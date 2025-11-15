@@ -25,8 +25,12 @@ export default function Navigator() {
   });
 
   useEffect(() => {
-    loadInvoices();
-  }, []);
+    if (currentWorkspace) {
+      loadInvoices();
+    } else {
+      setLoading(false);
+    }
+  }, [currentWorkspace]);
 
   const loadInvoices = async () => {
     try {
