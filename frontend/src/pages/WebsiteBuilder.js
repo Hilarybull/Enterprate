@@ -14,7 +14,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
 export default function WebsiteBuilder() {
   const navigate = useNavigate();
-  const { getHeaders } = useWorkspace();
+  const { currentWorkspace, getHeaders } = useWorkspace();
   const [websites, setWebsites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
