@@ -45,11 +45,18 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { currentWorkspace, workspaces, switchWorkspace, createWorkspace } = useWorkspace();
+  const { currentWorkspace, workspaces, switchWorkspace, createWorkspace, loading } = useWorkspace();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(false);
   const [workspaceName, setWorkspaceName] = useState('');
   const [creating, setCreating] = useState(false);
+
+  // Auto-open workspace creation if no workspaces exist
+  useEffect(() => {
+    if (!loading && workspaces.length === 0 && !createWorkspaceOpen) {
+      setCreateWorkspaceOpen(true);
+    }
+  }, [loading, workspaces, createWorkspaceOpen]);
 
   const handleLogout = () => {
     logout();
