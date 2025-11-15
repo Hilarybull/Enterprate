@@ -103,6 +103,24 @@ export default function Dashboard() {
     );
   }
 
+  if (!currentWorkspace) {
+    return (
+      <div className="flex items-center justify-center h-64" data-testid="no-workspace">
+        <Card className="max-w-md">
+          <CardContent className="p-8 text-center">
+            <h2 className="text-2xl font-bold mb-2">No Workspace Selected</h2>
+            <p className="text-gray-600 mb-4">
+              Please create a workspace to get started using Enterprate OS.
+            </p>
+            <p className="text-sm text-gray-500">
+              Click the workspace selector in the top navigation to create your first workspace.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-slide-in" data-testid="dashboard">
       <div>
