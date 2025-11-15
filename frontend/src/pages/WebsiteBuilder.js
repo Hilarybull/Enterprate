@@ -24,8 +24,12 @@ export default function WebsiteBuilder() {
   });
 
   useEffect(() => {
-    loadWebsites();
-  }, []);
+    if (currentWorkspace) {
+      loadWebsites();
+    } else {
+      setLoading(false);
+    }
+  }, [currentWorkspace]);
 
   const loadWebsites = async () => {
     try {
