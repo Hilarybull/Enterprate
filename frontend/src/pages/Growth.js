@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
 export default function Growth() {
-  const { getHeaders } = useWorkspace();
+  const { currentWorkspace, getHeaders } = useWorkspace();
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
