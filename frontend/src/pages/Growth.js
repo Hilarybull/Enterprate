@@ -26,8 +26,12 @@ export default function Growth() {
   });
 
   useEffect(() => {
-    loadLeads();
-  }, []);
+    if (currentWorkspace) {
+      loadLeads();
+    } else {
+      setLoading(false);
+    }
+  }, [currentWorkspace]);
 
   const loadLeads = async () => {
     try {
