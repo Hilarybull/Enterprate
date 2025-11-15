@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
 export default function Genesis() {
-  const { getHeaders } = useWorkspace();
+  const { currentWorkspace, getHeaders } = useWorkspace();
   const [idea, setIdea] = useState('');
   const [targetCustomer, setTargetCustomer] = useState('');
   const [loading, setLoading] = useState(false);
