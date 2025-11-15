@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
 export default function Navigator() {
-  const { getHeaders } = useWorkspace();
+  const { currentWorkspace, getHeaders } = useWorkspace();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
