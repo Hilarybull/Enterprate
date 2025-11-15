@@ -21,6 +21,8 @@ export default function Dashboard() {
   useEffect(() => {
     if (currentWorkspace) {
       loadDashboardData();
+    } else {
+      setLoading(false);
     }
   }, [currentWorkspace]);
 
