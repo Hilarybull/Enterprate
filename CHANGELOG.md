@@ -122,7 +122,35 @@ All notable changes to Enterprate OS will be documented in this file.
 
 ## Version History
 
-### v1.0.0 - Initial MVP Release
+### v1.1.0 - Backend Refactoring (November 24, 2025)
+**Major architectural improvement - Zero breaking changes**
+
+- ✅ Refactored backend from monolithic `server.py` (700 lines) to modular architecture (27 files)
+- ✅ Implemented clean separation of concerns:
+  - Core modules (config, database, security)
+  - Schemas (Pydantic models)
+  - Services (business logic)
+  - Routes (HTTP handlers)
+- ✅ All 24 API endpoints preserved with identical contracts
+- ✅ Improved maintainability and testability
+- ✅ Added pydantic-settings for configuration management
+- ✅ Enterprise-grade project structure
+- ✅ Full backward compatibility maintained
+- ✅ Comprehensive refactoring documentation added
+
+**Technical Details:**
+- New entry point: `app.main:app` (was `server:app`)
+- Original file backed up as `server.py.backup`
+- Average file size reduced from 700+ lines to ~71 lines per module
+- Clear import paths: `from app.services.auth_service import AuthService`
+
+### v1.0.1 - Bug Fixes (November 24, 2025)
+- Fixed infinite loading issue when new users register without workspace
+- Auto-prompt workspace creation for new users
+- Improved dashboard error handling
+- Better UX for missing workspace scenarios
+
+### v1.0.0 - Initial MVP Release (November 15, 2025)
 - Production-ready scaffold
 - Full multi-tenant architecture
 - Three AI domain placeholders
