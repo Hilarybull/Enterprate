@@ -1,12 +1,15 @@
 """Security utilities for authentication and authorization"""
 from datetime import datetime, timezone, timedelta
 from typing import Optional
+from uuid import UUID
 import bcrypt
 import jwt
 from fastapi import HTTPException, Depends, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
-from app.core.database import get_database
+from app.core.database import get_db
 
 security = HTTPBearer()
 
@@ -33,14 +36,29 @@ def decode_token(token: str) -> dict:
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db)
+) -> dict:
     """Get the current authenticated user"""
-    db = get_database()
+    from app.models.user import User
+    
     payload = decode_token(credentials.credentials)
-    user = await db.users.find_one({"id": payload["user_id"]}, {"_id": 0})
+    user_id = UUID(payload["user_id"])
+    
+    stmt = select(User).where(User.id == user_id)
+    result = await db.execute(stmt)
+    user = result.scalar_one_or_none()
+    
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
-    return user
+    
+    # Return dict format for compatibility with existing code
+    return {
+        "id": str(user.id),
+        "email": user.email,
+        "name": user.name
+    }
 
 async def get_workspace_id(x_workspace_id: Optional[str] = Header(None)) -> str:
     """Get workspace ID from header"""
