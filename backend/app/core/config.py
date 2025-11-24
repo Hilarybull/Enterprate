@@ -8,9 +8,11 @@ ROOT_DIR = Path(__file__).parent.parent.parent
 class Settings(BaseSettings):
     """Application settings loaded from environment variables"""
     
-    # Database
-    MONGO_URL: str
-    DB_NAME: str
+    # Database (PostgreSQL)
+    DATABASE_URL: str
+    # Legacy MongoDB settings (kept for backward compatibility during migration)
+    MONGO_URL: Optional[str] = None
+    DB_NAME: Optional[str] = None
     
     # Security
     JWT_SECRET: str
