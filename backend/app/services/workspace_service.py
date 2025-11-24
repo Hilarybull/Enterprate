@@ -1,26 +1,44 @@
 """Workspace service"""
 from fastapi import HTTPException
-from app.core.database import get_database
-from app.schemas.workspace import Workspace, WorkspaceCreate, WorkspaceUpdate, WorkspaceMembership, BusinessProfile
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from uuid import UUID
+from app.models.workspace import Workspace, WorkspaceMembership, BusinessProfile
+from app.schemas.workspace import WorkspaceCreate, WorkspaceUpdate
 from app.schemas.enums import UserRole
 
 class WorkspaceService:
     """Service for workspace management"""
     
     @staticmethod
-    async def get_user_workspaces(user_id: str) -> list:
+    async def get_user_workspaces(db: AsyncSession, user_id: str) -> list:
         """Get all workspaces for a user"""
-        db = get_database()
+        user_uuid = UUID(user_id)
         
-        memberships = await db.workspace_memberships.find({"userId": user_id}, {"_id": 0}).to_list(100)
-        workspace_ids = [m['workspaceId'] for m in memberships]
+        # Get memberships with workspace data
+        stmt = select(WorkspaceMembership).where(
+            WorkspaceMembership.user_id == user_uuid
+        ).options(selectinload(WorkspaceMembership.workspace))
         
-        workspaces = await db.workspaces.find({"id": {"$in": workspace_ids}}, {"_id": 0}).to_list(100)
+        result = await db.execute(stmt)
+        memberships = result.scalars().all()
         
-        # Add membership info
-        for ws in workspaces:
-            membership = next((m for m in memberships if m['workspaceId'] == ws['id']), None)
-            ws['role'] = membership['role'] if membership else None
+        # Build response
+        workspaces = []
+        for membership in memberships:
+            ws = membership.workspace
+            workspaces.append({
+                "id": str(ws.id),
+                "name": ws.name,
+                "slug": ws.slug,
+                "country": ws.country,
+                "industry": ws.industry,
+                "stage": ws.stage,
+                "ownerId": str(ws.owner_id),
+                "createdAt": ws.created_at.isoformat(),
+                "role": membership.role.value
+            })
         
         return workspaces
     
