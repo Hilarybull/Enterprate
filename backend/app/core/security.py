@@ -66,13 +66,22 @@ async def get_workspace_id(x_workspace_id: Optional[str] = Header(None)) -> str:
         raise HTTPException(status_code=400, detail="Workspace ID required in X-Workspace-Id header")
     return x_workspace_id
 
-async def verify_workspace_access(workspace_id: str, user: dict) -> bool:
+async def verify_workspace_access(
+    workspace_id: str,
+    user: dict,
+    db: AsyncSession = Depends(get_db)
+) -> bool:
     """Verify user has access to workspace"""
-    db = get_database()
-    membership = await db.workspace_memberships.find_one({
-        "workspaceId": workspace_id,
-        "userId": user["id"]
-    })
+    from app.models.workspace import WorkspaceMembership
+    from uuid import UUID
+    
+    stmt = select(WorkspaceMembership).where(
+        WorkspaceMembership.workspace_id == UUID(workspace_id),
+        WorkspaceMembership.user_id == UUID(user["id"])
+    )
+    result = await db.execute(stmt)
+    membership = result.scalar_one_or_none()
+    
     if not membership:
         raise HTTPException(status_code=403, detail="Access denied to workspace")
     return True
