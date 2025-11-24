@@ -61,6 +61,9 @@ Enterprate OS is a comprehensive business management platform featuring:
    pip install -r requirements.txt
    cp .env.example .env
    # Edit .env with your configuration
+   
+   # Note: Backend now uses modular structure (v1.1+)
+   # Main app: app/main.py
    ```
 
 3. **Frontend Setup:**
