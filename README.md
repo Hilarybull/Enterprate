@@ -27,6 +27,7 @@ Enterprate OS is a comprehensive business management platform featuring:
 - **MongoDB** - NoSQL database for flexible data modeling
 - **JWT Authentication** - Secure token-based authentication
 - **Emergent LLM Integration** - AI capabilities via universal API key
+- **Modular Architecture** - Clean separation of concerns (v1.1+)
 
 ### Frontend
 - **React 19** - Modern UI library
