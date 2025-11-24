@@ -1,0 +1,93 @@
+ENTERPRATE OS - COMPLETE FILE LISTING
+======================================
+
+All files are located in /app directory on the Emergent platform.
+
+ROOT DOCUMENTATION FILES:
+-------------------------
+/app/README.md - Main documentation (300+ lines)
+/app/CHANGELOG.md - Version history
+/app/DEPLOYMENT.md - Deployment guides (400+ lines)
+/app/BUGFIX.md - Recent bug fixes
+/app/CODEBASE_STRUCTURE.md - Complete structure overview
+/app/.env.example - Environment template
+/app/test_enterprate.sh - API testing script
+/app/package_codebase.sh - Packaging script
+
+BACKEND FILES (/app/backend/):
+------------------------------
+/app/backend/server.py - Main FastAPI application (700+ lines)
+/app/backend/requirements.txt - Python dependencies
+/app/backend/.env - Environment variables (configured)
+/app/backend/.env.example - Environment template
+
+FRONTEND ROOT (/app/frontend/):
+-------------------------------
+/app/frontend/package.json - Dependencies & scripts
+/app/frontend/tailwind.config.js - Tailwind config
+/app/frontend/postcss.config.js - PostCSS config
+/app/frontend/craco.config.js - CRA override
+/app/frontend/.env - Environment variables
+/app/frontend/.env.example - Environment template
+
+FRONTEND SOURCE (/app/frontend/src/):
+-------------------------------------
+/app/frontend/src/index.js - React entry point
+/app/frontend/src/App.js - Main app with routing
+/app/frontend/src/App.css - Global styles
+/app/frontend/src/index.css - Base styles
+
+CONTEXT FILES:
+--------------
+/app/frontend/src/context/AuthContext.js - Auth state
+/app/frontend/src/context/WorkspaceContext.js - Workspace state
+
+COMPONENTS:
+-----------
+/app/frontend/src/components/Layout.js - Main layout (250+ lines)
+
+PAGE COMPONENTS:
+----------------
+/app/frontend/src/pages/Login.js - Login page
+/app/frontend/src/pages/Register.js - Registration
+/app/frontend/src/pages/Dashboard.js - Main dashboard
+/app/frontend/src/pages/Genesis.js - Genesis AI
+/app/frontend/src/pages/Navigator.js - Invoicing
+/app/frontend/src/pages/Growth.js - CRM/Leads
+/app/frontend/src/pages/WebsiteBuilder.js - Website list
+/app/frontend/src/pages/WebsiteEditor.js - Website editor
+/app/frontend/src/pages/Settings.js - Settings page
+
+UI COMPONENTS (/app/frontend/src/components/ui/):
+-------------------------------------------------
+/app/frontend/src/components/ui/accordion.jsx
+/app/frontend/src/components/ui/alert-dialog.jsx
+/app/frontend/src/components/ui/avatar.jsx
+/app/frontend/src/components/ui/button.jsx
+/app/frontend/src/components/ui/card.jsx
+/app/frontend/src/components/ui/dialog.jsx
+/app/frontend/src/components/ui/dropdown-menu.jsx
+/app/frontend/src/components/ui/input.jsx
+/app/frontend/src/components/ui/label.jsx
+/app/frontend/src/components/ui/select.jsx
+/app/frontend/src/components/ui/separator.jsx
+/app/frontend/src/components/ui/sonner.jsx
+/app/frontend/src/components/ui/switch.jsx
+/app/frontend/src/components/ui/tabs.jsx
+/app/frontend/src/components/ui/textarea.jsx
+/app/frontend/src/components/ui/tooltip.jsx
+... and 15+ more shadcn/ui components
+
+HOOKS:
+------
+/app/frontend/src/hooks/use-toast.js
+
+PUBLIC ASSETS:
+--------------
+/app/frontend/public/index.html
+/app/frontend/public/manifest.json
+/app/frontend/public/robots.txt
+
+======================================
+TOTAL: 60+ files, ~6,000 lines of code
+======================================
