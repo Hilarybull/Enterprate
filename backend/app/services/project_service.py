@@ -1,31 +1,56 @@
 """Project service"""
-from app.core.database import get_database
-from app.schemas.project import Project, ProjectCreate
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
+from app.models.project import Project
+from app.schemas.project import ProjectCreate
 
 class ProjectService:
     """Service for project management"""
     
     @staticmethod
-    async def get_workspace_projects(workspace_id: str) -> list:
+    async def get_workspace_projects(db: AsyncSession, workspace_id: str) -> list:
         """Get all projects for a workspace"""
-        db = get_database()
-        projects = await db.projects.find({"workspaceId": workspace_id}, {"_id": 0}).to_list(100)
-        return projects
+        workspace_uuid = UUID(workspace_id)
+        
+        stmt = select(Project).where(Project.workspace_id == workspace_uuid)
+        result = await db.execute(stmt)
+        projects = result.scalars().all()
+        
+        return [
+            {
+                "id": str(p.id),
+                "workspaceId": str(p.workspace_id),
+                "type": p.type.value,
+                "name": p.name,
+                "status": p.status.value,
+                "config": p.config,
+                "createdAt": p.created_at.isoformat()
+            }
+            for p in projects
+        ]
     
     @staticmethod
-    async def create_project(workspace_id: str, project_data: ProjectCreate) -> dict:
+    async def create_project(db: AsyncSession, workspace_id: str, project_data: ProjectCreate) -> dict:
         """Create a new project"""
-        db = get_database()
+        workspace_uuid = UUID(workspace_id)
         
         project = Project(
-            workspaceId=workspace_id,
+            workspace_id=workspace_uuid,
             type=project_data.type,
             name=project_data.name,
             config=project_data.config
         )
         
-        doc = project.model_dump()
-        doc['createdAt'] = doc['createdAt'].isoformat()
-        await db.projects.insert_one(doc)
+        db.add(project)
+        await db.flush()
         
-        return project.model_dump()
+        return {
+            "id": str(project.id),
+            "workspaceId": str(project.workspace_id),
+            "type": project.type.value,
+            "name": project.name,
+            "status": project.status.value,
+            "config": project.config,
+            "createdAt": project.created_at.isoformat()
+        }
