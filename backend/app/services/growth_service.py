@@ -1,59 +1,114 @@
 """Growth service for CRM/Lead management"""
 from fastapi import HTTPException
-from app.core.database import get_database
-from app.schemas.lead import Lead, LeadCreate, LeadUpdate
-from app.schemas.intelligence import IntelligenceEvent
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
+from app.models.lead import Lead
+from app.models.intelligence import IntelligenceEvent
+from app.schemas.lead import LeadCreate, LeadUpdate
 
 class GrowthService:
     """Service for Growth CRM features"""
     
     @staticmethod
-    async def get_leads(workspace_id: str) -> list:
+    async def get_leads(db: AsyncSession, workspace_id: str) -> list:
         """Get all leads for a workspace"""
-        db = get_database()
-        leads = await db.leads.find({"workspaceId": workspace_id}, {"_id": 0}).to_list(100)
-        return leads
+        workspace_uuid = UUID(workspace_id)
+        
+        stmt = select(Lead).where(Lead.workspace_id == workspace_uuid)
+        result = await db.execute(stmt)
+        leads = result.scalars().all()
+        
+        return [
+            {
+                "id": str(lead.id),
+                "workspaceId": str(lead.workspace_id),
+                "name": lead.name,
+                "email": lead.email,
+                "phone": lead.phone,
+                "source": lead.source,
+                "status": lead.status.value,
+                "notes": lead.notes,
+                "createdAt": lead.created_at.isoformat()
+            }
+            for lead in leads
+        ]
     
     @staticmethod
-    async def create_lead(lead_data: LeadCreate, workspace_id: str, user_id: str) -> dict:
+    async def create_lead(db: AsyncSession, lead_data: LeadCreate, workspace_id: str, user_id: str) -> dict:
         """Create a new lead"""
-        db = get_database()
+        workspace_uuid = UUID(workspace_id)
+        user_uuid = UUID(user_id)
         
         lead = Lead(
-            workspaceId=workspace_id,
-            **lead_data.model_dump()
+            workspace_id=workspace_uuid,
+            name=lead_data.name,
+            email=lead_data.email,
+            phone=lead_data.phone,
+            source=lead_data.source,
+            notes=lead_data.notes
         )
         
-        doc = lead.model_dump()
-        doc['createdAt'] = doc['createdAt'].isoformat()
-        await db.leads.insert_one(doc)
+        db.add(lead)
+        await db.flush()
         
         # Log event
         event = IntelligenceEvent(
-            workspaceId=workspace_id,
-            userId=user_id,
+            workspace_id=workspace_uuid,
+            user_id=user_uuid,
             type="growth.lead_created",
-            payload={"leadId": lead.id, "name": lead.name}
+            payload={"leadId": str(lead.id), "name": lead.name}
         )
-        event_doc = event.model_dump()
-        event_doc['occurredAt'] = event_doc['occurredAt'].isoformat()
-        await db.intelligence_events.insert_one(event_doc)
+        db.add(event)
+        await db.flush()
         
-        return lead.model_dump()
+        return {
+            "id": str(lead.id),
+            "workspaceId": str(lead.workspace_id),
+            "name": lead.name,
+            "email": lead.email,
+            "phone": lead.phone,
+            "source": lead.source,
+            "status": lead.status.value,
+            "notes": lead.notes,
+            "createdAt": lead.created_at.isoformat()
+        }
     
     @staticmethod
-    async def update_lead(lead_id: str, lead_data: LeadUpdate, workspace_id: str) -> dict:
+    async def update_lead(db: AsyncSession, lead_id: str, lead_data: LeadUpdate, workspace_id: str) -> dict:
         """Update a lead"""
-        db = get_database()
+        lead_uuid = UUID(lead_id)
+        workspace_uuid = UUID(workspace_id)
         
         update_data = {k: v for k, v in lead_data.model_dump().items() if v is not None}
         if not update_data:
             raise HTTPException(status_code=400, detail="No data to update")
         
-        await db.leads.update_one(
-            {"id": lead_id, "workspaceId": workspace_id},
-            {"$set": update_data}
+        stmt = select(Lead).where(
+            Lead.id == lead_uuid,
+            Lead.workspace_id == workspace_uuid
         )
+        result = await db.execute(stmt)
+        lead = result.scalar_one_or_none()
         
-        lead = await db.leads.find_one({"id": lead_id}, {"_id": 0})
-        return lead
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        # Update fields
+        for key, value in update_data.items():
+            if hasattr(lead, key):
+                setattr(lead, key, value)
+        
+        await db.flush()
+        
+        return {
+            "id": str(lead.id),
+            "workspaceId": str(lead.workspace_id),
+            "name": lead.name,
+            "email": lead.email,
+            "phone": lead.phone,
+            "source": lead.source,
+            "status": lead.status.value,
+            "notes": lead.notes,
+            "createdAt": lead.created_at.isoformat()
+        }
