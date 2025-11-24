@@ -56,7 +56,12 @@ markdown-it-py==4.0.0
 MarkupSafe==3.0.3
 mccabe==0.7.0
 mdurl==0.1.2
-motor==3.3.1
+# Removed: motor==3.3.1 (migrated to PostgreSQL)
+# PostgreSQL and SQLAlchemy
+sqlalchemy==2.0.36
+asyncpg==0.30.0
+alembic==1.14.0
+psycopg2-binary==2.9.10
 multidict==6.7.0
 mypy==1.18.2
 mypy_extensions==1.1.0
