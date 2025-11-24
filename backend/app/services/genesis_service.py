@@ -1,26 +1,27 @@
 """Genesis AI service"""
-from app.core.database import get_database
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
+from app.models.intelligence import IntelligenceEvent
 from app.schemas.genesis import IdeaScoreRequest, BusinessBlueprintRequest
-from app.schemas.intelligence import IntelligenceEvent
 
 class GenesisService:
     """Service for Genesis AI features"""
     
     @staticmethod
-    async def score_idea(request: IdeaScoreRequest, workspace_id: str, user_id: str) -> dict:
+    async def score_idea(db: AsyncSession, request: IdeaScoreRequest, workspace_id: str, user_id: str) -> dict:
         """Score a business idea (mocked for now)"""
-        db = get_database()
+        workspace_uuid = UUID(workspace_id)
+        user_uuid = UUID(user_id)
         
         # Log intelligence event
         event = IntelligenceEvent(
-            workspaceId=workspace_id,
-            userId=user_id,
+            workspace_id=workspace_uuid,
+            user_id=user_uuid,
             type="genesis.idea_score",
             payload={"idea": request.idea}
         )
-        event_doc = event.model_dump()
-        event_doc['occurredAt'] = event_doc['occurredAt'].isoformat()
-        await db.intelligence_events.insert_one(event_doc)
+        db.add(event)
+        await db.flush()
         
         # TODO: Implement actual AI scoring logic with LLM
         # For now, return mocked response
