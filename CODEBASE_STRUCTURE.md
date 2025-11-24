@@ -14,23 +14,63 @@
 └── test_enterprate.sh           # API testing script
 ```
 
-### Backend (/app/backend/)
+### Backend (/app/backend/) - Modular Structure (v1.1+)
 ```
 /app/backend/
-├── server.py                    # Main FastAPI application (700+ lines)
-├── requirements.txt             # Python dependencies
-├── .env                         # Environment variables (configured)
-└── .env.example                 # Environment template
+├── app/
+│   ├── __init__.py
+│   ├── main.py                    # FastAPI app initialization (~60 lines)
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py              # Settings management
+│   │   ├── database.py            # MongoDB connection
+│   │   └── security.py            # Auth & JWT utilities
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   ├── enums.py               # Enum definitions
+│   │   ├── user.py                # User schemas
+│   │   ├── workspace.py           # Workspace schemas
+│   │   ├── project.py             # Project schemas
+│   │   ├── website.py             # Website schemas
+│   │   ├── invoice.py             # Invoice schemas
+│   │   ├── lead.py                # Lead schemas
+│   │   ├── intelligence.py        # Intelligence event schemas
+│   │   └── genesis.py             # Genesis AI schemas
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── auth_service.py        # Authentication logic
+│   │   ├── workspace_service.py   # Workspace management
+│   │   ├── project_service.py     # Project management
+│   │   ├── genesis_service.py     # Genesis AI logic
+│   │   ├── navigator_service.py   # Navigator/invoicing logic
+│   │   ├── growth_service.py      # Growth/CRM logic
+│   │   ├── website_service.py     # Website builder logic
+│   │   └── intel_service.py       # Intelligence graph logic
+│   └── routes/
+│       ├── __init__.py
+│       ├── auth.py                # Auth endpoints
+│       ├── workspaces.py          # Workspace endpoints
+│       ├── projects.py            # Project endpoints
+│       ├── genesis.py             # Genesis AI endpoints
+│       ├── navigator.py           # Navigator endpoints
+│       ├── growth.py              # Growth endpoints
+│       ├── websites.py            # Website builder endpoints
+│       └── intel.py               # Intelligence endpoints
+├── requirements.txt               # Python dependencies
+├── .env                           # Environment variables (configured)
+├── .env.example                   # Environment template
+└── server.py.backup               # Original monolithic file (backup)
 ```
 
-**server.py includes:**
-- Authentication system (JWT, bcrypt)
-- 24 REST API endpoints
-- 10 Pydantic models
-- MongoDB integration
-- Multi-tenant workspace logic
-- Genesis AI, Navigator, Growth AI, Website Builder APIs
-- Intelligence Graph event logging
+**Modular architecture features:**
+- Clean separation of concerns (Core, Schemas, Services, Routes)
+- 27 well-organized modules (~71 lines average per file)
+- Easy to test, maintain, and scale
+- All 24 REST API endpoints preserved
+- MongoDB integration in core/database.py
+- Authentication system in core/security.py
+- Business logic in services/
+- HTTP handling in routes/
 
 ### Frontend (/app/frontend/)
 
