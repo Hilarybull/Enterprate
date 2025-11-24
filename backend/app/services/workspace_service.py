@@ -91,30 +91,76 @@ class WorkspaceService:
         }
     
     @staticmethod
-    async def get_workspace(workspace_id: str) -> dict:
+    async def get_workspace(db: AsyncSession, workspace_id: str) -> dict:
         """Get workspace by ID"""
-        db = get_database()
+        workspace_uuid = UUID(workspace_id)
         
-        workspace = await db.workspaces.find_one({"id": workspace_id}, {"_id": 0})
+        stmt = select(Workspace).where(Workspace.id == workspace_uuid).options(
+            selectinload(Workspace.business_profile)
+        )
+        result = await db.execute(stmt)
+        workspace = result.scalar_one_or_none()
+        
         if not workspace:
             raise HTTPException(status_code=404, detail="Workspace not found")
         
-        # Get business profile
-        profile = await db.business_profiles.find_one({"workspaceId": workspace_id}, {"_id": 0})
-        workspace['businessProfile'] = profile
+        # Build response
+        response = {
+            "id": str(workspace.id),
+            "name": workspace.name,
+            "slug": workspace.slug,
+            "country": workspace.country,
+            "industry": workspace.industry,
+            "stage": workspace.stage,
+            "ownerId": str(workspace.owner_id),
+            "createdAt": workspace.created_at.isoformat()
+        }
         
-        return workspace
+        # Add business profile if exists
+        if workspace.business_profile:
+            profile = workspace.business_profile
+            response["businessProfile"] = {
+                "id": str(profile.id),
+                "workspaceId": str(profile.workspace_id),
+                "businessName": profile.business_name,
+                "status": profile.status.value,
+                "brandTone": profile.brand_tone,
+                "primaryGoal": profile.primary_goal,
+                "targetAudience": profile.target_audience,
+                "createdAt": profile.created_at.isoformat()
+            }
+        
+        return response
     
     @staticmethod
-    async def update_workspace(workspace_id: str, workspace_data: WorkspaceUpdate) -> dict:
+    async def update_workspace(db: AsyncSession, workspace_id: str, workspace_data: WorkspaceUpdate) -> dict:
         """Update workspace"""
-        db = get_database()
+        workspace_uuid = UUID(workspace_id)
         
         update_data = {k: v for k, v in workspace_data.model_dump().items() if v is not None}
         if not update_data:
             raise HTTPException(status_code=400, detail="No data to update")
         
-        await db.workspaces.update_one({"id": workspace_id}, {"$set": update_data})
+        stmt = select(Workspace).where(Workspace.id == workspace_uuid)
+        result = await db.execute(stmt)
+        workspace = result.scalar_one_or_none()
         
-        workspace = await db.workspaces.find_one({"id": workspace_id}, {"_id": 0})
-        return workspace
+        if not workspace:
+            raise HTTPException(status_code=404, detail="Workspace not found")
+        
+        # Update fields
+        for key, value in update_data.items():
+            setattr(workspace, key, value)
+        
+        await db.flush()
+        
+        return {
+            "id": str(workspace.id),
+            "name": workspace.name,
+            "slug": workspace.slug,
+            "country": workspace.country,
+            "industry": workspace.industry,
+            "stage": workspace.stage,
+            "ownerId": str(workspace.owner_id),
+            "createdAt": workspace.created_at.isoformat()
+        }
