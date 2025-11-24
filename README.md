@@ -84,7 +84,8 @@ Enterprate OS is a comprehensive business management platform featuring:
 2. **Start Backend:**
    ```bash
    cd backend
-   uvicorn server:app --reload --host 0.0.0.0 --port 8001
+   # v1.1+ uses modular structure
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
    ```
 
 3. **Start Frontend:**
