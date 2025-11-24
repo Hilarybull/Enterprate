@@ -43,48 +43,52 @@ class WorkspaceService:
         return workspaces
     
     @staticmethod
-    async def create_workspace(workspace_data: WorkspaceCreate, user_id: str) -> dict:
+    async def create_workspace(db: AsyncSession, workspace_data: WorkspaceCreate, user_id: str) -> dict:
         """Create a new workspace"""
-        db = get_database()
+        user_uuid = UUID(user_id)
         
         # Generate slug from name
         slug = workspace_data.name.lower().replace(' ', '-')
         
+        # Create workspace
         workspace = Workspace(
             name=workspace_data.name,
             slug=slug,
             country=workspace_data.country,
             industry=workspace_data.industry,
             stage=workspace_data.stage,
-            ownerId=user_id
+            owner_id=user_uuid
         )
-        
-        doc = workspace.model_dump()
-        doc['createdAt'] = doc['createdAt'].isoformat()
-        await db.workspaces.insert_one(doc)
+        db.add(workspace)
+        await db.flush()  # Get the ID
         
         # Create membership
         membership = WorkspaceMembership(
-            userId=user_id,
-            workspaceId=workspace.id,
+            user_id=user_uuid,
+            workspace_id=workspace.id,
             role=UserRole.OWNER
         )
-        
-        mem_doc = membership.model_dump()
-        mem_doc['createdAt'] = mem_doc['createdAt'].isoformat()
-        await db.workspace_memberships.insert_one(mem_doc)
+        db.add(membership)
         
         # Create business profile
         profile = BusinessProfile(
-            workspaceId=workspace.id,
-            businessName=workspace_data.name
+            workspace_id=workspace.id,
+            business_name=workspace_data.name
         )
+        db.add(profile)
         
-        profile_doc = profile.model_dump()
-        profile_doc['createdAt'] = profile_doc['createdAt'].isoformat()
-        await db.business_profiles.insert_one(profile_doc)
+        await db.flush()
         
-        return workspace.model_dump()
+        return {
+            "id": str(workspace.id),
+            "name": workspace.name,
+            "slug": workspace.slug,
+            "country": workspace.country,
+            "industry": workspace.industry,
+            "stage": workspace.stage,
+            "ownerId": str(workspace.owner_id),
+            "createdAt": workspace.created_at.isoformat()
+        }
     
     @staticmethod
     async def get_workspace(workspace_id: str) -> dict:
