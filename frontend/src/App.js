@@ -3,16 +3,32 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import AuthProvider, { useAuth } from '@/context/AuthContext';
 import WorkspaceProvider from '@/context/WorkspaceContext';
+
+// Auth Pages
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
-import Dashboard from '@/pages/Dashboard';
-import Genesis from '@/pages/Genesis';
-import Navigator from '@/pages/Navigator';
-import Growth from '@/pages/Growth';
-import WebsiteBuilder from '@/pages/WebsiteBuilder';
+
+// Enterprise Layout
+import { EnterpriseLayout } from '@/components/enterprise';
+
+// Enterprise Pages
+import {
+  Dashboard,
+  IdeaDiscovery,
+  WebsiteSetup,
+  BusinessRegistration,
+  BusinessBlueprint,
+  FinanceAutomation,
+  BusinessOperations,
+  Growth,
+  IntelligenceGraph,
+  Settings
+} from '@/pages/enterprise';
+import Help from '@/pages/enterprise/Help';
+
+// Legacy imports for website editor
 import WebsiteEditor from '@/pages/WebsiteEditor';
-import Settings from '@/pages/Settings';
-import Layout from '@/components/Layout';
+
 import '@/App.css';
 
 function PrivateRoute({ children }) {
@@ -20,8 +36,13 @@ function PrivateRoute({ children }) {
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <span className="text-white font-bold text-2xl">E</span>
+          </div>
+          <p className="text-gray-500">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -32,25 +53,40 @@ function PrivateRoute({ children }) {
 function AppRoutes() {
   return (
     <Routes>
+      {/* Auth Routes */}
       <Route path="/auth/login" element={<Login />} />
       <Route path="/auth/register" element={<Register />} />
       
+      {/* Protected Enterprise Routes */}
       <Route path="/" element={
         <PrivateRoute>
           <WorkspaceProvider>
-            <Layout />
+            <EnterpriseLayout />
           </WorkspaceProvider>
         </PrivateRoute>
       }>
         <Route index element={<Navigate to="/dashboard" />} />
         <Route path="dashboard" element={<Dashboard />} />
-        <Route path="genesis" element={<Genesis />} />
-        <Route path="navigator" element={<Navigator />} />
-        <Route path="growth" element={<Growth />} />
-        <Route path="website-builder" element={<WebsiteBuilder />} />
+        <Route path="idea-discovery" element={<IdeaDiscovery />} />
+        <Route path="website-setup" element={<WebsiteSetup />} />
         <Route path="website-builder/:websiteId" element={<WebsiteEditor />} />
+        <Route path="business-registration" element={<BusinessRegistration />} />
+        <Route path="business-blueprint" element={<BusinessBlueprint />} />
+        <Route path="finance-automation" element={<FinanceAutomation />} />
+        <Route path="business-operations" element={<BusinessOperations />} />
+        <Route path="growth" element={<Growth />} />
+        <Route path="intelligence-graph" element={<IntelligenceGraph />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="help" element={<Help />} />
+        
+        {/* Legacy redirects */}
+        <Route path="genesis" element={<Navigate to="/idea-discovery" />} />
+        <Route path="navigator" element={<Navigate to="/finance-automation" />} />
+        <Route path="website-builder" element={<Navigate to="/website-setup" />} />
       </Route>
+
+      {/* Catch all - redirect to dashboard */}
+      <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>
   );
 }
@@ -61,7 +97,7 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <AppRoutes />
-          <Toaster position="top-right" />
+          <Toaster position="top-right" richColors />
         </BrowserRouter>
       </AuthProvider>
     </div>
