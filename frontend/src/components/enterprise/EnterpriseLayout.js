@@ -12,14 +12,19 @@ export default function EnterpriseLayout() {
   const { user, logout } = useAuth();
   const { currentWorkspace, workspaces, loading } = useWorkspace();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(false);
+  
+  // Initialize workspace modal state based on workspaces availability
+  const shouldShowWorkspaceModal = !loading && workspaces.length === 0;
+  const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(shouldShowWorkspaceModal);
 
-  // Auto-open workspace creation if no workspaces exist
+  // Update modal state when loading completes and no workspaces exist
   useEffect(() => {
-    if (!loading && workspaces.length === 0 && !createWorkspaceOpen) {
-      setCreateWorkspaceOpen(true);
+    if (!loading && workspaces.length === 0) {
+      // Use a timeout to avoid cascading state updates
+      const timer = setTimeout(() => setCreateWorkspaceOpen(true), 0);
+      return () => clearTimeout(timer);
     }
-  }, [loading, workspaces, createWorkspaceOpen]);
+  }, [loading, workspaces.length]);
 
   const handleLogout = () => {
     logout();
