@@ -121,7 +121,7 @@ export default function AIChatbot() {
       {isOpen && (
         <div 
           className="
-            fixed bottom-24 right-6 z-50
+            fixed bottom-36 right-6 z-50
             w-[380px] h-[520px]
             bg-white rounded-2xl
             shadow-2xl shadow-purple-500/10
