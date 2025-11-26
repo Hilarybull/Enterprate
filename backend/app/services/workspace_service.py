@@ -40,7 +40,17 @@ class WorkspaceService:
         }
         await db.workspace_memberships.insert_one(membership)
         
-        return {**workspace, "role": "OWNER"}
+        # Return without _id
+        return {
+            "id": workspace_id,
+            "name": data.name,
+            "slug": slug,
+            "owner_id": user_id,
+            "country": data.country,
+            "industry": data.industry,
+            "stage": data.stage,
+            "role": "OWNER"
+        }
     
     @staticmethod
     async def get_user_workspaces(user_id: str) -> List[dict]:
