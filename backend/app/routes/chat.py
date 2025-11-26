@@ -50,10 +50,11 @@ Key features available:
 @router.post("", response_model=ChatResponse)
 async def send_chat_message(
     request: ChatRequest,
-    user_id: str = Depends(get_current_user_id)
+    user: dict = Depends(get_current_user)
 ):
     """Send a message to the AI assistant and get a response"""
     try:
+        user_id = user["id"]
         api_key = os.environ.get("EMERGENT_LLM_KEY")
         if not api_key:
             raise HTTPException(status_code=500, detail="AI service not configured")
