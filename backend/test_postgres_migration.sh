@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-API_URL="https://enterprate-os.preview.emergentagent.com/api"
+API_URL="https://saas-dashboard-20.preview.emergentagent.com/api"
 
 echo "========================================"
 echo "PostgreSQL Migration - API Testing"
