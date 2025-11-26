@@ -154,7 +154,7 @@ export default function BusinessRegistration() {
           <Clock className="mx-auto text-purple-600 mb-3" size={40} />
           <h3 className="font-semibold text-lg mb-2">Full Registration Workflow Coming Soon</h3>
           <p className="text-gray-600 max-w-xl mx-auto">
-            We're building an AI-powered registration assistant that will guide you through each step, 
+            We&apos;re building an AI-powered registration assistant that will guide you through each step, 
             generate documents, and help you stay compliant. Check back soon!
           </p>
         </CardContent>
