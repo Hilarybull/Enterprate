@@ -16,6 +16,15 @@ class Project(BaseModel):
     createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ProjectCreate(BaseModel):
-    type: ProjectType
+    type: str = "GENESIS"
     name: str
+    description: Optional[str] = None
     config: Optional[Dict[str, Any]] = None
+
+class ProjectResponse(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    id: str
+    name: str
+    type: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None

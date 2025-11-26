@@ -1,18 +1,14 @@
 """Intelligence event schemas"""
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, Dict, Any
-from datetime import datetime, timezone
-import uuid
 
-class IntelligenceEvent(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    workspaceId: str
-    userId: Optional[str] = None
+class EventCreate(BaseModel):
     type: str
-    payload: Optional[Dict[str, Any]] = None
-    occurredAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    data: Optional[Dict[str, Any]] = None
 
-class IntelligenceEventCreate(BaseModel):
+class EventResponse(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    id: str
     type: str
-    payload: Optional[Dict[str, Any]] = None
+    data: Optional[Dict[str, Any]] = None
+    occurredAt: Optional[str] = None

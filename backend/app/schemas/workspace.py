@@ -28,6 +28,16 @@ class WorkspaceUpdate(BaseModel):
     industry: Optional[str] = None
     stage: Optional[str] = None
 
+class WorkspaceResponse(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    id: str
+    name: str
+    slug: Optional[str] = None
+    country: Optional[str] = None
+    industry: Optional[str] = None
+    stage: Optional[str] = None
+    role: Optional[str] = None
+
 class WorkspaceMembership(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

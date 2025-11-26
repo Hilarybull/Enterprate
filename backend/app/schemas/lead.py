@@ -1,32 +1,23 @@
-"""Lead-related schemas"""
-from pydantic import BaseModel, Field, ConfigDict, EmailStr
+"""Lead schemas"""
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
-from datetime import datetime, timezone
-import uuid
-from app.schemas.enums import LeadStatus
-
-class Lead(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    workspaceId: str
-    name: str
-    email: EmailStr
-    phone: Optional[str] = None
-    source: Optional[str] = None
-    status: LeadStatus = LeadStatus.LEAD
-    notes: Optional[str] = None
-    createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class LeadCreate(BaseModel):
     name: str
-    email: EmailStr
+    email: Optional[str] = None
     phone: Optional[str] = None
-    source: Optional[str] = None
-    notes: Optional[str] = None
+    source: str = "WEBSITE"
+    status: Optional[str] = "NEW"
 
 class LeadUpdate(BaseModel):
+    status: Optional[str] = None
     name: Optional[str] = None
-    email: Optional[EmailStr] = None
+
+class LeadResponse(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    id: str
+    name: str
+    email: Optional[str] = None
     phone: Optional[str] = None
-    status: Optional[LeadStatus] = None
-    notes: Optional[str] = None
+    source: Optional[str] = None
+    status: Optional[str] = None

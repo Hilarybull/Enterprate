@@ -21,3 +21,12 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    name: str
+
+class TokenResponse(BaseModel):
+    token: str
+    user: UserResponse
