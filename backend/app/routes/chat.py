@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from emergentintegrations.llm.chat import LlmChat, UserMessage
-from app.core.auth import get_current_user_id
+from app.core.security import get_current_user
 
 load_dotenv()
 logger = logging.getLogger(__name__)
