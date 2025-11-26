@@ -100,7 +100,7 @@ export default function AIChatbot() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          fixed bottom-6 right-6 z-50 
+          fixed bottom-20 right-6 z-50 
           w-14 h-14 rounded-full
           gradient-primary
           shadow-lg shadow-purple-500/30
