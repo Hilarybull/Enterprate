@@ -1,42 +1,38 @@
-"""Growth (CRM/Lead) routes"""
+"""Growth/Marketing routes"""
+from typing import List
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.database import get_db
-from app.schemas.lead import LeadCreate, LeadUpdate
 from app.services.growth_service import GrowthService
-from app.core.security import get_current_user, get_workspace_id, verify_workspace_access
+from app.schemas.lead import LeadCreate, LeadUpdate, LeadResponse
+from app.core.security import get_current_user, verify_workspace_access, get_workspace_id
 
 router = APIRouter(prefix="/growth", tags=["growth"])
 
-@router.get("/leads")
-async def get_leads(
-    workspace_id: str = Depends(get_workspace_id),
-    user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """Get all leads for a workspace"""
-    await verify_workspace_access(workspace_id, user, db)
-    return await GrowthService.get_leads(db, workspace_id)
-
-@router.post("/leads")
+@router.post("/leads", response_model=LeadResponse)
 async def create_lead(
-    lead_data: LeadCreate,
-    workspace_id: str = Depends(get_workspace_id),
+    data: LeadCreate,
     user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    workspace_id: str = Depends(get_workspace_id)
 ):
     """Create a new lead"""
-    await verify_workspace_access(workspace_id, user, db)
-    return await GrowthService.create_lead(db, lead_data, workspace_id, user['id'])
+    await verify_workspace_access(workspace_id, user)
+    return await GrowthService.create_lead(workspace_id, user["id"], data)
 
-@router.patch("/leads/{lead_id}")
+@router.get("/leads", response_model=List[LeadResponse])
+async def get_leads(
+    user: dict = Depends(get_current_user),
+    workspace_id: str = Depends(get_workspace_id)
+):
+    """Get all leads"""
+    await verify_workspace_access(workspace_id, user)
+    return await GrowthService.get_leads(workspace_id)
+
+@router.patch("/leads/{lead_id}", response_model=LeadResponse)
 async def update_lead(
     lead_id: str,
-    lead_data: LeadUpdate,
-    workspace_id: str = Depends(get_workspace_id),
+    data: LeadUpdate,
     user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    workspace_id: str = Depends(get_workspace_id)
 ):
     """Update a lead"""
-    await verify_workspace_access(workspace_id, user, db)
-    return await GrowthService.update_lead(db, lead_id, lead_data, workspace_id)
+    await verify_workspace_access(workspace_id, user)
+    return await GrowthService.update_lead(lead_id, workspace_id, data)

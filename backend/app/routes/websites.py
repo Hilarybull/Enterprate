@@ -1,77 +1,48 @@
-"""Website builder routes"""
+"""Website routes"""
+from typing import List
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.database import get_db
-from app.schemas.website import WebsiteCreate, WebsitePageCreate
 from app.services.website_service import WebsiteService
-from app.core.security import get_current_user, get_workspace_id, verify_workspace_access
+from app.schemas.website import WebsiteCreate, WebsiteUpdate, WebsiteResponse
+from app.core.security import get_current_user, verify_workspace_access, get_workspace_id
 
-router = APIRouter(prefix="/websites", tags=["website-builder"])
+router = APIRouter(prefix="/websites", tags=["websites"])
 
-@router.get("")
-async def get_websites(
-    workspace_id: str = Depends(get_workspace_id),
-    user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """Get all websites for a workspace"""
-    await verify_workspace_access(workspace_id, user, db)
-    return await WebsiteService.get_websites(db, workspace_id)
-
-@router.post("")
+@router.post("", response_model=WebsiteResponse)
 async def create_website(
-    website_data: WebsiteCreate,
-    workspace_id: str = Depends(get_workspace_id),
+    data: WebsiteCreate,
     user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    workspace_id: str = Depends(get_workspace_id)
 ):
     """Create a new website"""
-    await verify_workspace_access(workspace_id, user, db)
-    return await WebsiteService.create_website(db, website_data, workspace_id)
+    await verify_workspace_access(workspace_id, user)
+    return await WebsiteService.create_website(workspace_id, user["id"], data)
 
-@router.get("/{website_id}")
+@router.get("", response_model=List[WebsiteResponse])
+async def get_websites(
+    user: dict = Depends(get_current_user),
+    workspace_id: str = Depends(get_workspace_id)
+):
+    """Get all websites"""
+    await verify_workspace_access(workspace_id, user)
+    return await WebsiteService.get_websites(workspace_id)
+
+@router.get("/{website_id}", response_model=WebsiteResponse)
 async def get_website(
     website_id: str,
-    workspace_id: str = Depends(get_workspace_id),
     user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    workspace_id: str = Depends(get_workspace_id)
 ):
-    """Get a website by ID"""
-    await verify_workspace_access(workspace_id, user, db)
-    return await WebsiteService.get_website(db, website_id, workspace_id)
+    """Get a specific website"""
+    await verify_workspace_access(workspace_id, user)
+    return await WebsiteService.get_website(website_id, workspace_id)
 
-@router.get("/{website_id}/pages")
-async def get_website_pages(
+@router.delete("/{website_id}")
+async def delete_website(
     website_id: str,
-    workspace_id: str = Depends(get_workspace_id),
     user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    workspace_id: str = Depends(get_workspace_id)
 ):
-    """Get all pages for a website"""
-    await verify_workspace_access(workspace_id, user, db)
-    return await WebsiteService.get_website_pages(db, website_id)
-
-@router.post("/{website_id}/pages")
-async def create_website_page(
-    website_id: str,
-    page_data: WebsitePageCreate,
-    workspace_id: str = Depends(get_workspace_id),
-    user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """Create a new website page"""
-    await verify_workspace_access(workspace_id, user, db)
-    return await WebsiteService.create_website_page(db, website_id, page_data, workspace_id)
-
-@router.patch("/{website_id}/pages/{page_id}")
-async def update_website_page(
-    website_id: str,
-    page_id: str,
-    page_data: WebsitePageCreate,
-    workspace_id: str = Depends(get_workspace_id),
-    user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """Update a website page"""
-    await verify_workspace_access(workspace_id, user, db)
-    return await WebsiteService.update_website_page(db, page_id, website_id, page_data)
+    """Delete a website"""
+    await verify_workspace_access(workspace_id, user)
+    await WebsiteService.delete_website(website_id, workspace_id)
+    return {"message": "Website deleted"}

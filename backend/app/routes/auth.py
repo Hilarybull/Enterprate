@@ -1,29 +1,22 @@
 """Authentication routes"""
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.database import get_db
-from app.schemas.user import UserCreate, UserLogin
 from app.services.auth_service import AuthService
+from app.schemas.user import UserCreate, UserLogin, UserResponse, TokenResponse
 from app.core.security import get_current_user
 
-router = APIRouter(prefix="/auth", tags=["authentication"])
+router = APIRouter(prefix="/auth", tags=["auth"])
 
-@router.post("/register")
-async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
+@router.post("/register", response_model=TokenResponse)
+async def register(user_data: UserCreate):
     """Register a new user"""
-    return await AuthService.register_user(db, user_data)
+    return await AuthService.register_user(user_data)
 
-@router.post("/login")
-async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
-    """Login with email and password"""
-    return await AuthService.login_user(db, credentials)
+@router.post("/login", response_model=TokenResponse)
+async def login(credentials: UserLogin):
+    """Login user"""
+    return await AuthService.login_user(credentials)
 
-@router.get("/me")
-async def get_me(user: dict = Depends(get_current_user)):
-    """Get current user information"""
-    return {"id": user['id'], "email": user['email'], "name": user['name']}
-
-@router.get("/google")
-async def google_auth():
-    """Google OAuth integration (placeholder)"""
-    return {"message": "Google OAuth integration - to be implemented"}
+@router.get("/me", response_model=UserResponse)
+async def get_current_user_info(user: dict = Depends(get_current_user)):
+    """Get current user info"""
+    return user

@@ -45,13 +45,18 @@ app.add_middleware(
 # Startup event
 @app.on_event("startup")
 async def startup_db_client():
-    """Initialize PostgreSQL connection on startup"""
+    """Initialize MongoDB connection on startup"""
     await init_db()
-    logger.info("Connected to PostgreSQL")
+    logger.info("Connected to MongoDB")
 
 # Shutdown event
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    """Close PostgreSQL connection on shutdown"""
+    """Close MongoDB connection on shutdown"""
     await close_db()
-    logger.info("Closed PostgreSQL connection")
+    logger.info("Closed MongoDB connection")
+
+# Health check
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
