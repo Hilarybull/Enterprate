@@ -49,7 +49,7 @@ const faqs = [
   },
   {
     question: 'Can I invite team members to my workspace?',
-    answer: 'Team collaboration features are coming soon! You\'ll be able to invite members and assign roles.'
+    answer: 'Team collaboration features are coming soon! You will be able to invite members and assign roles.'
   },
   {
     question: 'How do I create and send an invoice?',
