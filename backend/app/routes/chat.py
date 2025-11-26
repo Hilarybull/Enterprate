@@ -118,9 +118,10 @@ async def get_chat_history(
 @router.delete("/history/{session_id}")
 async def clear_chat_history(
     session_id: str,
-    user_id: str = Depends(get_current_user_id)
+    user: dict = Depends(get_current_user)
 ):
     """Clear chat history for a session"""
+    user_id = user["id"]
     session_key = f"{user_id}_{session_id}"
     
     if session_key in chat_sessions:
