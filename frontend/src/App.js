@@ -7,6 +7,8 @@ import WorkspaceProvider from '@/context/WorkspaceContext';
 // Auth Pages
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
+import ForgotPassword from '@/pages/ForgotPassword';
+import ResetPassword from '@/pages/ResetPassword';
 
 // Enterprise Layout
 import { EnterpriseLayout } from '@/components/enterprise';
@@ -38,9 +40,11 @@ function PrivateRoute({ children }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <span className="text-white font-bold text-2xl">E</span>
-          </div>
+          <img 
+            src="https://customer-assets.emergentagent.com/job_saas-dashboard-20/artifacts/aems110l_Enterprate%20Logo.png" 
+            alt="Enterprate" 
+            className="h-12 mx-auto mb-4 animate-pulse"
+          />
           <p className="text-gray-500">Loading...</p>
         </div>
       </div>
@@ -56,6 +60,8 @@ function AppRoutes() {
       {/* Auth Routes */}
       <Route path="/auth/login" element={<Login />} />
       <Route path="/auth/register" element={<Register />} />
+      <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+      <Route path="/auth/reset-password" element={<ResetPassword />} />
       
       {/* Protected Enterprise Routes */}
       <Route path="/" element={
