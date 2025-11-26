@@ -134,13 +134,11 @@ export default function AIChatbot() {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-                <Sparkles className="text-white" size={20} />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">AI Assistant</h3>
-                <p className="text-xs text-gray-500">Powered by GPT-4o</p>
-              </div>
+              <img 
+                src="https://customer-assets.emergentagent.com/job_saas-dashboard-20/artifacts/aems110l_Enterprate%20Logo.png" 
+                alt="Enterprate AI" 
+                className="h-8"
+              />
             </div>
             <div className="flex items-center space-x-1">
               <Button 
