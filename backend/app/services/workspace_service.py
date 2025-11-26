@@ -1,166 +1,122 @@
 """Workspace service"""
+import uuid
+from datetime import datetime, timezone
+from typing import List, Optional
 from fastapi import HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from uuid import UUID
-from app.models.workspace import Workspace, WorkspaceMembership, BusinessProfile
+from app.core.database import get_db
 from app.schemas.workspace import WorkspaceCreate, WorkspaceUpdate
-from app.schemas.enums import UserRole
 
 class WorkspaceService:
-    """Service for workspace management"""
+    """Service for workspace operations"""
     
     @staticmethod
-    async def get_user_workspaces(db: AsyncSession, user_id: str) -> list:
-        """Get all workspaces for a user"""
-        user_uuid = UUID(user_id)
-        
-        # Get memberships with workspace data
-        stmt = select(WorkspaceMembership).where(
-            WorkspaceMembership.user_id == user_uuid
-        ).options(selectinload(WorkspaceMembership.workspace))
-        
-        result = await db.execute(stmt)
-        memberships = result.scalars().all()
-        
-        # Build response
-        workspaces = []
-        for membership in memberships:
-            ws = membership.workspace
-            workspaces.append({
-                "id": str(ws.id),
-                "name": ws.name,
-                "slug": ws.slug,
-                "country": ws.country,
-                "industry": ws.industry,
-                "stage": ws.stage,
-                "ownerId": str(ws.owner_id),
-                "createdAt": ws.created_at.isoformat(),
-                "role": membership.role.value
-            })
-        
-        return workspaces
-    
-    @staticmethod
-    async def create_workspace(db: AsyncSession, workspace_data: WorkspaceCreate, user_id: str) -> dict:
+    async def create_workspace(user_id: str, data: WorkspaceCreate) -> dict:
         """Create a new workspace"""
-        user_uuid = UUID(user_id)
+        db = get_db()
         
-        # Generate slug from name
-        slug = workspace_data.name.lower().replace(' ', '-')
+        workspace_id = str(uuid.uuid4())
+        slug = data.name.lower().replace(' ', '-')
         
-        # Create workspace
-        workspace = Workspace(
-            name=workspace_data.name,
-            slug=slug,
-            country=workspace_data.country,
-            industry=workspace_data.industry,
-            stage=workspace_data.stage,
-            owner_id=user_uuid
-        )
-        db.add(workspace)
-        await db.flush()  # Get the ID
-        
-        # Create membership
-        membership = WorkspaceMembership(
-            user_id=user_uuid,
-            workspace_id=workspace.id,
-            role=UserRole.OWNER
-        )
-        db.add(membership)
-        
-        # Create business profile
-        profile = BusinessProfile(
-            workspace_id=workspace.id,
-            business_name=workspace_data.name
-        )
-        db.add(profile)
-        
-        await db.flush()
-        
-        return {
-            "id": str(workspace.id),
-            "name": workspace.name,
-            "slug": workspace.slug,
-            "country": workspace.country,
-            "industry": workspace.industry,
-            "stage": workspace.stage,
-            "ownerId": str(workspace.owner_id),
-            "createdAt": workspace.created_at.isoformat()
+        workspace = {
+            "id": workspace_id,
+            "name": data.name,
+            "slug": slug,
+            "owner_id": user_id,
+            "country": data.country,
+            "industry": data.industry,
+            "stage": data.stage,
+            "created_at": datetime.now(timezone.utc).isoformat()
         }
+        
+        await db.workspaces.insert_one(workspace)
+        
+        # Add owner as member
+        membership = {
+            "id": str(uuid.uuid4()),
+            "workspace_id": workspace_id,
+            "user_id": user_id,
+            "role": "OWNER",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.workspace_memberships.insert_one(membership)
+        
+        return {**workspace, "role": "OWNER"}
     
     @staticmethod
-    async def get_workspace(db: AsyncSession, workspace_id: str) -> dict:
-        """Get workspace by ID"""
-        workspace_uuid = UUID(workspace_id)
+    async def get_user_workspaces(user_id: str) -> List[dict]:
+        """Get all workspaces for a user"""
+        db = get_db()
         
-        stmt = select(Workspace).where(Workspace.id == workspace_uuid).options(
-            selectinload(Workspace.business_profile)
-        )
-        result = await db.execute(stmt)
-        workspace = result.scalar_one_or_none()
+        # Find memberships
+        memberships = await db.workspace_memberships.find(
+            {"user_id": user_id}
+        ).to_list(length=100)
         
+        workspace_ids = [m["workspace_id"] for m in memberships]
+        
+        # Get workspaces
+        workspaces = await db.workspaces.find(
+            {"id": {"$in": workspace_ids}}
+        ).to_list(length=100)
+        
+        # Add role to each workspace
+        result = []
+        for ws in workspaces:
+            membership = next((m for m in memberships if m["workspace_id"] == ws["id"]), None)
+            ws_dict = {k: v for k, v in ws.items() if k != '_id'}
+            ws_dict["role"] = membership["role"] if membership else "MEMBER"
+            result.append(ws_dict)
+        
+        return result
+    
+    @staticmethod
+    async def get_workspace(workspace_id: str, user_id: str) -> dict:
+        """Get a specific workspace"""
+        db = get_db()
+        
+        workspace = await db.workspaces.find_one({"id": workspace_id})
         if not workspace:
             raise HTTPException(status_code=404, detail="Workspace not found")
         
-        # Build response
-        response = {
-            "id": str(workspace.id),
-            "name": workspace.name,
-            "slug": workspace.slug,
-            "country": workspace.country,
-            "industry": workspace.industry,
-            "stage": workspace.stage,
-            "ownerId": str(workspace.owner_id),
-            "createdAt": workspace.created_at.isoformat()
-        }
+        # Check membership
+        membership = await db.workspace_memberships.find_one({
+            "workspace_id": workspace_id,
+            "user_id": user_id
+        })
+        if not membership:
+            raise HTTPException(status_code=403, detail="Access denied")
         
-        # Add business profile if exists
-        if workspace.business_profile:
-            profile = workspace.business_profile
-            response["businessProfile"] = {
-                "id": str(profile.id),
-                "workspaceId": str(profile.workspace_id),
-                "businessName": profile.business_name,
-                "status": profile.status.value,
-                "brandTone": profile.brand_tone,
-                "primaryGoal": profile.primary_goal,
-                "targetAudience": profile.target_audience,
-                "createdAt": profile.created_at.isoformat()
-            }
-        
-        return response
+        ws_dict = {k: v for k, v in workspace.items() if k != '_id'}
+        ws_dict["role"] = membership["role"]
+        return ws_dict
     
     @staticmethod
-    async def update_workspace(db: AsyncSession, workspace_id: str, workspace_data: WorkspaceUpdate) -> dict:
-        """Update workspace"""
-        workspace_uuid = UUID(workspace_id)
+    async def update_workspace(workspace_id: str, user_id: str, data: WorkspaceUpdate) -> dict:
+        """Update a workspace"""
+        db = get_db()
         
-        update_data = {k: v for k, v in workspace_data.model_dump().items() if v is not None}
-        if not update_data:
-            raise HTTPException(status_code=400, detail="No data to update")
-        
-        stmt = select(Workspace).where(Workspace.id == workspace_uuid)
-        result = await db.execute(stmt)
-        workspace = result.scalar_one_or_none()
-        
+        # Check ownership
+        workspace = await db.workspaces.find_one({"id": workspace_id})
         if not workspace:
             raise HTTPException(status_code=404, detail="Workspace not found")
         
-        # Update fields
-        for key, value in update_data.items():
-            setattr(workspace, key, value)
+        membership = await db.workspace_memberships.find_one({
+            "workspace_id": workspace_id,
+            "user_id": user_id
+        })
+        if not membership:
+            raise HTTPException(status_code=403, detail="Access denied")
         
-        await db.flush()
+        # Update
+        update_data = data.model_dump(exclude_unset=True)
+        if update_data:
+            await db.workspaces.update_one(
+                {"id": workspace_id},
+                {"$set": update_data}
+            )
         
-        return {
-            "id": str(workspace.id),
-            "name": workspace.name,
-            "slug": workspace.slug,
-            "country": workspace.country,
-            "industry": workspace.industry,
-            "stage": workspace.stage,
-            "ownerId": str(workspace.owner_id),
-            "createdAt": workspace.created_at.isoformat()
-        }
+        # Return updated workspace
+        updated = await db.workspaces.find_one({"id": workspace_id})
+        ws_dict = {k: v for k, v in updated.items() if k != '_id'}
+        ws_dict["role"] = membership["role"]
+        return ws_dict
