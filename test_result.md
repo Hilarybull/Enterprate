@@ -195,11 +195,11 @@ backend:
 
   - task: "Website CRUD APIs"
     implemented: true
-    working: NA
+    working: true
     file: "app/routes/websites.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: NA
         agent: "main"
@@ -207,6 +207,9 @@ backend:
       - working: NA
         agent: "testing"
         comment: "⚠️ NOT TESTED: Website APIs not included in current test sequence. No endpoints found in routes/websites.py during testing."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Website CRUD APIs working correctly. Successfully created website 'Enterprate Test Website', retrieved websites list, and fetched specific website by ID. All endpoints (POST /api/websites, GET /api/websites, GET /api/websites/{id}) functioning properly with workspace authentication."
 
   - task: "AI Chat API"
     implemented: true
