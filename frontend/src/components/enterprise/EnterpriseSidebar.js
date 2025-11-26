@@ -92,16 +92,12 @@ export default function EnterpriseSidebar({ isOpen, onClose }) {
     >
       {/* Logo */}
       <div className="h-16 flex items-center px-6 border-b border-gray-200">
-        <Link to="/dashboard" className="flex items-center space-x-3" onClick={onClose}>
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-lg shadow-purple-500/25">
-            <span className="text-white font-bold text-xl">E</span>
-          </div>
-          <div>
-            <span className="text-xl font-bold text-gray-900" style={{ fontFamily: 'Space Grotesk' }}>
-              Enterprate
-            </span>
-            <span className="text-xs text-purple-600 font-medium block -mt-1">OS</span>
-          </div>
+        <Link to="/dashboard" className="flex items-center" onClick={onClose}>
+          <img 
+            src="https://customer-assets.emergentagent.com/job_saas-dashboard-20/artifacts/aems110l_Enterprate%20Logo.png" 
+            alt="Enterprate" 
+            className="h-9"
+          />
         </Link>
       </div>
 
