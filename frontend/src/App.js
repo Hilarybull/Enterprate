@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import AuthProvider, { useAuth } from '@/context/AuthContext';
@@ -32,6 +32,20 @@ import Help from '@/pages/enterprise/Help';
 import WebsiteEditor from '@/pages/WebsiteEditor';
 
 import '@/App.css';
+
+// Suppress ResizeObserver loop errors (harmless in Radix UI)
+if (typeof window !== 'undefined') {
+  const originalError = window.onerror;
+  window.onerror = function(message, source, lineno, colno, error) {
+    if (message && message.includes('ResizeObserver loop')) {
+      return true; // Suppress the error
+    }
+    if (originalError) {
+      return originalError(message, source, lineno, colno, error);
+    }
+    return false;
+  };
+}
 
 function PrivateRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
