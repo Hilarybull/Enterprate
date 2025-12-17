@@ -21,6 +21,11 @@ h1, h2, h3, h4, h5, h6 {
   min-height: 100vh;
 }
 
+/* Hide ResizeObserver error overlay */
+#webpack-dev-server-client-overlay {
+  display: none !important;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
