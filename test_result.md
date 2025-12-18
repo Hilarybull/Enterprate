@@ -292,6 +292,30 @@ frontend:
         agent: "main"
         comment: "UI renders correctly"
 
+  - task: "Comprehensive Validation Report UI"
+    implemented: true
+    working: NA
+    file: "src/pages/enterprise/ValidationReport.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: NA
+        agent: "main"
+        comment: "New IdeaBrowser-style report page with AI scores, business fit, value ladder, community signals, keywords, and Accept/Reject/Modify actions. Needs E2E testing."
+
+  - task: "Validation History Page"
+    implemented: true
+    working: NA
+    file: "src/pages/enterprise/ValidationHistory.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: NA
+        agent: "main"
+        comment: "New history page showing all past validations with engagement stats and status badges. Needs E2E testing."
+
   - task: "Enterprise Sidebar Navigation"
     implemented: true
     working: true
