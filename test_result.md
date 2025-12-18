@@ -339,7 +339,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Comprehensive Validation Report API"
     - "Comprehensive Validation Report UI"
     - "Validation History Page"
   stuck_tasks: []
