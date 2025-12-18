@@ -405,6 +405,194 @@ def test_ai_chat():
         log_test("AI Chat", False, "AI chat failed", response)
         return False
 
+def test_create_validation_report():
+    """Test validation report creation API"""
+    print("\n📊 Testing Validation Report Creation...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Validation Report Creation", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("POST", "/validation-reports", TEST_VALIDATION_REPORT, headers)
+    
+    if success and isinstance(response, dict):
+        if "id" in response and "report" in response:
+            global validation_report_id
+            validation_report_id = response["id"]
+            report = response.get("report", {})
+            scores = report.get("scores", {})
+            opp_score = scores.get("opportunity", {}).get("value", 0)
+            log_test("Validation Report Creation", True, 
+                    f"Report created: {response.get('ideaInput', {}).get('ideaName', 'Unknown')} (Score: {opp_score}/10)")
+            return True
+        else:
+            log_test("Validation Report Creation", False, "Missing id or report in response", response)
+            return False
+    else:
+        log_test("Validation Report Creation", False, "Report creation failed", response)
+        return False
+
+def test_list_validation_reports():
+    """Test list validation reports API"""
+    print("\n📋 Testing List Validation Reports...")
+    
+    if not auth_token or not workspace_id:
+        log_test("List Validation Reports", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("GET", "/validation-reports", headers=headers)
+    
+    if success and isinstance(response, list):
+        if len(response) > 0:
+            first_report = response[0]
+            if "id" in first_report and "ideaName" in first_report:
+                log_test("List Validation Reports", True, 
+                        f"Retrieved {len(response)} report(s), first: {first_report.get('ideaName')}")
+                return True
+            else:
+                log_test("List Validation Reports", False, "Missing required fields in report items", response)
+                return False
+        else:
+            log_test("List Validation Reports", True, "No reports found (empty list)")
+            return True
+    else:
+        log_test("List Validation Reports", False, "Failed to get reports list", response)
+        return False
+
+def test_get_validation_report():
+    """Test get specific validation report API"""
+    print("\n📄 Testing Get Validation Report...")
+    
+    if not auth_token or not workspace_id or not validation_report_id:
+        log_test("Get Validation Report", False, "Missing auth token, workspace ID, or report ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("GET", f"/validation-reports/{validation_report_id}", headers=headers)
+    
+    if success and isinstance(response, dict):
+        if "id" in response and "report" in response and "ideaInput" in response:
+            idea_name = response.get("ideaInput", {}).get("ideaName", "Unknown")
+            status = response.get("status", "unknown")
+            log_test("Get Validation Report", True, 
+                    f"Retrieved report: {idea_name} (Status: {status})")
+            return True
+        else:
+            log_test("Get Validation Report", False, "Missing required fields in response", response)
+            return False
+    else:
+        log_test("Get Validation Report", False, "Failed to get specific report", response)
+        return False
+
+def test_update_report_status():
+    """Test update validation report status API"""
+    print("\n✅ Testing Update Report Status...")
+    
+    if not auth_token or not workspace_id or not validation_report_id:
+        log_test("Update Report Status", False, "Missing auth token, workspace ID, or report ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    status_data = {"status": "accepted"}
+    success, response = make_request("PUT", f"/validation-reports/{validation_report_id}/status", status_data, headers)
+    
+    if success and isinstance(response, dict):
+        if "message" in response and "report" in response:
+            updated_status = response.get("report", {}).get("status", "unknown")
+            log_test("Update Report Status", True, 
+                    f"Status updated to: {updated_status}")
+            return True
+        else:
+            log_test("Update Report Status", False, "Missing message or report in response", response)
+            return False
+    else:
+        log_test("Update Report Status", False, "Failed to update report status", response)
+        return False
+
+def test_get_engagement_stats():
+    """Test get engagement statistics API"""
+    print("\n📈 Testing Get Engagement Stats...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Get Engagement Stats", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("GET", "/validation-reports/engagement", headers=headers)
+    
+    if success and isinstance(response, dict):
+        if "totalValidations" in response:
+            total = response.get("totalValidations", 0)
+            accepted = response.get("acceptedCount", 0)
+            rejected = response.get("rejectedCount", 0)
+            pending = response.get("pendingCount", 0)
+            log_test("Get Engagement Stats", True, 
+                    f"Stats: {total} total, {accepted} accepted, {rejected} rejected, {pending} pending")
+            return True
+        else:
+            log_test("Get Engagement Stats", False, "Missing totalValidations in response", response)
+            return False
+    else:
+        log_test("Get Engagement Stats", False, "Failed to get engagement stats", response)
+        return False
+
+def test_modify_validation_report():
+    """Test modify and regenerate validation report API"""
+    print("\n🔄 Testing Modify Validation Report...")
+    
+    if not auth_token or not workspace_id or not validation_report_id:
+        log_test("Modify Validation Report", False, "Missing auth token, workspace ID, or report ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    # Modified test data
+    modified_data = TEST_VALIDATION_REPORT.copy()
+    modified_data["ideaName"] = "SmartMeal Pro - Enhanced AI Meal Planning"
+    modified_data["urgencyLevel"] = "medium"
+    modified_data["customerBudget"] = "high"
+    
+    success, response = make_request("POST", f"/validation-reports/{validation_report_id}/modify", modified_data, headers)
+    
+    if success and isinstance(response, dict):
+        if "id" in response and "report" in response:
+            idea_name = response.get("ideaInput", {}).get("ideaName", "Unknown")
+            status = response.get("status", "unknown")
+            log_test("Modify Validation Report", True, 
+                    f"Report modified: {idea_name} (Status reset to: {status})")
+            return True
+        else:
+            log_test("Modify Validation Report", False, "Missing id or report in response", response)
+            return False
+    else:
+        log_test("Modify Validation Report", False, "Failed to modify report", response)
+        return False
+
 def run_all_tests():
     """Run all backend API tests in sequence"""
     print("🚀 Starting Enterprate OS Backend API Tests")
