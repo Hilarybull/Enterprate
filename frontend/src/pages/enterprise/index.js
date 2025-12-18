@@ -8,3 +8,5 @@ export { default as BusinessOperations } from './BusinessOperations';
 export { default as Growth } from './Growth';
 export { default as IntelligenceGraph } from './IntelligenceGraph';
 export { default as Settings } from './Settings';
+export { default as ValidationReport } from './ValidationReport';
+export { default as ValidationHistory } from './ValidationHistory';
