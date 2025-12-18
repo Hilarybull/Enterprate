@@ -256,8 +256,22 @@ export default function IdeaDiscovery() {
     <div className="space-y-6 animate-slide-in" data-testid="idea-validation-wizard">
       <PageHeader
         icon={Lightbulb}
-        title="Business/Product Idea and Validation"
-        description="Answer a few questions and we'll generate a validation report"
+        title={isModifyMode ? "Modify Validation" : "Business/Product Idea and Validation"}
+        description={isModifyMode ? "Update your idea details and regenerate the report" : "Answer a few questions and we'll generate a comprehensive validation report"}
+        actions={
+          <div className="flex space-x-2">
+            {isModifyMode && (
+              <Button variant="outline" onClick={() => navigate(`/validation-report/${modifyId}`)}>
+                <ArrowLeft className="mr-2" size={16} />
+                Back to Report
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => navigate('/validation-history')}>
+              <History className="mr-2" size={16} />
+              View History
+            </Button>
+          </div>
+        }
       />
 
       {/* Progress Bar */}
