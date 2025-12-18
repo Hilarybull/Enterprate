@@ -293,7 +293,7 @@ export default function IdeaDiscovery() {
             <div className="space-y-6">
               <div>
                 <h2 className="text-xl font-semibold mb-2">What are you validating?</h2>
-                <p className="text-gray-500 text-sm">Choose the one that best matches what you're validating.</p>
+                <p className="text-gray-500 text-sm">Choose the one that best matches what you are validating.</p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
