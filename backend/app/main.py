@@ -30,6 +30,7 @@ api_router.include_router(websites.router)
 api_router.include_router(intel.router)
 api_router.include_router(chat.router)
 api_router.include_router(password_reset.router)
+api_router.include_router(validation_reports.router)
 
 # Include API router in main app
 app.include_router(api_router)
