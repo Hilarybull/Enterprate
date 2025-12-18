@@ -223,7 +223,7 @@ export default function ValidationHistory() {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete Validation Report</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Are you sure you want to delete "{report.ideaName}"? This action cannot be undone.
+                            Are you sure you want to delete &quot;{report.ideaName}&quot;? This action cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
