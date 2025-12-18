@@ -121,6 +121,8 @@ def make_request(method, endpoint, data=None, headers=None, expect_success=True)
             response = requests.get(url, headers=default_headers, timeout=30)
         elif method.upper() == "POST":
             response = requests.post(url, json=data, headers=default_headers, timeout=30)
+        elif method.upper() == "PUT":
+            response = requests.put(url, json=data, headers=default_headers, timeout=30)
         elif method.upper() == "PATCH":
             response = requests.patch(url, json=data, headers=default_headers, timeout=30)
         else:
