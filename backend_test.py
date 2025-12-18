@@ -69,9 +69,27 @@ TEST_CHAT = {
     "message": "Hello! I'm looking for help with business strategy and growth planning. What can you help me with?"
 }
 
+TEST_VALIDATION_REPORT = {
+    "ideaType": "business",
+    "ideaName": "SmartMeal - AI Meal Planning",
+    "ideaDescription": "An AI-powered meal planning app that creates personalized weekly meal plans based on dietary preferences, allergies, and available ingredients.",
+    "industry": "Technology",
+    "subIndustry": "FoodTech",
+    "problemSolved": "People struggle to plan healthy meals consistently, leading to unhealthy eating habits and food waste.",
+    "targetAudience": "Busy professionals aged 25-45 who want to eat healthier but lack time for meal planning",
+    "urgencyLevel": "high",
+    "howItWorks": "Users input dietary preferences, allergies, and pantry items. The AI generates a personalized weekly meal plan with recipes and shopping lists.",
+    "deliveryModel": "saas",
+    "targetMarket": "B2C",
+    "targetLocation": "United States",
+    "customerBudget": "medium",
+    "goToMarketChannel": ["SEO", "Social", "Ads"]
+}
+
 # Global variables for test state
 auth_token = None
 workspace_id = None
+validation_report_id = None
 test_results = []
 
 def log_test(test_name, success, details="", response_data=None):
