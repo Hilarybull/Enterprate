@@ -92,19 +92,41 @@ export default function IdeaDiscovery() {
     goToMarketChannel: []
   });
 
-  // Auto-save to localStorage
+  // Load existing report data for modify mode
   useEffect(() => {
-    const saved = localStorage.getItem('enterprate_idea_validation');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setFormData(parsed.formData || formData);
-        setCurrentStep(parsed.currentStep || 1);
-      } catch (e) {
-        console.error('Failed to load saved data');
+    if (modifyId && currentWorkspace) {
+      loadReportForModification();
+    } else {
+      // Auto-save to localStorage for new validations
+      const saved = localStorage.getItem('enterprate_idea_validation');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setFormData(parsed.formData || formData);
+          setCurrentStep(parsed.currentStep || 1);
+        } catch (e) {
+          console.error('Failed to load saved data');
+        }
       }
     }
-  }, []);
+  }, [modifyId, currentWorkspace]);
+
+  const loadReportForModification = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/validation-reports/${modifyId}`,
+        { headers: getHeaders() }
+      );
+      if (response.data && response.data.ideaInput) {
+        setFormData(response.data.ideaInput);
+        setIsModifyMode(true);
+        setCurrentStep(1);
+      }
+    } catch (error) {
+      toast.error('Failed to load report for modification');
+      navigate('/idea-discovery');
+    }
+  };
 
   useEffect(() => {
     localStorage.setItem('enterprate_idea_validation', JSON.stringify({
