@@ -109,6 +109,11 @@ user_problem_statement: |
   2. Fixed 280px left sidebar with 9 navigation items
   3. All 9 pages with real data from APIs
   4. AI chatbot at bottom-right powered by GPT-4o
+  5. NEW: Comprehensive Idea Validation Report (IdeaBrowser-style) with:
+     - Full IdeaBrowser-style report UI with AI scores, business fit, value ladder
+     - Persistent storage for validation reports
+     - Report history page with engagement counter
+     - Accept/Reject/Modify actions on reports
   Backend has been migrated from PostgreSQL back to MongoDB.
 
 backend:
