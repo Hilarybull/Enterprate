@@ -4,7 +4,7 @@ echo "========================================"
 echo "Enterprate OS - API Testing"
 echo "========================================"
 
-API_URL="https://saas-dashboard-20.preview.emergentagent.com/api"
+API_URL="https://idea-validator-19.preview.emergentagent.com/api"
 
 # Test 1: Register
 echo -e "\n1. Testing Registration..."
