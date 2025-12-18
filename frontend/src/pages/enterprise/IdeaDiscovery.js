@@ -67,11 +67,12 @@ const GTM_CHANNELS = [
 const TOTAL_STEPS = 6;
 
 export default function IdeaDiscovery() {
+  const navigate = useNavigate();
+  const { modifyId } = useParams(); // For modify mode
   const { currentWorkspace, getHeaders } = useWorkspace();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [validationResult, setValidationResult] = useState(null);
-  const [showResults, setShowResults] = useState(false);
+  const [isModifyMode, setIsModifyMode] = useState(false);
   
   // Form data
   const [formData, setFormData] = useState({
