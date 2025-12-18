@@ -616,11 +616,11 @@ export default function IdeaDiscovery() {
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Validating...
+                {isModifyMode ? 'Regenerating...' : 'Validating...'}
               </>
             ) : (
               <>
-                Generate Validation Report
+                {isModifyMode ? 'Regenerate Report' : 'Generate Validation Report'}
                 <ArrowRight className="ml-2" size={16} />
               </>
             )}
