@@ -24,7 +24,9 @@ import {
   BusinessOperations,
   Growth,
   IntelligenceGraph,
-  Settings
+  Settings,
+  ValidationReport,
+  ValidationHistory
 } from '@/pages/enterprise';
 import Help from '@/pages/enterprise/Help';
 
