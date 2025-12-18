@@ -192,16 +192,31 @@ export default function IdeaDiscovery() {
 
     setLoading(true);
     try {
-      const response = await axios.post(
-        `${API_URL}/genesis/validate`,
-        formData,
-        { headers: getHeaders() }
-      );
-      setValidationResult(response.data);
-      setShowResults(true);
-      toast.success('Validation complete!');
+      let response;
+      if (isModifyMode && modifyId) {
+        // Modify existing report
+        response = await axios.post(
+          `${API_URL}/validation-reports/${modifyId}/modify`,
+          formData,
+          { headers: getHeaders() }
+        );
+        toast.success('Report regenerated!');
+      } else {
+        // Create new comprehensive report
+        response = await axios.post(
+          `${API_URL}/validation-reports`,
+          formData,
+          { headers: getHeaders() }
+        );
+        toast.success('Validation complete!');
+      }
+      
       // Clear saved data
       localStorage.removeItem('enterprate_idea_validation');
+      
+      // Navigate to the report view
+      const reportId = response.data.id;
+      navigate(`/validation-report/${reportId}`);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to validate idea');
       console.error(error);
