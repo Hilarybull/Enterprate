@@ -287,7 +287,7 @@ Be realistic but constructive. Base scores on the information provided. Return O
                     "tier": "CORE",
                     "name": f"Pro {data.ideaName}",
                     "price": "$30-50/month",
-                    "description": f"Full-featured solution with premium capabilities"
+                    "description": "Full-featured solution with premium capabilities"
                 }
             ],
             "whyNow": f"Now is an opportune time to launch in the {data.industry} market. With {data.urgencyLevel} urgency around {data.problemSolved[:100]}..., early movers can capture significant market share.",
