@@ -612,7 +612,13 @@ def run_all_tests():
         test_get_leads,
         test_idea_scoring,
         test_get_events,
-        test_ai_chat
+        test_ai_chat,
+        test_create_validation_report,
+        test_list_validation_reports,
+        test_get_validation_report,
+        test_update_report_status,
+        test_get_engagement_stats,
+        test_modify_validation_report
     ]
     
     passed = 0
