@@ -90,6 +90,9 @@ function AppRoutes() {
         <Route index element={<Navigate to="/dashboard" />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="idea-discovery" element={<IdeaDiscovery />} />
+        <Route path="idea-discovery/modify/:modifyId" element={<IdeaDiscovery />} />
+        <Route path="validation-report/:reportId" element={<ValidationReport />} />
+        <Route path="validation-history" element={<ValidationHistory />} />
         <Route path="website-setup" element={<WebsiteSetup />} />
         <Route path="website-builder/:websiteId" element={<WebsiteEditor />} />
         <Route path="business-registration" element={<BusinessRegistration />} />
