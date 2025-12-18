@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useWorkspace } from '@/context/WorkspaceContext';
 import { PageHeader, FeatureCard } from '@/components/enterprise';
@@ -30,7 +31,8 @@ import {
   TrendingUp,
   Users,
   FileText,
-  RefreshCw
+  RefreshCw,
+  History
 } from 'lucide-react';
 import { toast } from 'sonner';
 
