@@ -689,10 +689,10 @@ export default function ValidationReport() {
       <Card>
         <CardContent className="p-6">
           <div className="text-center">
-            <h3 className="font-semibold mb-4">What'd you think of this idea?</h3>
+            <h3 className="font-semibold mb-4">What do you think of this idea?</h3>
             <div className="flex justify-center space-x-4">
               <Button variant="outline" className="px-6">
-                💎 Chef's kiss
+                💎 Amazing
               </Button>
               <Button variant="outline" className="px-6">
                 🤔 Pretty interesting
