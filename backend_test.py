@@ -195,6 +195,15 @@ TEST_SOCIAL_GENERATE = {
 auth_token = None
 workspace_id = None
 validation_report_id = None
+blueprint_id = None
+expense_id = None
+compliance_item_id = None
+task_id = None
+email_template_id = None
+document_id = None
+workflow_id = None
+campaign_id = None
+social_post_id = None
 test_results = []
 
 def log_test(test_name, success, details="", response_data=None):
