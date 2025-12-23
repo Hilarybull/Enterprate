@@ -423,7 +423,10 @@ export default function BusinessRegistration() {
       case 2:
         return formData.companyName.length >= 3;
       case 3:
-        return formData.businessDescription.length >= 20 && formData.selectedSicCodes.length > 0;
+        // Must have description, generated SIC codes, and selected exactly 4
+        return formData.businessDescription.length >= 20 && 
+               sicCodesGenerated && 
+               formData.selectedSicCodes.length === 4;
       case 4:
         return formData.directors.every(d => d.firstName && d.lastName);
       case 5:
