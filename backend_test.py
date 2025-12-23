@@ -1548,14 +1548,16 @@ def test_get_growth_analytics():
     success, response = make_request("GET", "/marketing/analytics", headers=headers)
     
     if success and isinstance(response, dict):
-        if "totalLeads" in response or "campaignMetrics" in response:
-            leads = response.get("totalLeads", 0)
-            campaigns = response.get("totalCampaigns", 0)
+        if "leads" in response and "campaigns" in response:
+            leads_data = response.get("leads", {})
+            campaigns_data = response.get("campaigns", {})
+            total_leads = leads_data.get("totalLeads", 0)
+            total_campaigns = campaigns_data.get("totalCampaigns", 0)
             log_test("Get Growth Analytics", True, 
-                    f"Analytics: {leads} leads, {campaigns} campaigns")
+                    f"Analytics: {total_leads} leads, {total_campaigns} campaigns")
             return True
         else:
-            log_test("Get Growth Analytics", False, "Missing analytics fields in response", response)
+            log_test("Get Growth Analytics", False, "Missing analytics structure in response", response)
             return False
     else:
         log_test("Get Growth Analytics", False, "Failed to get growth analytics", response)
