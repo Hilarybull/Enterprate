@@ -709,6 +709,840 @@ def test_modify_validation_report():
         log_test("Modify Validation Report", False, "Failed to modify report", response)
         return False
 
+
+# ===== BLUEPRINT MODULE TESTS =====
+
+def test_create_blueprint():
+    """Test blueprint creation API"""
+    print("\n📋 Testing Blueprint Creation...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Blueprint Creation", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("POST", "/blueprint", TEST_BLUEPRINT, headers)
+    
+    if success and isinstance(response, dict):
+        if "id" in response and "businessName" in response:
+            global blueprint_id
+            blueprint_id = response["id"]
+            log_test("Blueprint Creation", True, 
+                    f"Blueprint created: {response.get('businessName')} (ID: {blueprint_id})")
+            return True
+        else:
+            log_test("Blueprint Creation", False, "Missing id or businessName in response", response)
+            return False
+    else:
+        log_test("Blueprint Creation", False, "Blueprint creation failed", response)
+        return False
+
+
+def test_get_blueprints():
+    """Test get blueprints API"""
+    print("\n📋 Testing Get Blueprints...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Get Blueprints", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("GET", "/blueprint", headers=headers)
+    
+    if success and isinstance(response, list):
+        log_test("Get Blueprints", True, f"Retrieved {len(response)} blueprint(s)")
+        return True
+    else:
+        log_test("Get Blueprints", False, "Failed to get blueprints", response)
+        return False
+
+
+def test_get_blueprint():
+    """Test get specific blueprint API"""
+    print("\n📄 Testing Get Specific Blueprint...")
+    
+    if not auth_token or not workspace_id or not blueprint_id:
+        log_test("Get Specific Blueprint", False, "Missing auth token, workspace ID, or blueprint ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("GET", f"/blueprint/{blueprint_id}", headers=headers)
+    
+    if success and isinstance(response, dict):
+        if "id" in response and "businessName" in response:
+            log_test("Get Specific Blueprint", True, 
+                    f"Retrieved blueprint: {response.get('businessName')}")
+            return True
+        else:
+            log_test("Get Specific Blueprint", False, "Missing required fields in response", response)
+            return False
+    else:
+        log_test("Get Specific Blueprint", False, "Failed to get specific blueprint", response)
+        return False
+
+
+def test_generate_blueprint_section():
+    """Test generate blueprint section API"""
+    print("\n🤖 Testing Generate Blueprint Section...")
+    
+    if not auth_token or not workspace_id or not blueprint_id:
+        log_test("Generate Blueprint Section", False, "Missing auth token, workspace ID, or blueprint ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("POST", f"/blueprint/{blueprint_id}/generate-section/executive_summary", None, headers)
+    
+    if success and isinstance(response, dict):
+        if "section" in response or "content" in response:
+            log_test("Generate Blueprint Section", True, "Executive summary section generated successfully")
+            return True
+        else:
+            log_test("Generate Blueprint Section", False, "Missing section content in response", response)
+            return False
+    else:
+        log_test("Generate Blueprint Section", False, "Failed to generate blueprint section", response)
+        return False
+
+
+def test_generate_swot():
+    """Test generate SWOT analysis API"""
+    print("\n📊 Testing Generate SWOT Analysis...")
+    
+    if not auth_token or not workspace_id or not blueprint_id:
+        log_test("Generate SWOT Analysis", False, "Missing auth token, workspace ID, or blueprint ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("POST", f"/blueprint/{blueprint_id}/generate-swot", None, headers)
+    
+    if success and isinstance(response, dict):
+        if "swot" in response or "analysis" in response:
+            log_test("Generate SWOT Analysis", True, "SWOT analysis generated successfully")
+            return True
+        else:
+            log_test("Generate SWOT Analysis", False, "Missing SWOT analysis in response", response)
+            return False
+    else:
+        log_test("Generate SWOT Analysis", False, "Failed to generate SWOT analysis", response)
+        return False
+
+
+def test_generate_financials():
+    """Test generate financial projections API"""
+    print("\n💰 Testing Generate Financial Projections...")
+    
+    if not auth_token or not workspace_id or not blueprint_id:
+        log_test("Generate Financial Projections", False, "Missing auth token, workspace ID, or blueprint ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("POST", f"/blueprint/{blueprint_id}/generate-financials", None, headers)
+    
+    if success and isinstance(response, dict):
+        if "financials" in response or "projections" in response:
+            log_test("Generate Financial Projections", True, "Financial projections generated successfully")
+            return True
+        else:
+            log_test("Generate Financial Projections", False, "Missing financial projections in response", response)
+            return False
+    else:
+        log_test("Generate Financial Projections", False, "Failed to generate financial projections", response)
+        return False
+
+
+# ===== FINANCE MODULE TESTS =====
+
+def test_create_expense():
+    """Test expense creation API"""
+    print("\n💸 Testing Expense Creation...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Expense Creation", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("POST", "/finance/expenses", TEST_EXPENSE, headers)
+    
+    if success and isinstance(response, dict):
+        if "id" in response and "description" in response:
+            global expense_id
+            expense_id = response["id"]
+            log_test("Expense Creation", True, 
+                    f"Expense created: {response.get('description')} - ${response.get('amount')}")
+            return True
+        else:
+            log_test("Expense Creation", False, "Missing required fields in response", response)
+            return False
+    else:
+        log_test("Expense Creation", False, "Expense creation failed", response)
+        return False
+
+
+def test_get_expenses():
+    """Test get expenses API"""
+    print("\n📊 Testing Get Expenses...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Get Expenses", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("GET", "/finance/expenses", headers=headers)
+    
+    if success and isinstance(response, list):
+        log_test("Get Expenses", True, f"Retrieved {len(response)} expense(s)")
+        return True
+    else:
+        log_test("Get Expenses", False, "Failed to get expenses", response)
+        return False
+
+
+def test_get_expense_summary():
+    """Test get expense summary API"""
+    print("\n📈 Testing Get Expense Summary...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Get Expense Summary", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("GET", "/finance/expenses/summary", headers=headers)
+    
+    if success and isinstance(response, dict):
+        if "totalAmount" in response or "count" in response:
+            total = response.get("totalAmount", 0)
+            count = response.get("count", 0)
+            log_test("Get Expense Summary", True, f"Summary: {count} expenses, total: ${total}")
+            return True
+        else:
+            log_test("Get Expense Summary", False, "Missing summary fields in response", response)
+            return False
+    else:
+        log_test("Get Expense Summary", False, "Failed to get expense summary", response)
+        return False
+
+
+def test_estimate_tax():
+    """Test tax estimation API"""
+    print("\n🧮 Testing Tax Estimation...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Tax Estimation", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("POST", "/finance/estimate-tax", TEST_TAX_ESTIMATE, headers)
+    
+    if success and isinstance(response, dict):
+        if "estimatedTax" in response or "taxBreakdown" in response:
+            estimated_tax = response.get("estimatedTax", 0)
+            log_test("Tax Estimation", True, f"Estimated tax: £{estimated_tax}")
+            return True
+        else:
+            log_test("Tax Estimation", False, "Missing tax estimation in response", response)
+            return False
+    else:
+        log_test("Tax Estimation", False, "Tax estimation failed", response)
+        return False
+
+
+def test_create_compliance_item():
+    """Test compliance item creation API"""
+    print("\n✅ Testing Compliance Item Creation...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Compliance Item Creation", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("POST", "/finance/compliance", TEST_COMPLIANCE_ITEM, headers)
+    
+    if success and isinstance(response, dict):
+        if "id" in response and "title" in response:
+            global compliance_item_id
+            compliance_item_id = response["id"]
+            log_test("Compliance Item Creation", True, 
+                    f"Compliance item created: {response.get('title')}")
+            return True
+        else:
+            log_test("Compliance Item Creation", False, "Missing required fields in response", response)
+            return False
+    else:
+        log_test("Compliance Item Creation", False, "Compliance item creation failed", response)
+        return False
+
+
+def test_get_compliance_items():
+    """Test get compliance items API"""
+    print("\n📋 Testing Get Compliance Items...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Get Compliance Items", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("GET", "/finance/compliance", headers=headers)
+    
+    if success and isinstance(response, list):
+        log_test("Get Compliance Items", True, f"Retrieved {len(response)} compliance item(s)")
+        return True
+    else:
+        log_test("Get Compliance Items", False, "Failed to get compliance items", response)
+        return False
+
+
+def test_get_default_compliance():
+    """Test get default compliance checklist API"""
+    print("\n📝 Testing Get Default Compliance...")
+    
+    if not auth_token:
+        log_test("Get Default Compliance", False, "Missing auth token")
+        return False
+    
+    headers = {"Authorization": f"Bearer {auth_token}"}
+    
+    success, response = make_request("GET", "/finance/compliance/defaults?business_type=ltd", headers=headers)
+    
+    if success and isinstance(response, list):
+        log_test("Get Default Compliance", True, f"Retrieved {len(response)} default compliance item(s)")
+        return True
+    else:
+        log_test("Get Default Compliance", False, "Failed to get default compliance", response)
+        return False
+
+
+# ===== OPERATIONS MODULE TESTS =====
+
+def test_create_task():
+    """Test task creation API"""
+    print("\n📝 Testing Task Creation...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Task Creation", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("POST", "/operations/tasks", TEST_TASK, headers)
+    
+    if success and isinstance(response, dict):
+        if "id" in response and "title" in response:
+            global task_id
+            task_id = response["id"]
+            log_test("Task Creation", True, 
+                    f"Task created: {response.get('title')} (Priority: {response.get('priority')})")
+            return True
+        else:
+            log_test("Task Creation", False, "Missing required fields in response", response)
+            return False
+    else:
+        log_test("Task Creation", False, "Task creation failed", response)
+        return False
+
+
+def test_get_tasks():
+    """Test get tasks API"""
+    print("\n📋 Testing Get Tasks...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Get Tasks", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("GET", "/operations/tasks", headers=headers)
+    
+    if success and isinstance(response, list):
+        log_test("Get Tasks", True, f"Retrieved {len(response)} task(s)")
+        return True
+    else:
+        log_test("Get Tasks", False, "Failed to get tasks", response)
+        return False
+
+
+def test_get_task_stats():
+    """Test get task statistics API"""
+    print("\n📊 Testing Get Task Stats...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Get Task Stats", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("GET", "/operations/tasks/stats", headers=headers)
+    
+    if success and isinstance(response, dict):
+        if "totalTasks" in response or "completedTasks" in response:
+            total = response.get("totalTasks", 0)
+            completed = response.get("completedTasks", 0)
+            log_test("Get Task Stats", True, f"Stats: {total} total, {completed} completed")
+            return True
+        else:
+            log_test("Get Task Stats", False, "Missing stats fields in response", response)
+            return False
+    else:
+        log_test("Get Task Stats", False, "Failed to get task stats", response)
+        return False
+
+
+def test_create_email_template():
+    """Test email template creation API"""
+    print("\n📧 Testing Email Template Creation...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Email Template Creation", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("POST", "/operations/email-templates", TEST_EMAIL_TEMPLATE, headers)
+    
+    if success and isinstance(response, dict):
+        if "id" in response and "name" in response:
+            global email_template_id
+            email_template_id = response["id"]
+            log_test("Email Template Creation", True, 
+                    f"Email template created: {response.get('name')}")
+            return True
+        else:
+            log_test("Email Template Creation", False, "Missing required fields in response", response)
+            return False
+    else:
+        log_test("Email Template Creation", False, "Email template creation failed", response)
+        return False
+
+
+def test_get_email_templates():
+    """Test get email templates API"""
+    print("\n📧 Testing Get Email Templates...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Get Email Templates", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("GET", "/operations/email-templates", headers=headers)
+    
+    if success and isinstance(response, list):
+        log_test("Get Email Templates", True, f"Retrieved {len(response)} email template(s)")
+        return True
+    else:
+        log_test("Get Email Templates", False, "Failed to get email templates", response)
+        return False
+
+
+def test_send_email():
+    """Test send email API (MOCKED)"""
+    print("\n📤 Testing Send Email (MOCKED)...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Send Email", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("POST", "/operations/send-email", TEST_EMAIL_SEND, headers)
+    
+    if success and isinstance(response, dict):
+        if "messageId" in response or "status" in response:
+            log_test("Send Email", True, "Email sent successfully (MOCKED)")
+            return True
+        else:
+            log_test("Send Email", False, "Missing email response fields", response)
+            return False
+    else:
+        log_test("Send Email", False, "Email sending failed", response)
+        return False
+
+
+def test_get_email_logs():
+    """Test get email logs API"""
+    print("\n📜 Testing Get Email Logs...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Get Email Logs", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("GET", "/operations/email-logs", headers=headers)
+    
+    if success and isinstance(response, list):
+        log_test("Get Email Logs", True, f"Retrieved {len(response)} email log(s)")
+        return True
+    else:
+        log_test("Get Email Logs", False, "Failed to get email logs", response)
+        return False
+
+
+def test_create_document():
+    """Test document creation API"""
+    print("\n📄 Testing Document Creation...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Document Creation", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("POST", "/operations/documents", TEST_DOCUMENT, headers)
+    
+    if success and isinstance(response, dict):
+        if "id" in response and "title" in response:
+            global document_id
+            document_id = response["id"]
+            log_test("Document Creation", True, 
+                    f"Document created: {response.get('title')}")
+            return True
+        else:
+            log_test("Document Creation", False, "Missing required fields in response", response)
+            return False
+    else:
+        log_test("Document Creation", False, "Document creation failed", response)
+        return False
+
+
+def test_get_documents():
+    """Test get documents API"""
+    print("\n📚 Testing Get Documents...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Get Documents", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("GET", "/operations/documents", headers=headers)
+    
+    if success and isinstance(response, list):
+        log_test("Get Documents", True, f"Retrieved {len(response)} document(s)")
+        return True
+    else:
+        log_test("Get Documents", False, "Failed to get documents", response)
+        return False
+
+
+def test_create_workflow():
+    """Test workflow creation API"""
+    print("\n🔄 Testing Workflow Creation...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Workflow Creation", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("POST", "/operations/workflows", TEST_WORKFLOW, headers)
+    
+    if success and isinstance(response, dict):
+        if "id" in response and "name" in response:
+            global workflow_id
+            workflow_id = response["id"]
+            log_test("Workflow Creation", True, 
+                    f"Workflow created: {response.get('name')}")
+            return True
+        else:
+            log_test("Workflow Creation", False, "Missing required fields in response", response)
+            return False
+    else:
+        log_test("Workflow Creation", False, "Workflow creation failed", response)
+        return False
+
+
+def test_get_workflows():
+    """Test get workflows API"""
+    print("\n🔄 Testing Get Workflows...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Get Workflows", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("GET", "/operations/workflows", headers=headers)
+    
+    if success and isinstance(response, list):
+        log_test("Get Workflows", True, f"Retrieved {len(response)} workflow(s)")
+        return True
+    else:
+        log_test("Get Workflows", False, "Failed to get workflows", response)
+        return False
+
+
+def test_get_default_workflows():
+    """Test get default workflows API"""
+    print("\n📋 Testing Get Default Workflows...")
+    
+    if not auth_token:
+        log_test("Get Default Workflows", False, "Missing auth token")
+        return False
+    
+    headers = {"Authorization": f"Bearer {auth_token}"}
+    
+    success, response = make_request("GET", "/operations/workflows/defaults", headers=headers)
+    
+    if success and isinstance(response, list):
+        log_test("Get Default Workflows", True, f"Retrieved {len(response)} default workflow(s)")
+        return True
+    else:
+        log_test("Get Default Workflows", False, "Failed to get default workflows", response)
+        return False
+
+
+# ===== MARKETING MODULE TESTS =====
+
+def test_create_campaign():
+    """Test campaign creation API"""
+    print("\n🚀 Testing Campaign Creation...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Campaign Creation", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("POST", "/marketing/campaigns", TEST_CAMPAIGN, headers)
+    
+    if success and isinstance(response, dict):
+        if "id" in response and "name" in response:
+            global campaign_id
+            campaign_id = response["id"]
+            log_test("Campaign Creation", True, 
+                    f"Campaign created: {response.get('name')} (Budget: ${response.get('budget')})")
+            return True
+        else:
+            log_test("Campaign Creation", False, "Missing required fields in response", response)
+            return False
+    else:
+        log_test("Campaign Creation", False, "Campaign creation failed", response)
+        return False
+
+
+def test_get_campaigns():
+    """Test get campaigns API"""
+    print("\n📊 Testing Get Campaigns...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Get Campaigns", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("GET", "/marketing/campaigns", headers=headers)
+    
+    if success and isinstance(response, list):
+        log_test("Get Campaigns", True, f"Retrieved {len(response)} campaign(s)")
+        return True
+    else:
+        log_test("Get Campaigns", False, "Failed to get campaigns", response)
+        return False
+
+
+def test_create_social_post():
+    """Test social post creation API"""
+    print("\n📱 Testing Social Post Creation...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Social Post Creation", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    # Set campaign ID if available
+    test_post = TEST_SOCIAL_POST.copy()
+    if campaign_id:
+        test_post["campaignId"] = campaign_id
+    
+    success, response = make_request("POST", "/marketing/social-posts", test_post, headers)
+    
+    if success and isinstance(response, dict):
+        if "id" in response and "platform" in response:
+            global social_post_id
+            social_post_id = response["id"]
+            log_test("Social Post Creation", True, 
+                    f"Social post created for {response.get('platform')}")
+            return True
+        else:
+            log_test("Social Post Creation", False, "Missing required fields in response", response)
+            return False
+    else:
+        log_test("Social Post Creation", False, "Social post creation failed", response)
+        return False
+
+
+def test_get_social_posts():
+    """Test get social posts API"""
+    print("\n📱 Testing Get Social Posts...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Get Social Posts", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("GET", "/marketing/social-posts", headers=headers)
+    
+    if success and isinstance(response, list):
+        log_test("Get Social Posts", True, f"Retrieved {len(response)} social post(s)")
+        return True
+    else:
+        log_test("Get Social Posts", False, "Failed to get social posts", response)
+        return False
+
+
+def test_generate_social_post():
+    """Test AI generate social post API"""
+    print("\n🤖 Testing AI Generate Social Post...")
+    
+    if not auth_token or not workspace_id:
+        log_test("AI Generate Social Post", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("POST", "/marketing/social-posts/generate", TEST_SOCIAL_GENERATE, headers)
+    
+    if success and isinstance(response, dict):
+        if "content" in response or "generatedContent" in response:
+            content = response.get("content") or response.get("generatedContent", "")
+            log_test("AI Generate Social Post", True, 
+                    f"AI generated social post ({len(content)} chars)")
+            return True
+        else:
+            log_test("AI Generate Social Post", False, "Missing generated content in response", response)
+            return False
+    else:
+        log_test("AI Generate Social Post", False, "AI social post generation failed", response)
+        return False
+
+
+def test_get_growth_analytics():
+    """Test get growth analytics API"""
+    print("\n📈 Testing Get Growth Analytics...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Get Growth Analytics", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    success, response = make_request("GET", "/marketing/analytics", headers=headers)
+    
+    if success and isinstance(response, dict):
+        if "totalLeads" in response or "campaignMetrics" in response:
+            leads = response.get("totalLeads", 0)
+            campaigns = response.get("totalCampaigns", 0)
+            log_test("Get Growth Analytics", True, 
+                    f"Analytics: {leads} leads, {campaigns} campaigns")
+            return True
+        else:
+            log_test("Get Growth Analytics", False, "Missing analytics fields in response", response)
+            return False
+    else:
+        log_test("Get Growth Analytics", False, "Failed to get growth analytics", response)
+        return False
+
 def run_all_tests():
     """Run all backend API tests in sequence"""
     print("🚀 Starting Enterprate OS Backend API Tests")
