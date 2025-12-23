@@ -1285,11 +1285,11 @@ def test_create_document():
     success, response = make_request("POST", "/operations/documents", TEST_DOCUMENT, headers)
     
     if success and isinstance(response, dict):
-        if "id" in response and "title" in response:
+        if "id" in response and "name" in response:
             global document_id
             document_id = response["id"]
             log_test("Document Creation", True, 
-                    f"Document created: {response.get('title')}")
+                    f"Document created: {response.get('name')}")
             return True
         else:
             log_test("Document Creation", False, "Missing required fields in response", response)
