@@ -1148,10 +1148,10 @@ def test_get_task_stats():
     success, response = make_request("GET", "/operations/tasks/stats", headers=headers)
     
     if success and isinstance(response, dict):
-        if "totalTasks" in response or "completedTasks" in response:
-            total = response.get("totalTasks", 0)
-            completed = response.get("completedTasks", 0)
-            log_test("Get Task Stats", True, f"Stats: {total} total, {completed} completed")
+        if "total" in response and "byStatus" in response:
+            total = response.get("total", 0)
+            by_status = response.get("byStatus", {})
+            log_test("Get Task Stats", True, f"Stats: {total} total tasks, status breakdown available")
             return True
         else:
             log_test("Get Task Stats", False, "Missing stats fields in response", response)
