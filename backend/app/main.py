@@ -4,7 +4,11 @@ from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import init_db, close_db
-from app.routes import auth, workspaces, projects, genesis, navigator, growth, websites, intel, chat, password_reset, validation_reports
+from app.routes import (
+    auth, workspaces, projects, genesis, navigator, growth, websites, 
+    intel, chat, password_reset, validation_reports,
+    blueprint, finance, operations, marketing
+)
 
 # Configure logging
 logging.basicConfig(
