@@ -1545,15 +1545,57 @@ def test_get_growth_analytics():
 
 def run_all_tests():
     """Run all backend API tests in sequence"""
-    print("🚀 Starting Enterprate OS Backend API Tests")
-    print("=" * 60)
+    print("🚀 Starting Enterprate OS Backend API Tests - FOUR NEW MODULES")
+    print("=" * 80)
     
-    # Test sequence as specified
+    # Test sequence as specified in review request
     tests = [
+        # Core authentication and workspace setup
         test_user_registration,
         test_user_login,
         test_workspace_creation,
         test_get_workspaces,
+        
+        # Module 1: Business Blueprint Generator
+        test_create_blueprint,
+        test_get_blueprints,
+        test_get_blueprint,
+        test_generate_blueprint_section,
+        test_generate_swot,
+        test_generate_financials,
+        
+        # Module 2: Finance & Compliance
+        test_create_expense,
+        test_get_expenses,
+        test_get_expense_summary,
+        test_estimate_tax,
+        test_create_compliance_item,
+        test_get_compliance_items,
+        test_get_default_compliance,
+        
+        # Module 3: Operations
+        test_create_task,
+        test_get_tasks,
+        test_get_task_stats,
+        test_create_email_template,
+        test_get_email_templates,
+        test_send_email,
+        test_get_email_logs,
+        test_create_document,
+        test_get_documents,
+        test_create_workflow,
+        test_get_workflows,
+        test_get_default_workflows,
+        
+        # Module 4: Growth/Marketing
+        test_create_campaign,
+        test_get_campaigns,
+        test_create_social_post,
+        test_get_social_posts,
+        test_generate_social_post,
+        test_get_growth_analytics,
+        
+        # Legacy tests (existing functionality)
         test_invoice_creation,
         test_get_invoices,
         test_lead_creation,
@@ -1583,12 +1625,21 @@ def run_all_tests():
             failed += 1
     
     # Summary
-    print("\n" + "=" * 60)
-    print("📊 TEST SUMMARY")
-    print("=" * 60)
+    print("\n" + "=" * 80)
+    print("📊 COMPREHENSIVE TEST SUMMARY - FOUR NEW MODULES")
+    print("=" * 80)
     print(f"✅ Passed: {passed}")
     print(f"❌ Failed: {failed}")
     print(f"📈 Success Rate: {(passed/(passed+failed)*100):.1f}%")
+    
+    # Module breakdown
+    print("\n🔍 MODULE BREAKDOWN:")
+    print("   📋 Blueprint Generator: 6 endpoints")
+    print("   💰 Finance & Compliance: 7 endpoints") 
+    print("   ⚙️  Operations: 12 endpoints")
+    print("   📈 Marketing/Growth: 6 endpoints")
+    print("   🔧 Legacy APIs: 17 endpoints")
+    print(f"   📊 Total: {len(tests)} endpoints tested")
     
     if failed > 0:
         print("\n🔍 FAILED TESTS:")
