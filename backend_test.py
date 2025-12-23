@@ -102,17 +102,17 @@ TEST_BLUEPRINT = {
 TEST_EXPENSE = {
     "description": "Office supplies and equipment",
     "amount": 450.75,
-    "category": "office_supplies",
+    "category": "office",  # Fixed: use valid enum value
     "date": "2024-01-15",
     "vendor": "Office Depot",
     "receiptUrl": "https://example.com/receipt.jpg"
 }
 
 TEST_TAX_ESTIMATE = {
-    "revenue": 120000,
-    "expenses": 45000,
+    "annualRevenue": 120000,  # Fixed: correct field name
+    "annualExpenses": 45000,  # Fixed: correct field name
     "businessType": "ltd",
-    "taxYear": 2024
+    "country": "UK"  # Added required field
 }
 
 TEST_COMPLIANCE_ITEM = {
@@ -128,40 +128,58 @@ TEST_TASK = {
     "title": "Implement user authentication system",
     "description": "Build secure login and registration functionality",
     "priority": "high",
-    "status": "todo",
     "dueDate": "2024-02-15",
-    "assignedTo": "dev-team"
+    "assignee": "dev-team"  # Fixed: correct field name
 }
 
 TEST_EMAIL_TEMPLATE = {
     "name": "Welcome Email",
     "subject": "Welcome to TechFlow Solutions!",
-    "content": "Thank you for joining us. We're excited to have you on board!",
-    "category": "onboarding"
+    "bodyHtml": "<h1>Welcome!</h1><p>Thank you for joining us. We're excited to have you on board!</p>",  # Fixed: required field
+    "bodyText": "Welcome! Thank you for joining us. We're excited to have you on board!",
+    "category": "general"
 }
 
 TEST_EMAIL_SEND = {
-    "to": "customer@example.com",
+    "to": ["customer@example.com"],  # Fixed: must be a list
     "templateId": None,  # Will be set after template creation
     "subject": "Welcome to our platform",
-    "content": "Thank you for signing up!"
+    "bodyHtml": "<p>Thank you for signing up!</p>"
 }
 
 TEST_DOCUMENT = {
-    "title": "Company Privacy Policy",
+    "name": "Company Privacy Policy",  # Fixed: correct field name
+    "type": "pdf",  # Fixed: required field
     "content": "This document outlines our privacy practices...",
-    "category": "legal",
-    "version": "1.0"
+    "category": "legal"
 }
 
 TEST_WORKFLOW = {
     "name": "Customer Onboarding",
     "description": "Standard process for new customer onboarding",
     "category": "customer_success",
-    "steps": [
-        {"name": "Send welcome email", "order": 1},
-        {"name": "Schedule onboarding call", "order": 2},
-        {"name": "Provide access credentials", "order": 3}
+    "steps": [  # Fixed: use correct WorkflowStep schema
+        {
+            "id": "step-1",
+            "title": "Send welcome email",
+            "description": "Send automated welcome email to new customer",
+            "order": 1,
+            "action": "email"
+        },
+        {
+            "id": "step-2", 
+            "title": "Schedule onboarding call",
+            "description": "Book initial onboarding call with customer success team",
+            "order": 2,
+            "action": "task"
+        },
+        {
+            "id": "step-3",
+            "title": "Provide access credentials", 
+            "description": "Send login credentials and setup instructions",
+            "order": 3,
+            "action": "email"
+        }
     ]
 }
 
@@ -169,8 +187,7 @@ TEST_WORKFLOW = {
 TEST_CAMPAIGN = {
     "name": "Q1 Product Launch",
     "description": "Launch campaign for our new AI features",
-    "type": "product_launch",
-    "status": "draft",
+    "type": "content",  # Fixed: use valid enum value
     "budget": 15000,
     "startDate": "2024-02-01",
     "endDate": "2024-03-31"
@@ -187,8 +204,7 @@ TEST_SOCIAL_GENERATE = {
     "platform": "twitter",
     "topic": "AI project management",
     "tone": "professional",
-    "includeHashtags": True,
-    "maxLength": 280
+    "includeHashtags": True
 }
 
 # Global variables for test state
