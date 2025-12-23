@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useWorkspace } from '@/context/WorkspaceContext';
 import { PageHeader } from '@/components/enterprise';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -11,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
 import {
   Select,
   SelectContent,
@@ -32,21 +32,24 @@ import {
   Loader2,
   AlertCircle,
   Lightbulb,
-  Search,
   User,
   Briefcase,
-  CreditCard,
-  Upload,
   Home,
   Building,
-  HelpCircle,
   Sparkles,
   Check,
-  X
+  X,
+  ExternalLink,
+  Download,
+  Printer,
+  Copy,
+  Info,
+  BookOpen,
+  Link2,
+  ClipboardList,
+  Globe
 } from 'lucide-react';
 import { toast } from 'sonner';
-
-const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
 // Step configuration
 const STEPS = [
@@ -55,9 +58,8 @@ const STEPS = [
   { id: 3, title: 'Business Activity', icon: Briefcase, description: 'Describe what your company does' },
   { id: 4, title: 'People Involved', icon: Users, description: 'Directors, shareholders & PSC' },
   { id: 5, title: 'Registered Address', icon: MapPin, description: 'Official company address' },
-  { id: 6, title: 'Company Documents', icon: FileCheck, description: 'Articles of Association' },
-  { id: 7, title: 'Identity Verification', icon: Shield, description: 'KYC & AML compliance' },
-  { id: 8, title: 'Submit Registration', icon: CreditCard, description: 'Review and submit' }
+  { id: 6, title: 'Documents & Requirements', icon: FileCheck, description: 'What you will need' },
+  { id: 7, title: 'Your Summary', icon: ClipboardList, description: 'Review and use for registration' }
 ];
 
 // Business type options
@@ -67,120 +69,111 @@ const BUSINESS_TYPES = [
     title: 'Private Limited Company (Ltd)',
     description: 'Separate legal entity with limited liability. Best for credibility and growth.',
     recommended: true,
+    registrationFee: '£12 (online) / £40 (paper)',
     benefits: ['Limited liability protection', 'Professional credibility', 'Tax advantages', 'Easier to raise investment']
   },
   {
     id: 'sole_trader',
     title: 'Sole Trader',
     description: 'Simplest structure. You and the business are legally the same.',
+    registrationFee: 'Free (register with HMRC)',
     benefits: ['Easy to set up', 'Minimal paperwork', 'Full control', 'Simple taxes']
   },
   {
     id: 'partnership',
     title: 'Partnership / LLP',
     description: 'Business owned by two or more people with shared profits.',
+    registrationFee: '£12 (LLP online)',
     benefits: ['Shared responsibility', 'Combined expertise', 'Flexible structure']
   },
   {
     id: 'charity',
     title: 'Charity / CIC',
     description: 'Community Interest Company or charitable organization.',
+    registrationFee: '£27 (CIC online)',
     benefits: ['Tax exemptions', 'Grant eligibility', 'Community focus']
   }
 ];
 
-// SIC code suggestions (sample)
-const SIC_CODES = [
-  { code: '62020', name: 'Information technology consultancy activities' },
-  { code: '62090', name: 'Other information technology service activities' },
-  { code: '63110', name: 'Data processing, hosting and related activities' },
-  { code: '70229', name: 'Management consultancy activities' },
-  { code: '73110', name: 'Advertising agencies' },
-  { code: '74909', name: 'Other professional activities' },
-  { code: '82990', name: 'Other business support service activities' },
-  { code: '47910', name: 'Retail sale via mail order houses or via Internet' }
+// SIC code database (expanded)
+const SIC_CODE_DATABASE = [
+  { code: '62011', name: 'Ready-made interactive leisure and entertainment software development', keywords: ['gaming', 'games', 'entertainment', 'app'] },
+  { code: '62012', name: 'Business and domestic software development', keywords: ['software', 'saas', 'app', 'development', 'tech'] },
+  { code: '62020', name: 'Information technology consultancy activities', keywords: ['it', 'consulting', 'technology', 'advice', 'tech'] },
+  { code: '62090', name: 'Other information technology service activities', keywords: ['it', 'tech', 'support', 'services'] },
+  { code: '63110', name: 'Data processing, hosting and related activities', keywords: ['hosting', 'cloud', 'data', 'server'] },
+  { code: '63120', name: 'Web portals', keywords: ['website', 'portal', 'online', 'platform'] },
+  { code: '70229', name: 'Management consultancy activities (other than financial management)', keywords: ['consulting', 'business', 'management', 'advice'] },
+  { code: '73110', name: 'Advertising agencies', keywords: ['advertising', 'marketing', 'agency', 'ads'] },
+  { code: '73120', name: 'Media representation services', keywords: ['media', 'pr', 'public relations'] },
+  { code: '74100', name: 'Specialised design activities', keywords: ['design', 'graphic', 'creative', 'branding'] },
+  { code: '74209', name: 'Other photographic activities', keywords: ['photography', 'photo', 'video'] },
+  { code: '74909', name: 'Other professional, scientific and technical activities', keywords: ['professional', 'technical', 'services'] },
+  { code: '82110', name: 'Combined office administrative service activities', keywords: ['admin', 'office', 'virtual assistant'] },
+  { code: '82990', name: 'Other business support service activities', keywords: ['business', 'support', 'services'] },
+  { code: '47910', name: 'Retail sale via mail order houses or via Internet', keywords: ['ecommerce', 'online', 'retail', 'shop', 'store'] },
+  { code: '56101', name: 'Restaurants and mobile food service activities', keywords: ['restaurant', 'food', 'catering', 'cafe'] },
+  { code: '85600', name: 'Educational support activities', keywords: ['education', 'training', 'coaching', 'tutoring'] },
+  { code: '96090', name: 'Other personal service activities', keywords: ['personal', 'services', 'freelance'] }
 ];
 
-// Tip component
-const Tip = ({ children }) => (
-  <div className="flex items-start space-x-2 p-3 bg-purple-50 rounded-lg border border-purple-100 text-sm">
-    <Lightbulb className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
-    <span className="text-purple-800">{children}</span>
-  </div>
-);
+// Official links
+const OFFICIAL_LINKS = {
+  nameCheck: 'https://find-and-update.company-information.service.gov.uk/company-name-availability',
+  companiesHouse: 'https://www.gov.uk/limited-company-formation',
+  registerOnline: 'https://www.gov.uk/register-as-company',
+  sicCodes: 'https://www.gov.uk/government/publications/standard-industrial-classification-of-economic-activities-sic',
+  modelArticles: 'https://www.gov.uk/guidance/model-articles-of-association-for-limited-companies',
+  pscRegister: 'https://www.gov.uk/guidance/people-with-significant-control-pscs',
+  hmrcRegister: 'https://www.gov.uk/register-for-self-assessment',
+  vatRegister: 'https://www.gov.uk/vat-registration'
+};
 
-// Name availability checker component
-const NameChecker = ({ name, onAvailabilityChange }) => {
-  const [status, setStatus] = useState(null); // null, 'checking', 'available', 'unavailable'
-  const [suggestions, setSuggestions] = useState([]);
-
-  useEffect(() => {
-    if (name.length < 3) {
-      setStatus(null);
-      return;
-    }
-
-    setStatus('checking');
-    const timer = setTimeout(() => {
-      // Simulate name check - in production, this would call an API
-      const isAvailable = !name.toLowerCase().includes('apple') && 
-                          !name.toLowerCase().includes('google') &&
-                          !name.toLowerCase().includes('microsoft');
-      
-      setStatus(isAvailable ? 'available' : 'unavailable');
-      onAvailabilityChange(isAvailable);
-      
-      if (!isAvailable) {
-        setSuggestions([
-          `${name} Solutions Ltd`,
-          `${name} Group Ltd`,
-          `${name} UK Ltd`
-        ]);
-      }
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [name]);
-
-  if (!name || name.length < 3) return null;
-
+// Info Box component
+const InfoBox = ({ type = 'info', title, children }) => {
+  const styles = {
+    info: 'bg-blue-50 border-blue-200 text-blue-800',
+    warning: 'bg-amber-50 border-amber-200 text-amber-800',
+    success: 'bg-green-50 border-green-200 text-green-800',
+    tip: 'bg-purple-50 border-purple-200 text-purple-800'
+  };
+  const icons = {
+    info: Info,
+    warning: AlertCircle,
+    success: CheckCircle,
+    tip: Lightbulb
+  };
+  const Icon = icons[type];
+  
   return (
-    <div className="mt-2">
-      {status === 'checking' && (
-        <div className="flex items-center text-gray-500 text-sm">
-          <Loader2 className="w-4 h-4 animate-spin mr-2" />
-          Checking availability...
-        </div>
-      )}
-      {status === 'available' && (
-        <div className="flex items-center text-green-600 text-sm">
-          <Check className="w-4 h-4 mr-2" />
-          This name is available!
-        </div>
-      )}
-      {status === 'unavailable' && (
-        <div className="space-y-2">
-          <div className="flex items-center text-red-600 text-sm">
-            <X className="w-4 h-4 mr-2" />
-            This name may be too similar to an existing company
-          </div>
-          {suggestions.length > 0 && (
-            <div className="text-sm text-gray-600">
-              <p className="font-medium mb-1">Try these alternatives:</p>
-              <ul className="space-y-1">
-                {suggestions.map((s, i) => (
-                  <li key={i} className="text-purple-600 cursor-pointer hover:underline">• {s}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
+    <div className={`flex items-start space-x-3 p-4 rounded-lg border ${styles[type]}`}>
+      <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
+      <div>
+        {title && <h4 className="font-semibold mb-1">{title}</h4>}
+        <div className="text-sm">{children}</div>
+      </div>
     </div>
   );
 };
 
-// Director/Shareholder form component
+// External Link Button component
+const ExternalLinkButton = ({ href, children, variant = 'default' }) => (
+  <a 
+    href={href} 
+    target="_blank" 
+    rel="noopener noreferrer"
+    className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+      variant === 'primary' 
+        ? 'bg-purple-600 text-white hover:bg-purple-700' 
+        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+    }`}
+  >
+    <span>{children}</span>
+    <ExternalLink size={14} />
+  </a>
+);
+
+// Person Form component
 const PersonForm = ({ person, onChange, onRemove, index, type }) => (
   <Card className="border-gray-200">
     <CardContent className="p-4 space-y-4">
@@ -252,23 +245,10 @@ const PersonForm = ({ person, onChange, onRemove, index, type }) => (
         <Textarea 
           value={person.address || ''} 
           onChange={(e) => onChange({ ...person, address: e.target.value })}
-          placeholder="Full residential address"
+          placeholder="Full residential address including postcode"
           rows={2}
         />
       </div>
-
-      {type === 'Director' && (
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id={`service-${index}`}
-            checked={person.useServiceAddress || false}
-            onCheckedChange={(checked) => onChange({ ...person, useServiceAddress: checked })}
-          />
-          <Label htmlFor={`service-${index}`} className="text-sm">
-            Use a different service address (this will be public)
-          </Label>
-        </div>
-      )}
 
       {type === 'Shareholder' && (
         <div>
@@ -287,10 +267,9 @@ const PersonForm = ({ person, onChange, onRemove, index, type }) => (
 
 export default function BusinessRegistration() {
   const navigate = useNavigate();
-  const { currentWorkspace, getHeaders } = useWorkspace();
+  const { currentWorkspace } = useWorkspace();
   const [currentStep, setCurrentStep] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [nameAvailable, setNameAvailable] = useState(false);
+  const [suggestedSicCodes, setSuggestedSicCodes] = useState([]);
   
   // Form data state
   const [formData, setFormData] = useState({
@@ -299,31 +278,24 @@ export default function BusinessRegistration() {
     
     // Step 2: Company Name
     companyName: '',
+    alternativeNames: ['', ''],
     
     // Step 3: Business Activity
     businessDescription: '',
     selectedSicCodes: [],
     
     // Step 4: People
-    directors: [{ firstName: '', lastName: '', dob: '', nationality: '', occupation: '', address: '', useServiceAddress: false }],
+    directors: [{ firstName: '', lastName: '', dob: '', nationality: '', occupation: '', address: '' }],
     shareholders: [{ firstName: '', lastName: '', dob: '', nationality: '', occupation: '', address: '', shares: '100' }],
     directorIsShareholder: true,
-    founderIsPSC: true,
     
     // Step 5: Registered Address
-    addressType: 'home', // 'home', 'office', 'virtual'
+    addressType: 'home',
     registeredAddress: '',
-    useForMail: true,
     
-    // Step 6: Documents
-    articlesType: 'model', // 'model', 'custom'
-    
-    // Step 7: Verification
-    idVerificationStatus: 'pending', // 'pending', 'in_progress', 'completed', 'failed'
-    
-    // Step 8: Submission
-    agreedToTerms: false,
-    paymentMethod: ''
+    // Step 6: Acknowledgements
+    understandsNotFormationAgent: false,
+    understandsOfficialRegistration: false
   });
 
   // Calculate progress
@@ -334,44 +306,22 @@ export default function BusinessRegistration() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Add director/shareholder
-  const addDirector = () => {
-    setFormData(prev => ({
-      ...prev,
-      directors: [...prev.directors, { firstName: '', lastName: '', dob: '', nationality: '', occupation: '', address: '', useServiceAddress: false }]
-    }));
-  };
-
-  const addShareholder = () => {
-    setFormData(prev => ({
-      ...prev,
-      shareholders: [...prev.shareholders, { firstName: '', lastName: '', dob: '', nationality: '', occupation: '', address: '', shares: '' }]
-    }));
-  };
-
-  // Update director/shareholder
-  const updateDirector = (index, data) => {
-    const updated = [...formData.directors];
-    updated[index] = data;
-    updateFormData('directors', updated);
-  };
-
-  const updateShareholder = (index, data) => {
-    const updated = [...formData.shareholders];
-    updated[index] = data;
-    updateFormData('shareholders', updated);
-  };
-
-  // Remove director/shareholder
-  const removeDirector = (index) => {
-    const updated = formData.directors.filter((_, i) => i !== index);
-    updateFormData('directors', updated);
-  };
-
-  const removeShareholder = (index) => {
-    const updated = formData.shareholders.filter((_, i) => i !== index);
-    updateFormData('shareholders', updated);
-  };
+  // Suggest SIC codes based on business description
+  useEffect(() => {
+    if (formData.businessDescription.length > 20) {
+      const description = formData.businessDescription.toLowerCase();
+      const matches = SIC_CODE_DATABASE.filter(sic => 
+        sic.keywords.some(keyword => description.includes(keyword))
+      ).slice(0, 4);
+      
+      if (matches.length > 0) {
+        setSuggestedSicCodes(matches);
+      } else {
+        // Default suggestions
+        setSuggestedSicCodes(SIC_CODE_DATABASE.slice(0, 4));
+      }
+    }
+  }, [formData.businessDescription]);
 
   // Toggle SIC code
   const toggleSicCode = (code) => {
@@ -385,26 +335,58 @@ export default function BusinessRegistration() {
     }
   };
 
+  // Director/Shareholder management
+  const addDirector = () => {
+    setFormData(prev => ({
+      ...prev,
+      directors: [...prev.directors, { firstName: '', lastName: '', dob: '', nationality: '', occupation: '', address: '' }]
+    }));
+  };
+
+  const updateDirector = (index, data) => {
+    const updated = [...formData.directors];
+    updated[index] = data;
+    updateFormData('directors', updated);
+  };
+
+  const removeDirector = (index) => {
+    const updated = formData.directors.filter((_, i) => i !== index);
+    updateFormData('directors', updated);
+  };
+
+  const addShareholder = () => {
+    setFormData(prev => ({
+      ...prev,
+      shareholders: [...prev.shareholders, { firstName: '', lastName: '', dob: '', nationality: '', occupation: '', address: '', shares: '' }]
+    }));
+  };
+
+  const updateShareholder = (index, data) => {
+    const updated = [...formData.shareholders];
+    updated[index] = data;
+    updateFormData('shareholders', updated);
+  };
+
+  const removeShareholder = (index) => {
+    const updated = formData.shareholders.filter((_, i) => i !== index);
+    updateFormData('shareholders', updated);
+  };
+
   // Validate current step
   const canProceed = () => {
     switch (currentStep) {
       case 1:
         return !!formData.businessType;
       case 2:
-        return formData.companyName.length >= 3 && nameAvailable;
+        return formData.companyName.length >= 3;
       case 3:
         return formData.businessDescription.length >= 20 && formData.selectedSicCodes.length > 0;
       case 4:
-        return formData.directors.every(d => d.firstName && d.lastName && d.dob && d.nationality) &&
-               formData.shareholders.every(s => s.firstName && s.lastName && s.shares);
+        return formData.directors.every(d => d.firstName && d.lastName);
       case 5:
         return !!formData.registeredAddress;
       case 6:
-        return !!formData.articlesType;
-      case 7:
-        return formData.idVerificationStatus === 'completed' || formData.idVerificationStatus === 'pending';
-      case 8:
-        return formData.agreedToTerms;
+        return formData.understandsNotFormationAgent && formData.understandsOfficialRegistration;
       default:
         return true;
     }
@@ -425,19 +407,88 @@ export default function BusinessRegistration() {
     }
   };
 
-  // Submit registration
-  const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      // In production, this would submit to the backend
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success('Registration submitted successfully!');
-      // Navigate to confirmation or dashboard
-    } catch (error) {
-      toast.error('Failed to submit registration');
-    } finally {
-      setLoading(false);
-    }
+  // Copy summary to clipboard
+  const copySummary = () => {
+    const summary = generateTextSummary();
+    navigator.clipboard.writeText(summary);
+    toast.success('Summary copied to clipboard!');
+  };
+
+  // Generate text summary
+  const generateTextSummary = () => {
+    const businessType = BUSINESS_TYPES.find(t => t.id === formData.businessType);
+    const sicCodes = formData.selectedSicCodes.map(code => {
+      const sic = SIC_CODE_DATABASE.find(s => s.code === code);
+      return sic ? `${sic.code} - ${sic.name}` : code;
+    });
+
+    return `
+BUSINESS REGISTRATION SUMMARY
+Generated by Enterprate AI
+================================
+
+COMPANY DETAILS
+---------------
+Company Name: ${formData.companyName} ${formData.businessType === 'ltd' ? 'Ltd' : ''}
+Business Type: ${businessType?.title || 'Not specified'}
+Registration Fee: ${businessType?.registrationFee || 'Varies'}
+
+BUSINESS ACTIVITIES
+-------------------
+Description: ${formData.businessDescription}
+
+SIC Codes:
+${sicCodes.map(c => `  • ${c}`).join('\n')}
+
+DIRECTORS
+---------
+${formData.directors.map((d, i) => `
+Director ${i + 1}:
+  Name: ${d.firstName} ${d.lastName}
+  DOB: ${d.dob}
+  Nationality: ${d.nationality}
+  Occupation: ${d.occupation}
+  Address: ${d.address}
+`).join('')}
+
+${!formData.directorIsShareholder ? `
+SHAREHOLDERS
+------------
+${formData.shareholders.map((s, i) => `
+Shareholder ${i + 1}:
+  Name: ${s.firstName} ${s.lastName}
+  Shares: ${s.shares}
+`).join('')}` : 'Director is also the sole shareholder (100% ownership)'}
+
+REGISTERED OFFICE ADDRESS
+-------------------------
+Type: ${formData.addressType === 'home' ? 'Home Address' : formData.addressType === 'office' ? 'Office Address' : 'Virtual Office'}
+Address: ${formData.registeredAddress}
+
+IMPORTANT LINKS
+---------------
+• Check Name Availability: ${OFFICIAL_LINKS.nameCheck}
+• Register Company Online: ${OFFICIAL_LINKS.registerOnline}
+• SIC Codes Reference: ${OFFICIAL_LINKS.sicCodes}
+• Model Articles: ${OFFICIAL_LINKS.modelArticles}
+
+NEXT STEPS
+----------
+1. Check your company name availability using the link above
+2. Prepare your ID documents (passport/driving licence)
+3. Have proof of address ready
+4. Register online at Companies House
+5. Pay the registration fee (£12 online)
+6. Receive Certificate of Incorporation (usually within 24 hours)
+
+This summary was generated to help you prepare for registration.
+You must complete the actual registration at Companies House.
+`.trim();
+  };
+
+  // Print summary
+  const printSummary = () => {
+    window.print();
   };
 
   // Render step content
@@ -449,7 +500,7 @@ export default function BusinessRegistration() {
           <div className="space-y-6">
             <div>
               <h2 className="text-xl font-semibold mb-2">What type of business are you creating?</h2>
-              <p className="text-gray-500">Choose the structure that best fits your needs. Most beginners choose a Private Limited Company.</p>
+              <p className="text-gray-500">Choose the structure that best fits your needs. This will determine where and how you register.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -466,23 +517,24 @@ export default function BusinessRegistration() {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 flex-wrap gap-1">
                           <h3 className="font-semibold">{type.title}</h3>
                           {type.recommended && (
                             <Badge className="bg-purple-100 text-purple-700">Recommended</Badge>
                           )}
                         </div>
                         <p className="text-sm text-gray-500 mt-1">{type.description}</p>
+                        <p className="text-xs text-purple-600 mt-2 font-medium">Fee: {type.registrationFee}</p>
                         <div className="mt-3 space-y-1">
                           {type.benefits.map((b, i) => (
                             <div key={i} className="flex items-center text-xs text-gray-600">
-                              <Check className="w-3 h-3 text-green-500 mr-1" />
+                              <Check className="w-3 h-3 text-green-500 mr-1 flex-shrink-0" />
                               {b}
                             </div>
                           ))}
                         </div>
                       </div>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-2 ${
                         formData.businessType === type.id ? 'border-purple-600 bg-purple-600' : 'border-gray-300'
                       }`}>
                         {formData.businessType === type.id && <Check className="w-3 h-3 text-white" />}
@@ -493,9 +545,10 @@ export default function BusinessRegistration() {
               ))}
             </div>
 
-            <Tip>
-              If you want credibility, liability protection, and room to grow → Private Limited Company (Ltd) is the best choice for most beginners.
-            </Tip>
+            <InfoBox type="tip" title="Recommendation for beginners">
+              If you want credibility, liability protection, and room to grow → <strong>Private Limited Company (Ltd)</strong> is the best choice. 
+              It separates your personal assets from the business.
+            </InfoBox>
           </div>
         );
 
@@ -504,14 +557,14 @@ export default function BusinessRegistration() {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold mb-2">Choose a Company Name</h2>
-              <p className="text-gray-500">Your company name must be unique and end with "Limited" or "Ltd"</p>
+              <h2 className="text-xl font-semibold mb-2">Choose Your Company Name</h2>
+              <p className="text-gray-500">Your company name must be unique and follow Companies House naming rules.</p>
             </div>
 
             <Card>
               <CardContent className="p-6 space-y-4">
                 <div>
-                  <Label>Company Name *</Label>
+                  <Label>Preferred Company Name *</Label>
                   <div className="flex space-x-2">
                     <Input 
                       value={formData.companyName}
@@ -519,32 +572,60 @@ export default function BusinessRegistration() {
                       placeholder="e.g., Acme Consulting"
                       className="flex-1"
                     />
-                    <span className="flex items-center text-gray-500 bg-gray-100 px-3 rounded-md">Ltd</span>
+                    {formData.businessType === 'ltd' && (
+                      <span className="flex items-center text-gray-500 bg-gray-100 px-3 rounded-md">Ltd</span>
+                    )}
                   </div>
-                  <NameChecker 
-                    name={formData.companyName} 
-                    onAvailabilityChange={setNameAvailable}
-                  />
                 </div>
 
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <h4 className="font-medium text-amber-800 flex items-center">
-                    <AlertCircle className="w-4 h-4 mr-2" />
-                    Naming Rules
+                <div>
+                  <Label>Alternative Names (in case your first choice is taken)</Label>
+                  <div className="space-y-2 mt-2">
+                    <Input 
+                      value={formData.alternativeNames[0]}
+                      onChange={(e) => {
+                        const alts = [...formData.alternativeNames];
+                        alts[0] = e.target.value;
+                        updateFormData('alternativeNames', alts);
+                      }}
+                      placeholder="Alternative name 1"
+                    />
+                    <Input 
+                      value={formData.alternativeNames[1]}
+                      onChange={(e) => {
+                        const alts = [...formData.alternativeNames];
+                        alts[1] = e.target.value;
+                        updateFormData('alternativeNames', alts);
+                      }}
+                      placeholder="Alternative name 2"
+                    />
+                  </div>
+                </div>
+
+                {/* Check Name Availability Link */}
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-purple-800 flex items-center mb-2">
+                    <Globe className="w-4 h-4 mr-2" />
+                    Check Name Availability
                   </h4>
-                  <ul className="mt-2 text-sm text-amber-700 space-y-1">
-                    <li>• Must be unique (not too similar to existing companies)</li>
-                    <li>• Cannot include restricted words (e.g., "Bank", "Royal") without permission</li>
-                    <li>• Must end with "Limited" or "Ltd"</li>
-                    <li>• Cannot be offensive or misleading</li>
-                  </ul>
+                  <p className="text-sm text-purple-700 mb-3">
+                    Use the official Companies House service to check if your chosen name is available.
+                  </p>
+                  <ExternalLinkButton href={OFFICIAL_LINKS.nameCheck} variant="primary">
+                    Check Name on Companies House
+                  </ExternalLinkButton>
                 </div>
               </CardContent>
             </Card>
 
-            <Tip>
-              A good company name is memorable, easy to spell, and reflects your business. Avoid names too similar to well-known brands.
-            </Tip>
+            <InfoBox type="warning" title="Naming Rules">
+              <ul className="space-y-1 mt-1">
+                <li>• Must be <strong>unique</strong> (not too similar to existing companies)</li>
+                <li>• Cannot include restricted words (e.g., "Bank", "Royal") without permission</li>
+                <li>• Must end with "Limited" or "Ltd" for private limited companies</li>
+                <li>• Cannot be offensive or misleading</li>
+              </ul>
+            </InfoBox>
           </div>
         );
 
@@ -553,8 +634,8 @@ export default function BusinessRegistration() {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold mb-2">Describe What Your Company Will Do</h2>
-              <p className="text-gray-500">Explain your main activities. This helps us select the right SIC codes.</p>
+              <h2 className="text-xl font-semibold mb-2">Describe Your Business Activities</h2>
+              <p className="text-gray-500">Tell us what your company will do. We will suggest appropriate SIC codes based on your description.</p>
             </div>
 
             <Card>
@@ -564,49 +645,70 @@ export default function BusinessRegistration() {
                   <Textarea 
                     value={formData.businessDescription}
                     onChange={(e) => updateFormData('businessDescription', e.target.value)}
-                    placeholder="e.g., I provide IT consulting services to small businesses and may sell software products online in the future."
+                    placeholder="e.g., I provide IT consulting services to small businesses. I may also develop and sell software products online in the future."
                     rows={4}
                   />
                   <p className="text-xs text-gray-400 mt-1">
-                    {formData.businessDescription.length}/500 characters
+                    {formData.businessDescription.length}/500 characters (minimum 20)
                   </p>
                 </div>
 
-                <div>
-                  <Label className="mb-3 block">Select SIC Codes (up to 4) *</Label>
-                  <p className="text-sm text-gray-500 mb-3">
-                    SIC codes are official business activity codes used for classification.
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {SIC_CODES.map(sic => (
-                      <div 
-                        key={sic.code}
-                        onClick={() => toggleSicCode(sic.code)}
-                        className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                          formData.selectedSicCodes.includes(sic.code)
-                            ? 'border-purple-500 bg-purple-50'
-                            : 'hover:border-purple-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <span className="font-mono text-sm text-purple-600">{sic.code}</span>
-                            <p className="text-sm text-gray-700">{sic.name}</p>
+                {/* AI Suggested SIC Codes */}
+                {suggestedSicCodes.length > 0 && formData.businessDescription.length >= 20 && (
+                  <div>
+                    <div className="flex items-center space-x-2 mb-3">
+                      <Sparkles className="w-4 h-4 text-purple-600" />
+                      <Label>Suggested SIC Codes (select up to 4)</Label>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      {suggestedSicCodes.map(sic => (
+                        <div 
+                          key={sic.code}
+                          onClick={() => toggleSicCode(sic.code)}
+                          className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                            formData.selectedSicCodes.includes(sic.code)
+                              ? 'border-purple-500 bg-purple-50'
+                              : 'hover:border-purple-300'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="font-mono text-sm text-purple-600 font-semibold">{sic.code}</span>
+                              <p className="text-sm text-gray-700">{sic.name}</p>
+                            </div>
+                            {formData.selectedSicCodes.includes(sic.code) && (
+                              <Check className="w-5 h-5 text-purple-600" />
+                            )}
                           </div>
-                          {formData.selectedSicCodes.includes(sic.code) && (
-                            <Check className="w-4 h-4 text-purple-600" />
-                          )}
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                    
+                    <p className="text-sm text-gray-500 mt-3">
+                      Selected: {formData.selectedSicCodes.length}/4 codes
+                    </p>
                   </div>
+                )}
+
+                {/* Browse All SIC Codes Link */}
+                <div className="flex items-center space-x-2 pt-2">
+                  <BookOpen className="w-4 h-4 text-gray-400" />
+                  <a 
+                    href={OFFICIAL_LINKS.sicCodes}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-purple-600 hover:underline inline-flex items-center"
+                  >
+                    Browse all SIC codes on GOV.UK <ExternalLink size={12} className="ml-1" />
+                  </a>
                 </div>
               </CardContent>
             </Card>
 
-            <Tip>
-              Select codes that cover your current activities and any you plan to do in the future. You can change these later.
-            </Tip>
+            <InfoBox type="info" title="What are SIC codes?">
+              SIC (Standard Industrial Classification) codes are 5-digit codes that describe your business activities. 
+              Companies House uses these to categorize businesses. You can have up to 4 SIC codes.
+            </InfoBox>
           </div>
         );
 
@@ -616,7 +718,7 @@ export default function BusinessRegistration() {
           <div className="space-y-6">
             <div>
               <h2 className="text-xl font-semibold mb-2">Who Is Involved in the Company?</h2>
-              <p className="text-gray-500">Add directors, shareholders, and people with significant control.</p>
+              <p className="text-gray-500">Provide details of directors and shareholders. You will need this information when registering.</p>
             </div>
 
             {/* Directors Section */}
@@ -686,31 +788,23 @@ export default function BusinessRegistration() {
             )}
 
             {/* PSC Notice */}
-            <Card className="border-blue-200 bg-blue-50">
-              <CardContent className="p-4">
-                <h4 className="font-semibold text-blue-800 flex items-center">
-                  <Shield className="w-4 h-4 mr-2" />
-                  People with Significant Control (PSC)
-                </h4>
-                <p className="text-sm text-blue-700 mt-1">
-                  Anyone who owns more than 25% of shares or has significant influence must be registered as a PSC.
-                </p>
-                <div className="flex items-center space-x-2 mt-3">
-                  <Checkbox 
-                    id="founder-psc"
-                    checked={formData.founderIsPSC}
-                    onCheckedChange={(checked) => updateFormData('founderIsPSC', checked)}
-                  />
-                  <Label htmlFor="founder-psc" className="text-sm">
-                    I confirm the founder/director above is a Person with Significant Control
-                  </Label>
-                </div>
-              </CardContent>
-            </Card>
+            <InfoBox type="info" title="People with Significant Control (PSC)">
+              Anyone who owns more than 25% of shares or has significant influence must be registered as a PSC. 
+              For single-founder companies, the founder is automatically the PSC.
+              <a 
+                href={OFFICIAL_LINKS.pscRegister}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-purple-600 hover:underline ml-1 inline-flex items-center"
+              >
+                Learn more <ExternalLink size={12} className="ml-1" />
+              </a>
+            </InfoBox>
 
-            <Tip>
-              Most single-founder companies have 1 director who is also the sole shareholder and PSC. We recommend 100 ordinary shares.
-            </Tip>
+            <InfoBox type="tip">
+              Most single-founder companies have <strong>1 director</strong> who is also the <strong>sole shareholder</strong> and <strong>PSC</strong>. 
+              We recommend <strong>100 ordinary shares</strong> at £1 each.
+            </InfoBox>
           </div>
         );
 
@@ -719,8 +813,8 @@ export default function BusinessRegistration() {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold mb-2">Choose a Registered Office Address</h2>
-              <p className="text-gray-500">This is the official company address (public record). Must be a UK physical address.</p>
+              <h2 className="text-xl font-semibold mb-2">Registered Office Address</h2>
+              <p className="text-gray-500">This will be your company&apos;s official address. It must be a UK physical address and will be public.</p>
             </div>
 
             <Card>
@@ -760,317 +854,276 @@ export default function BusinessRegistration() {
                     rows={4}
                   />
                 </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="use-for-mail"
-                    checked={formData.useForMail}
-                    onCheckedChange={(checked) => updateFormData('useForMail', checked)}
-                  />
-                  <Label htmlFor="use-for-mail">
-                    Use this address for official mail as well
-                  </Label>
-                </div>
               </CardContent>
             </Card>
 
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <h4 className="font-medium text-amber-800 flex items-center">
-                <AlertCircle className="w-4 h-4 mr-2" />
-                Important Note
-              </h4>
-              <p className="text-sm text-amber-700 mt-1">
-                Your registered address will be publicly visible on Companies House. If you use your home address, 
-                it will be searchable online. Consider using a virtual office for privacy.
-              </p>
-            </div>
+            <InfoBox type="warning" title="Privacy Notice">
+              Your registered address will be <strong>publicly visible</strong> on Companies House and searchable online. 
+              If you use your home address, consider using a virtual office service for privacy.
+            </InfoBox>
           </div>
         );
 
-      // STEP 6: Company Documents
+      // STEP 6: Documents & Requirements
       case 6:
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold mb-2">Prepare Company Documents</h2>
-              <p className="text-gray-500">The Articles of Association is your company's rulebook.</p>
+              <h2 className="text-xl font-semibold mb-2">What You Will Need to Register</h2>
+              <p className="text-gray-500">Here is everything you will need to complete your registration on Companies House.</p>
             </div>
 
             <Card>
-              <CardContent className="p-6 space-y-4">
-                <Label className="mb-3 block">Articles of Association *</Label>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div
-                    onClick={() => updateFormData('articlesType', 'model')}
-                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                      formData.articlesType === 'model'
-                        ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200'
-                        : 'hover:border-purple-300'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <h3 className="font-semibold">Model Articles</h3>
-                          <Badge className="bg-green-100 text-green-700">Recommended</Badge>
-                        </div>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Standard articles provided by Companies House. Suitable for most businesses.
-                        </p>
-                        <ul className="mt-2 text-sm text-gray-600 space-y-1">
-                          <li>• Pre-approved by government</li>
-                          <li>• Covers standard operations</li>
-                          <li>• No additional cost</li>
-                        </ul>
-                      </div>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        formData.articlesType === 'model' ? 'border-purple-600 bg-purple-600' : 'border-gray-300'
-                      }`}>
-                        {formData.articlesType === 'model' && <Check className="w-3 h-3 text-white" />}
-                      </div>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center">
+                  <FileCheck className="w-5 h-5 mr-2 text-purple-600" />
+                  Required Documents
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {[
+                  { item: 'Photo ID for each director', desc: 'Passport or driving licence' },
+                  { item: 'Proof of address for each director', desc: 'Utility bill or bank statement (dated within 3 months)' },
+                  { item: 'Your chosen company name', desc: 'Verified as available on Companies House' },
+                  { item: 'Registered office address', desc: 'Must be a UK physical address' },
+                  { item: 'SIC code(s)', desc: 'Up to 4 codes describing your business activities' },
+                  { item: 'Director/shareholder details', desc: 'Full names, DOB, nationality, occupation, addresses' },
+                  { item: 'Share structure', desc: 'Number and type of shares (e.g., 100 ordinary shares at £1 each)' }
+                ].map((doc, i) => (
+                  <div key={i} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-sm">{doc.item}</p>
+                      <p className="text-xs text-gray-500">{doc.desc}</p>
                     </div>
                   </div>
-
-                  <div
-                    onClick={() => updateFormData('articlesType', 'custom')}
-                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                      formData.articlesType === 'custom'
-                        ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200'
-                        : 'hover:border-purple-300'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold">Custom Articles</h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Tailored articles for specific needs. Requires legal expertise.
-                        </p>
-                        <ul className="mt-2 text-sm text-gray-600 space-y-1">
-                          <li>• Fully customizable</li>
-                          <li>• Complex share structures</li>
-                          <li>• May need legal review</li>
-                        </ul>
-                      </div>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        formData.articlesType === 'custom' ? 'border-purple-600 bg-purple-600' : 'border-gray-300'
-                      }`}>
-                        {formData.articlesType === 'custom' && <Check className="w-3 h-3 text-white" />}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                ))}
               </CardContent>
             </Card>
 
-            <Tip>
-              Model Articles are recommended for beginners. They cover everything you need and can be amended later if required.
-            </Tip>
-          </div>
-        );
-
-      // STEP 7: Identity Verification
-      case 7:
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-2">Verify Identity</h2>
-              <p className="text-gray-500">Legal requirement: Each director and PSC must complete ID verification.</p>
-            </div>
-
             <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center">
+                  <Scale className="w-5 h-5 mr-2 text-purple-600" />
+                  Articles of Association
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 mb-3">
+                  This is your company&apos;s rulebook. For most new companies, the standard <strong>Model Articles</strong> are recommended.
+                </p>
+                <a 
+                  href={OFFICIAL_LINKS.modelArticles}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-purple-600 hover:underline inline-flex items-center text-sm"
+                >
+                  View Model Articles on GOV.UK <ExternalLink size={12} className="ml-1" />
+                </a>
+              </CardContent>
+            </Card>
+
+            {/* Important Acknowledgement */}
+            <Card className="border-amber-200 bg-amber-50">
               <CardContent className="p-6 space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-blue-800 flex items-center">
-                    <Shield className="w-4 h-4 mr-2" />
-                    AML & KYC Compliance
-                  </h4>
-                  <p className="text-sm text-blue-700 mt-1">
-                    Anti-Money Laundering (AML) and Know Your Customer (KYC) checks are required by law.
-                  </p>
-                </div>
-
+                <h4 className="font-semibold text-amber-800 flex items-center">
+                  <AlertCircle className="w-5 h-5 mr-2" />
+                  Important: Please Read and Acknowledge
+                </h4>
+                
                 <div className="space-y-3">
-                  <h4 className="font-semibold">Required Documents:</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-4 border rounded-lg text-center">
-                      <FileText className="w-8 h-8 mx-auto text-purple-600 mb-2" />
-                      <h5 className="font-medium text-sm">Photo ID</h5>
-                      <p className="text-xs text-gray-500">Passport or driving licence</p>
-                    </div>
-                    <div className="p-4 border rounded-lg text-center">
-                      <Home className="w-8 h-8 mx-auto text-purple-600 mb-2" />
-                      <h5 className="font-medium text-sm">Proof of Address</h5>
-                      <p className="text-xs text-gray-500">Utility bill or bank statement</p>
-                    </div>
-                    <div className="p-4 border rounded-lg text-center">
-                      <User className="w-8 h-8 mx-auto text-purple-600 mb-2" />
-                      <h5 className="font-medium text-sm">Liveness Check</h5>
-                      <p className="text-xs text-gray-500">Selfie or video verification</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Verification Status */}
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-semibold">Verification Status</h4>
-                      <p className="text-sm text-gray-500">
-                        {formData.directors[0]?.firstName} {formData.directors[0]?.lastName}
-                      </p>
-                    </div>
-                    <Badge className={
-                      formData.idVerificationStatus === 'completed' ? 'bg-green-100 text-green-700' :
-                      formData.idVerificationStatus === 'in_progress' ? 'bg-yellow-100 text-yellow-700' :
-                      formData.idVerificationStatus === 'failed' ? 'bg-red-100 text-red-700' :
-                      'bg-gray-100 text-gray-700'
-                    }>
-                      {formData.idVerificationStatus === 'completed' ? 'Verified' :
-                       formData.idVerificationStatus === 'in_progress' ? 'In Progress' :
-                       formData.idVerificationStatus === 'failed' ? 'Failed' : 'Pending'}
-                    </Badge>
+                  <div className="flex items-start space-x-3">
+                    <Checkbox 
+                      id="not-formation-agent"
+                      checked={formData.understandsNotFormationAgent}
+                      onCheckedChange={(checked) => updateFormData('understandsNotFormationAgent', checked)}
+                    />
+                    <Label htmlFor="not-formation-agent" className="text-sm text-amber-800">
+                      I understand that Enterprate AI is <strong>NOT a formation agent</strong> and does not register companies. 
+                      This tool helps me prepare the information I need to register myself.
+                    </Label>
                   </div>
                   
-                  <Button 
-                    className="w-full mt-4 gradient-primary border-0"
-                    onClick={() => {
-                      updateFormData('idVerificationStatus', 'in_progress');
-                      setTimeout(() => updateFormData('idVerificationStatus', 'completed'), 2000);
-                      toast.info('Starting verification process...');
-                    }}
-                    disabled={formData.idVerificationStatus === 'completed'}
-                  >
-                    {formData.idVerificationStatus === 'completed' ? (
-                      <>
-                        <Check className="w-4 h-4 mr-2" />
-                        Verification Complete
-                      </>
-                    ) : formData.idVerificationStatus === 'in_progress' ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Verifying...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-4 h-4 mr-2" />
-                        Start Verification
-                      </>
-                    )}
-                  </Button>
+                  <div className="flex items-start space-x-3">
+                    <Checkbox 
+                      id="official-registration"
+                      checked={formData.understandsOfficialRegistration}
+                      onCheckedChange={(checked) => updateFormData('understandsOfficialRegistration', checked)}
+                    />
+                    <Label htmlFor="official-registration" className="text-sm text-amber-800">
+                      I understand that I must complete the <strong>actual registration</strong> on the official Companies House website.
+                    </Label>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-
-            <Tip>
-              Verification typically takes a few minutes. Make sure your documents are clear and not expired.
-            </Tip>
           </div>
         );
 
-      // STEP 8: Submit Registration
-      case 8:
+      // STEP 7: Summary
+      case 7:
+        const businessType = BUSINESS_TYPES.find(t => t.id === formData.businessType);
+        
         return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-2">Review & Submit Registration</h2>
-              <p className="text-gray-500">Please review all details before submitting your company registration.</p>
+          <div className="space-y-6 print:space-y-4" id="registration-summary">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold mb-2">Your Registration Summary</h2>
+                <p className="text-gray-500">Use this summary to complete your registration on Companies House.</p>
+              </div>
+              <div className="flex space-x-2 print:hidden">
+                <Button variant="outline" size="sm" onClick={copySummary}>
+                  <Copy size={14} className="mr-1" /> Copy
+                </Button>
+                <Button variant="outline" size="sm" onClick={printSummary}>
+                  <Printer size={14} className="mr-1" /> Print
+                </Button>
+              </div>
             </div>
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
                 <CardContent className="p-4">
-                  <h4 className="font-semibold text-sm text-gray-500 mb-2">COMPANY DETAILS</h4>
-                  <p className="font-semibold">{formData.companyName} Ltd</p>
-                  <p className="text-sm text-gray-600">
-                    {BUSINESS_TYPES.find(t => t.id === formData.businessType)?.title}
+                  <h4 className="font-semibold text-sm text-gray-500 mb-2">COMPANY NAME</h4>
+                  <p className="font-semibold text-lg">
+                    {formData.companyName} {formData.businessType === 'ltd' ? 'Ltd' : ''}
                   </p>
+                  {formData.alternativeNames.filter(n => n).length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-500">Alternative names:</p>
+                      {formData.alternativeNames.filter(n => n).map((n, i) => (
+                        <p key={i} className="text-sm text-gray-600">• {n}</p>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
               <Card>
                 <CardContent className="p-4">
-                  <h4 className="font-semibold text-sm text-gray-500 mb-2">SIC CODES</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {formData.selectedSicCodes.map(code => (
-                      <Badge key={code} variant="secondary">{code}</Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4">
-                  <h4 className="font-semibold text-sm text-gray-500 mb-2">DIRECTOR</h4>
-                  <p className="font-semibold">
-                    {formData.directors[0]?.firstName} {formData.directors[0]?.lastName}
-                  </p>
-                  <p className="text-sm text-gray-600">{formData.directors[0]?.occupation}</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4">
-                  <h4 className="font-semibold text-sm text-gray-500 mb-2">REGISTERED ADDRESS</h4>
-                  <p className="text-sm text-gray-600 whitespace-pre-line">{formData.registeredAddress}</p>
+                  <h4 className="font-semibold text-sm text-gray-500 mb-2">BUSINESS TYPE</h4>
+                  <p className="font-semibold">{businessType?.title}</p>
+                  <p className="text-sm text-purple-600">Fee: {businessType?.registrationFee}</p>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Payment */}
             <Card>
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-semibold">Registration Fee</h4>
-                    <p className="text-sm text-gray-500">Companies House filing fee</p>
-                  </div>
-                  <span className="text-2xl font-bold text-purple-600">£12</span>
-                </div>
-
-                <div className="border-t pt-4">
-                  <Label className="mb-3 block">Payment Method</Label>
-                  <Select value={formData.paymentMethod} onValueChange={(v) => updateFormData('paymentMethod', v)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select payment method" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="card">Credit/Debit Card</SelectItem>
-                      <SelectItem value="paypal">PayPal</SelectItem>
-                      <SelectItem value="bank">Bank Transfer</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-start space-x-2 pt-4">
-                  <Checkbox 
-                    id="agree-terms"
-                    checked={formData.agreedToTerms}
-                    onCheckedChange={(checked) => updateFormData('agreedToTerms', checked)}
-                  />
-                  <Label htmlFor="agree-terms" className="text-sm">
-                    I confirm all information is accurate and I agree to the terms of service and Companies House regulations.
-                  </Label>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* What happens next */}
-            <Card className="bg-green-50 border-green-200">
               <CardContent className="p-4">
-                <h4 className="font-semibold text-green-800 flex items-center">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  What happens next?
-                </h4>
-                <ul className="mt-2 text-sm text-green-700 space-y-1">
-                  <li>• Your application will be submitted to Companies House</li>
-                  <li>• Processing usually takes 24 hours</li>
-                  <li>• You will receive your Certificate of Incorporation</li>
-                  <li>• Your company number will be issued</li>
-                </ul>
+                <h4 className="font-semibold text-sm text-gray-500 mb-2">SIC CODES</h4>
+                <div className="space-y-2">
+                  {formData.selectedSicCodes.map(code => {
+                    const sic = SIC_CODE_DATABASE.find(s => s.code === code);
+                    return (
+                      <div key={code} className="flex items-center">
+                        <Badge variant="outline" className="mr-2 font-mono">{code}</Badge>
+                        <span className="text-sm">{sic?.name || 'Unknown'}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </CardContent>
             </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <h4 className="font-semibold text-sm text-gray-500 mb-2">BUSINESS DESCRIPTION</h4>
+                <p className="text-sm text-gray-700">{formData.businessDescription}</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <h4 className="font-semibold text-sm text-gray-500 mb-2">DIRECTORS</h4>
+                {formData.directors.map((d, i) => (
+                  <div key={i} className="mb-3 last:mb-0">
+                    <p className="font-semibold">{d.firstName} {d.lastName}</p>
+                    <p className="text-sm text-gray-600">DOB: {d.dob} | Nationality: {d.nationality}</p>
+                    <p className="text-sm text-gray-600">Occupation: {d.occupation}</p>
+                    <p className="text-sm text-gray-600">Address: {d.address}</p>
+                  </div>
+                ))}
+                {formData.directorIsShareholder && (
+                  <p className="text-sm text-purple-600 mt-2">
+                    ✓ Director is also the sole shareholder (100 ordinary shares)
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <h4 className="font-semibold text-sm text-gray-500 mb-2">REGISTERED ADDRESS</h4>
+                <Badge variant="outline" className="mb-2">
+                  {formData.addressType === 'home' ? 'Home Address' : 
+                   formData.addressType === 'office' ? 'Office Address' : 'Virtual Office'}
+                </Badge>
+                <p className="text-sm text-gray-700 whitespace-pre-line">{formData.registeredAddress}</p>
+              </CardContent>
+            </Card>
+
+            {/* Action Links */}
+            <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+              <CardContent className="p-6">
+                <h4 className="font-semibold text-lg mb-4 flex items-center">
+                  <Link2 className="w-5 h-5 mr-2 text-purple-600" />
+                  Next Steps - Complete Your Registration
+                </h4>
+                
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">1</div>
+                    <div>
+                      <p className="font-medium">Check Name Availability</p>
+                      <p className="text-sm text-gray-600 mb-2">Verify your chosen company name is available.</p>
+                      <ExternalLinkButton href={OFFICIAL_LINKS.nameCheck}>
+                        Check Name on Companies House
+                      </ExternalLinkButton>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">2</div>
+                    <div>
+                      <p className="font-medium">Register Your Company</p>
+                      <p className="text-sm text-gray-600 mb-2">Use this summary to complete registration (approx. 24 hours for approval).</p>
+                      <ExternalLinkButton href={OFFICIAL_LINKS.registerOnline} variant="primary">
+                        Register on GOV.UK
+                      </ExternalLinkButton>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">3</div>
+                    <div>
+                      <p className="font-medium">After Registration</p>
+                      <p className="text-sm text-gray-600">
+                        Once registered, you will receive your Certificate of Incorporation and Company Number. 
+                        Then register for taxes with HMRC.
+                      </p>
+                      <div className="flex space-x-2 mt-2">
+                        <ExternalLinkButton href={OFFICIAL_LINKS.hmrcRegister}>
+                          Register with HMRC
+                        </ExternalLinkButton>
+                        <ExternalLinkButton href={OFFICIAL_LINKS.vatRegister}>
+                          VAT Registration
+                        </ExternalLinkButton>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <InfoBox type="success" title="You are ready!">
+              You have all the information you need to register your company. 
+              Use the links above to complete the official registration process on Companies House. Good luck! 🎉
+            </InfoBox>
           </div>
         );
 
@@ -1084,8 +1137,19 @@ export default function BusinessRegistration() {
       <PageHeader
         icon={FileText}
         title="Business Registration Companion"
-        description="Step-by-step guidance through company formation"
+        description="Prepare everything you need to register your company on Companies House"
       />
+
+      {/* Important Notice Banner */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start space-x-3">
+        <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+        <div>
+          <p className="text-sm text-blue-800">
+            <strong>This is a preparation guide, not a formation agent.</strong> We help you gather all the information 
+            you need to register your company yourself on the official Companies House website.
+          </p>
+        </div>
+      </div>
 
       {/* Progress Bar */}
       <Card>
@@ -1118,7 +1182,7 @@ export default function BusinessRegistration() {
                   }`}>
                     {isCompleted ? <Check size={16} /> : <Icon size={14} />}
                   </div>
-                  <span className={`text-xs mt-1 hidden md:block ${
+                  <span className={`text-xs mt-1 hidden md:block text-center ${
                     isCurrent ? 'text-purple-600 font-medium' : 'text-gray-400'
                   }`}>
                     {step.title}
@@ -1136,7 +1200,7 @@ export default function BusinessRegistration() {
       </div>
 
       {/* Navigation Buttons */}
-      <div className="flex justify-between pt-4 border-t">
+      <div className="flex justify-between pt-4 border-t print:hidden">
         <Button
           variant="outline"
           onClick={prevStep}
@@ -1157,21 +1221,11 @@ export default function BusinessRegistration() {
           </Button>
         ) : (
           <Button
-            onClick={handleSubmit}
-            disabled={!canProceed() || loading}
+            onClick={copySummary}
             className="gradient-primary border-0"
           >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              <>
-                Submit Registration
-                <ArrowRight size={16} className="ml-2" />
-              </>
-            )}
+            <Copy size={16} className="mr-2" />
+            Copy Summary
           </Button>
         )}
       </div>
