@@ -86,6 +86,111 @@ TEST_VALIDATION_REPORT = {
     "goToMarketChannel": ["SEO", "Social", "Ads"]
 }
 
+# NEW MODULE TEST DATA
+
+# Blueprint test data
+TEST_BLUEPRINT = {
+    "businessName": "TechFlow Solutions",
+    "industry": "Technology",
+    "businessType": "SaaS",
+    "description": "AI-powered project management platform for tech teams",
+    "targetMarket": "Small to medium tech companies",
+    "fundingGoal": 500000
+}
+
+# Finance test data
+TEST_EXPENSE = {
+    "description": "Office supplies and equipment",
+    "amount": 450.75,
+    "category": "office_supplies",
+    "date": "2024-01-15",
+    "vendor": "Office Depot",
+    "receiptUrl": "https://example.com/receipt.jpg"
+}
+
+TEST_TAX_ESTIMATE = {
+    "revenue": 120000,
+    "expenses": 45000,
+    "businessType": "ltd",
+    "taxYear": 2024
+}
+
+TEST_COMPLIANCE_ITEM = {
+    "title": "VAT Registration",
+    "description": "Register for VAT if turnover exceeds £85,000",
+    "category": "tax",
+    "dueDate": "2024-03-31",
+    "priority": "high"
+}
+
+# Operations test data
+TEST_TASK = {
+    "title": "Implement user authentication system",
+    "description": "Build secure login and registration functionality",
+    "priority": "high",
+    "status": "todo",
+    "dueDate": "2024-02-15",
+    "assignedTo": "dev-team"
+}
+
+TEST_EMAIL_TEMPLATE = {
+    "name": "Welcome Email",
+    "subject": "Welcome to TechFlow Solutions!",
+    "content": "Thank you for joining us. We're excited to have you on board!",
+    "category": "onboarding"
+}
+
+TEST_EMAIL_SEND = {
+    "to": "customer@example.com",
+    "templateId": None,  # Will be set after template creation
+    "subject": "Welcome to our platform",
+    "content": "Thank you for signing up!"
+}
+
+TEST_DOCUMENT = {
+    "title": "Company Privacy Policy",
+    "content": "This document outlines our privacy practices...",
+    "category": "legal",
+    "version": "1.0"
+}
+
+TEST_WORKFLOW = {
+    "name": "Customer Onboarding",
+    "description": "Standard process for new customer onboarding",
+    "category": "customer_success",
+    "steps": [
+        {"name": "Send welcome email", "order": 1},
+        {"name": "Schedule onboarding call", "order": 2},
+        {"name": "Provide access credentials", "order": 3}
+    ]
+}
+
+# Marketing test data
+TEST_CAMPAIGN = {
+    "name": "Q1 Product Launch",
+    "description": "Launch campaign for our new AI features",
+    "type": "product_launch",
+    "status": "draft",
+    "budget": 15000,
+    "startDate": "2024-02-01",
+    "endDate": "2024-03-31"
+}
+
+TEST_SOCIAL_POST = {
+    "platform": "linkedin",
+    "content": "Excited to announce our new AI-powered project management features! 🚀",
+    "scheduledFor": "2024-02-01T10:00:00Z",
+    "campaignId": None  # Will be set after campaign creation
+}
+
+TEST_SOCIAL_GENERATE = {
+    "platform": "twitter",
+    "topic": "AI project management",
+    "tone": "professional",
+    "includeHashtags": True,
+    "maxLength": 280
+}
+
 # Global variables for test state
 auth_token = None
 workspace_id = None
