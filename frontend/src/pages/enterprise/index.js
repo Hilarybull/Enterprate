@@ -10,3 +10,6 @@ export { default as IntelligenceGraph } from './IntelligenceGraph';
 export { default as Settings } from './Settings';
 export { default as ValidationReport } from './ValidationReport';
 export { default as ValidationHistory } from './ValidationHistory';
+export { default as Branding } from './Branding';
+export { default as Resources } from './Resources';
+export { default as Help } from './Help';
