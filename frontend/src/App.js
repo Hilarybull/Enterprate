@@ -26,9 +26,11 @@ import {
   IntelligenceGraph,
   Settings,
   ValidationReport,
-  ValidationHistory
+  ValidationHistory,
+  Branding,
+  Resources,
+  Help
 } from '@/pages/enterprise';
-import Help from '@/pages/enterprise/Help';
 
 // Legacy imports for website editor
 import WebsiteEditor from '@/pages/WebsiteEditor';
