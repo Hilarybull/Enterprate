@@ -245,12 +245,12 @@ const PersonForm = ({ person, onChange, onRemove, index, type }) => (
             <SelectTrigger>
               <SelectValue placeholder="Select nationality" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="british">British</SelectItem>
-              <SelectItem value="american">American</SelectItem>
-              <SelectItem value="indian">Indian</SelectItem>
-              <SelectItem value="chinese">Chinese</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+            <SelectContent className="max-h-[300px]">
+              {COUNTRIES.map(country => (
+                <SelectItem key={country} value={country.toLowerCase().replace(/\s+/g, '_')}>
+                  {country}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
