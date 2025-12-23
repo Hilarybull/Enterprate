@@ -204,7 +204,7 @@ class FinanceService:
                     "confidence": result.get("confidence", 0.8),
                     "rawText": None
                 }
-            except:
+            except Exception:
                 return FinanceService._get_mock_receipt_data()
                 
         except Exception as e:

@@ -306,7 +306,7 @@ class MarketingService:
                     "hashtags": result.get("hashtags", []),
                     "generated": True
                 }
-            except:
+            except Exception:
                 return MarketingService._get_fallback_social_post(data)
                 
         except Exception as e:

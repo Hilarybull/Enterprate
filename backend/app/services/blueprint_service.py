@@ -415,7 +415,7 @@ class BlueprintService:
                     "opportunities": swot_data.get("opportunities", [])[:5],
                     "threats": swot_data.get("threats", [])[:5]
                 }
-            except:
+            except Exception:
                 return BlueprintService._get_fallback_swot(blueprint)
                 
         except Exception as e:
@@ -555,7 +555,7 @@ Key highlights include:
 - Continuous innovation"""
         }
         
-        return fallbacks.get(section_type, f"Content for {section_type} section.")
+        return fallbacks.get(section_type, "Content for this section.")
     
     @staticmethod
     def _get_fallback_swot(blueprint: dict) -> dict:
