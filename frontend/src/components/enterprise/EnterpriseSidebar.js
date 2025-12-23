@@ -9,7 +9,8 @@ import {
   DollarSign,
   Briefcase,
   TrendingUp,
-  Network,
+  Palette,
+  FolderOpen,
   Settings,
   HelpCircle
 } from 'lucide-react';
