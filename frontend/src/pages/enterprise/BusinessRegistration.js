@@ -681,7 +681,7 @@ You must complete the actual registration at Companies House.
           <div className="space-y-6">
             <div>
               <h2 className="text-xl font-semibold mb-2">Describe Your Business Activities</h2>
-              <p className="text-gray-500">Tell us what your company will do. We will suggest appropriate SIC codes based on your description.</p>
+              <p className="text-gray-500">Tell us what your company will do. We will generate appropriate SIC codes based on your description.</p>
             </div>
 
             <Card>
@@ -690,7 +690,15 @@ You must complete the actual registration at Companies House.
                   <Label>Business Description *</Label>
                   <Textarea 
                     value={formData.businessDescription}
-                    onChange={(e) => updateFormData('businessDescription', e.target.value)}
+                    onChange={(e) => {
+                      updateFormData('businessDescription', e.target.value);
+                      // Reset SIC codes if description changes significantly
+                      if (sicCodesGenerated && e.target.value.length < 20) {
+                        setSuggestedSicCodes([]);
+                        setSicCodesGenerated(false);
+                        updateFormData('selectedSicCodes', []);
+                      }
+                    }}
                     placeholder="e.g., I provide IT consulting services to small businesses. I may also develop and sell software products online in the future."
                     rows={4}
                   />
@@ -699,13 +707,72 @@ You must complete the actual registration at Companies House.
                   </p>
                 </div>
 
-                {/* AI Suggested SIC Codes */}
-                {suggestedSicCodes.length > 0 && formData.businessDescription.length >= 20 && (
+                {/* Generate SIC Codes Button */}
+                {!sicCodesGenerated && (
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-purple-800 flex items-center mb-2">
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Generate SIC Codes
+                    </h4>
+                    <p className="text-sm text-purple-700 mb-3">
+                      Based on your business description, we will identify 6 relevant SIC codes from the official GOV.UK database. 
+                      You must then select exactly 4 codes.
+                    </p>
+                    <Button 
+                      onClick={generateSicCodes}
+                      disabled={formData.businessDescription.length < 20 || generatingSicCodes}
+                      className="gradient-primary border-0"
+                    >
+                      {generatingSicCodes ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Analyzing your business...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Generate SIC Codes
+                        </>
+                      )}
+                    </Button>
+                    {formData.businessDescription.length < 20 && (
+                      <p className="text-xs text-purple-600 mt-2">
+                        Enter at least 20 characters to enable SIC code generation
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Generated SIC Codes - Select 4 out of 6 */}
+                {sicCodesGenerated && suggestedSicCodes.length > 0 && (
                   <div>
-                    <div className="flex items-center space-x-2 mb-3">
-                      <Sparkles className="w-4 h-4 text-purple-600" />
-                      <Label>Suggested SIC Codes (select up to 4)</Label>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <Sparkles className="w-4 h-4 text-purple-600" />
+                        <Label>Generated SIC Codes</Label>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setSicCodesGenerated(false);
+                          setSuggestedSicCodes([]);
+                          updateFormData('selectedSicCodes', []);
+                        }}
+                      >
+                        Regenerate
+                      </Button>
                     </div>
+                    
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                      <p className="text-sm text-amber-800 flex items-center">
+                        <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+                        <span>
+                          <strong>Select exactly 4 codes</strong> from the 6 options below to proceed.
+                        </span>
+                      </p>
+                    </div>
+
                     <div className="grid grid-cols-1 gap-2">
                       {suggestedSicCodes.map(sic => (
                         <div 
@@ -713,47 +780,54 @@ You must complete the actual registration at Companies House.
                           onClick={() => toggleSicCode(sic.code)}
                           className={`p-3 border rounded-lg cursor-pointer transition-all ${
                             formData.selectedSicCodes.includes(sic.code)
-                              ? 'border-purple-500 bg-purple-50'
-                              : 'hover:border-purple-300'
+                              ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200'
+                              : 'hover:border-purple-300 bg-white'
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <div>
+                            <div className="flex-1">
                               <span className="font-mono text-sm text-purple-600 font-semibold">{sic.code}</span>
                               <p className="text-sm text-gray-700">{sic.name}</p>
                             </div>
-                            {formData.selectedSicCodes.includes(sic.code) && (
-                              <Check className="w-5 h-5 text-purple-600" />
-                            )}
+                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-2 ${
+                              formData.selectedSicCodes.includes(sic.code) 
+                                ? 'border-purple-600 bg-purple-600' 
+                                : 'border-gray-300'
+                            }`}>
+                              {formData.selectedSicCodes.includes(sic.code) && (
+                                <Check className="w-4 h-4 text-white" />
+                              )}
+                            </div>
                           </div>
                         </div>
                       ))}
                     </div>
                     
-                    <p className="text-sm text-gray-500 mt-3">
-                      Selected: {formData.selectedSicCodes.length}/4 codes
-                    </p>
+                    <div className="mt-4 flex items-center justify-between">
+                      <p className={`text-sm font-medium ${
+                        formData.selectedSicCodes.length === 4 
+                          ? 'text-green-600' 
+                          : 'text-gray-500'
+                      }`}>
+                        Selected: {formData.selectedSicCodes.length}/4 codes
+                        {formData.selectedSicCodes.length === 4 && (
+                          <CheckCircle className="w-4 h-4 inline ml-1" />
+                        )}
+                      </p>
+                      {formData.selectedSicCodes.length !== 4 && (
+                        <p className="text-xs text-gray-400">
+                          {4 - formData.selectedSicCodes.length} more to select
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
-
-                {/* Browse All SIC Codes Link */}
-                <div className="flex items-center space-x-2 pt-2">
-                  <BookOpen className="w-4 h-4 text-gray-400" />
-                  <a 
-                    href={OFFICIAL_LINKS.sicCodes}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-purple-600 hover:underline inline-flex items-center"
-                  >
-                    Browse all SIC codes on GOV.UK <ExternalLink size={12} className="ml-1" />
-                  </a>
-                </div>
               </CardContent>
             </Card>
 
             <InfoBox type="info" title="What are SIC codes?">
               SIC (Standard Industrial Classification) codes are 5-digit codes that describe your business activities. 
-              Companies House uses these to categorize businesses. You can have up to 4 SIC codes.
+              Companies House uses these to categorize businesses. You must select exactly 4 SIC codes for your registration.
             </InfoBox>
           </div>
         );
