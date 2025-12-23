@@ -360,15 +360,21 @@ export default function BusinessRegistration() {
     }, 1500);
   };
 
-  // Toggle SIC code
+  // Toggle SIC code (must select exactly 4)
   const toggleSicCode = (code) => {
     const selected = formData.selectedSicCodes;
     if (selected.includes(code)) {
+      // Allow deselection
       updateFormData('selectedSicCodes', selected.filter(c => c !== code));
     } else if (selected.length < 4) {
+      // Allow selection if less than 4 selected
       updateFormData('selectedSicCodes', [...selected, code]);
+      if (selected.length === 3) {
+        toast.success('4 SIC codes selected! You can now proceed to the next step.');
+      }
     } else {
-      toast.error('Maximum 4 SIC codes allowed');
+      // Already have 4 selected
+      toast.error('You must select exactly 4 SIC codes. Deselect one to choose a different code.');
     }
   };
 
