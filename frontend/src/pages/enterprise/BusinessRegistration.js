@@ -270,6 +270,8 @@ export default function BusinessRegistration() {
   const { currentWorkspace } = useWorkspace();
   const [currentStep, setCurrentStep] = useState(1);
   const [suggestedSicCodes, setSuggestedSicCodes] = useState([]);
+  const [generatingSicCodes, setGeneratingSicCodes] = useState(false);
+  const [sicCodesGenerated, setSicCodesGenerated] = useState(false);
   
   // Form data state
   const [formData, setFormData] = useState({
@@ -306,22 +308,57 @@ export default function BusinessRegistration() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Suggest SIC codes based on business description
-  useEffect(() => {
-    if (formData.businessDescription.length > 20) {
-      const description = formData.businessDescription.toLowerCase();
-      const matches = SIC_CODE_DATABASE.filter(sic => 
-        sic.keywords.some(keyword => description.includes(keyword))
-      ).slice(0, 4);
-      
-      if (matches.length > 0) {
-        setSuggestedSicCodes(matches);
-      } else {
-        // Default suggestions
-        setSuggestedSicCodes(SIC_CODE_DATABASE.slice(0, 4));
-      }
+  // Generate SIC codes based on business description
+  const generateSicCodes = () => {
+    if (formData.businessDescription.length < 20) {
+      toast.error('Please enter at least 20 characters describing your business');
+      return;
     }
-  }, [formData.businessDescription]);
+
+    setGeneratingSicCodes(true);
+    setSuggestedSicCodes([]);
+    updateFormData('selectedSicCodes', []);
+
+    // Simulate AI analysis (in production, this would call an API)
+    setTimeout(() => {
+      const description = formData.businessDescription.toLowerCase();
+      
+      // Score each SIC code based on keyword matches
+      const scoredCodes = SIC_CODE_DATABASE.map(sic => {
+        let score = 0;
+        sic.keywords.forEach(keyword => {
+          if (description.includes(keyword)) {
+            score += 1;
+          }
+        });
+        // Also check if code name words appear in description
+        sic.name.toLowerCase().split(' ').forEach(word => {
+          if (word.length > 3 && description.includes(word)) {
+            score += 0.5;
+          }
+        });
+        return { ...sic, score };
+      });
+
+      // Sort by score and get top 6
+      const topCodes = scoredCodes
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 6);
+
+      // If not enough matches, pad with generic business codes
+      if (topCodes.filter(c => c.score > 0).length < 6) {
+        const genericCodes = SIC_CODE_DATABASE.filter(
+          sic => !topCodes.some(t => t.code === sic.code)
+        ).slice(0, 6 - topCodes.length);
+        topCodes.push(...genericCodes.map(c => ({ ...c, score: 0 })));
+      }
+
+      setSuggestedSicCodes(topCodes.slice(0, 6));
+      setSicCodesGenerated(true);
+      setGeneratingSicCodes(false);
+      toast.success('6 SIC codes generated! Please select exactly 4.');
+    }, 1500);
+  };
 
   // Toggle SIC code
   const toggleSicCode = (code) => {
