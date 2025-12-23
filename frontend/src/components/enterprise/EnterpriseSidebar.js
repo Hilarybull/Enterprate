@@ -29,21 +29,27 @@ const navItems = [
     description: 'Validate business ideas'
   },
   { 
-    path: '/website-setup', 
-    icon: Globe, 
-    label: 'Website Setup',
-    description: 'Build your online presence'
-  },
-  { 
     path: '/business-registration', 
     icon: FileText, 
-    label: 'Business Registration',
+    label: 'Business Registration Companion',
     description: 'Legal & compliance'
+  },
+  { 
+    path: '/branding', 
+    icon: Palette, 
+    label: 'Branding',
+    description: 'Visual identity & assets'
+  },
+  { 
+    path: '/website-setup', 
+    icon: Globe, 
+    label: 'Website',
+    description: 'Build your online presence'
   },
   { 
     path: '/business-blueprint', 
     icon: BookOpen, 
-    label: 'Business Blueprint',
+    label: 'Business Blueprint Generator',
     description: 'Strategic planning'
   },
   { 
@@ -65,10 +71,10 @@ const navItems = [
     description: 'Marketing & sales'
   },
   { 
-    path: '/intelligence-graph', 
-    icon: Network, 
-    label: 'Intelligence Graph',
-    description: 'Business insights'
+    path: '/resources', 
+    icon: FolderOpen, 
+    label: 'Business Resources Hub',
+    description: 'Tools & templates'
   }
 ];
 
