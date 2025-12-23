@@ -62,14 +62,14 @@ const STEPS = [
   { id: 7, title: 'Your Summary', icon: ClipboardList, description: 'Review and use for registration' }
 ];
 
-// Business type options
+// Business type options with updated fees from Companies House (as of 2024)
 const BUSINESS_TYPES = [
   {
     id: 'ltd',
     title: 'Private Limited Company (Ltd)',
     description: 'Separate legal entity with limited liability. Best for credibility and growth.',
     recommended: true,
-    registrationFee: '£12 (online) / £40 (paper)',
+    registrationFee: '£50 (online) / £71 (paper)',
     benefits: ['Limited liability protection', 'Professional credibility', 'Tax advantages', 'Easier to raise investment']
   },
   {
@@ -83,14 +83,14 @@ const BUSINESS_TYPES = [
     id: 'partnership',
     title: 'Partnership / LLP',
     description: 'Business owned by two or more people with shared profits.',
-    registrationFee: '£12 (LLP online)',
+    registrationFee: '£50 (online) / £71 (paper)',
     benefits: ['Shared responsibility', 'Combined expertise', 'Flexible structure']
   },
   {
     id: 'charity',
     title: 'Charity / CIC',
     description: 'Community Interest Company or charitable organization.',
-    registrationFee: '£27 (CIC online)',
+    registrationFee: '£65 (online) / £86 (paper)',
     benefits: ['Tax exemptions', 'Grant eligibility', 'Community focus']
   }
 ];
