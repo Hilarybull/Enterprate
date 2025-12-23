@@ -95,13 +95,15 @@ function AppRoutes() {
         <Route path="idea-discovery/modify/:modifyId" element={<IdeaDiscovery />} />
         <Route path="validation-report/:reportId" element={<ValidationReport />} />
         <Route path="validation-history" element={<ValidationHistory />} />
+        <Route path="business-registration" element={<BusinessRegistration />} />
+        <Route path="branding" element={<Branding />} />
         <Route path="website-setup" element={<WebsiteSetup />} />
         <Route path="website-builder/:websiteId" element={<WebsiteEditor />} />
-        <Route path="business-registration" element={<BusinessRegistration />} />
         <Route path="business-blueprint" element={<BusinessBlueprint />} />
         <Route path="finance-automation" element={<FinanceAutomation />} />
         <Route path="business-operations" element={<BusinessOperations />} />
         <Route path="growth" element={<Growth />} />
+        <Route path="resources" element={<Resources />} />
         <Route path="intelligence-graph" element={<IntelligenceGraph />} />
         <Route path="settings" element={<Settings />} />
         <Route path="help" element={<Help />} />
