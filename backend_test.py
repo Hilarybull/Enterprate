@@ -852,11 +852,12 @@ def test_generate_swot():
     success, response = make_request("POST", f"/blueprint/{blueprint_id}/generate-swot", None, headers)
     
     if success and isinstance(response, dict):
-        if "swot" in response or "analysis" in response:
+        # Check for SWOT components
+        if "strengths" in response and "weaknesses" in response and "opportunities" in response and "threats" in response:
             log_test("Generate SWOT Analysis", True, "SWOT analysis generated successfully")
             return True
         else:
-            log_test("Generate SWOT Analysis", False, "Missing SWOT analysis in response", response)
+            log_test("Generate SWOT Analysis", False, "Missing SWOT components in response", response)
             return False
     else:
         log_test("Generate SWOT Analysis", False, "Failed to generate SWOT analysis", response)
@@ -878,12 +879,13 @@ def test_generate_financials():
     
     success, response = make_request("POST", f"/blueprint/{blueprint_id}/generate-financials", None, headers)
     
-    if success and isinstance(response, dict):
-        if "financials" in response or "projections" in response:
-            log_test("Generate Financial Projections", True, "Financial projections generated successfully")
+    if success and isinstance(response, list):
+        # Check if it's a list of financial projections
+        if len(response) > 0 and "year" in response[0] and "revenue" in response[0]:
+            log_test("Generate Financial Projections", True, f"Financial projections generated for {len(response)} years")
             return True
         else:
-            log_test("Generate Financial Projections", False, "Missing financial projections in response", response)
+            log_test("Generate Financial Projections", False, "Invalid financial projections format", response)
             return False
     else:
         log_test("Generate Financial Projections", False, "Failed to generate financial projections", response)
