@@ -250,10 +250,21 @@ export default function Growth() {
     setGeneratedPost(null);
     try {
       const response = await axios.post(`${API_URL}/marketing/social-posts/generate`, generateRequest, { headers: getHeaders() });
-      setGeneratedPost(response.data);
-      toast.success('Post generated!');
+      
+      if (response.data && response.data.content) {
+        setGeneratedPost(response.data);
+        if (response.data.generated) {
+          toast.success('AI post generated successfully!');
+        } else {
+          toast.info('Generated a fallback post. Try again for AI-generated content.');
+        }
+      } else {
+        toast.warning('Generated post is empty. Please try again.');
+      }
     } catch (error) {
-      toast.error('Failed to generate post');
+      console.error('Post generation error:', error.response?.data || error.message);
+      const errorMessage = error.response?.data?.detail || 'Failed to generate post';
+      toast.error(errorMessage);
     } finally {
       setGeneratingPost(false);
     }
