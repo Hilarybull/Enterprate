@@ -1969,5 +1969,9 @@ def run_all_tests():
     return failed == 0
 
 if __name__ == "__main__":
-    success = run_all_tests()
+    # Check if we should run bug fix tests specifically
+    if len(sys.argv) > 1 and sys.argv[1] == "--bug-fixes":
+        success = run_bug_fix_tests()
+    else:
+        success = run_all_tests()
     sys.exit(0 if success else 1)
