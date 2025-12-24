@@ -149,67 +149,164 @@ class FinanceService:
     @staticmethod
     async def scan_receipt(workspace_id: str, data: ReceiptScanRequest) -> dict:
         """Scan receipt image and extract data using AI Vision"""
+        import json
+        import re
+        
         if not LLM_AVAILABLE:
-            return FinanceService._get_mock_receipt_data()
+            return FinanceService._get_mock_receipt_data("AI Vision library not available")
         
         try:
             llm_key = os.environ.get("EMERGENT_LLM_KEY")
             if not llm_key:
-                return FinanceService._get_mock_receipt_data()
+                return FinanceService._get_mock_receipt_data("No API key configured")
+            
+            # Prepare image data - ensure proper format
+            image_data = data.imageBase64
+            
+            # Strip any existing data URL prefix and rebuild
+            if "base64," in image_data:
+                image_data = image_data.split("base64,")[1]
+            
+            # Detect image type from base64 header or filename
+            image_type = "jpeg"  # default
+            if data.filename:
+                lower_filename = data.filename.lower()
+                if lower_filename.endswith(".png"):
+                    image_type = "png"
+                elif lower_filename.endswith(".gif"):
+                    image_type = "gif"
+                elif lower_filename.endswith(".webp"):
+                    image_type = "webp"
+            
+            # Rebuild proper data URL
+            full_image_url = f"data:image/{image_type};base64,{image_data}"
             
             # Create chat with vision capability
             chat = LlmChat(
                 api_key=llm_key,
                 model="gpt-4o",
-                system_message="""You are a receipt scanning assistant. Extract information from receipt images.
-                Return a JSON object with:
-                - vendor: store/business name
-                - amount: total amount as a number
-                - date: date in YYYY-MM-DD format
-                - category: one of: office, travel, marketing, software, utilities, equipment, professional_services, other
-                - items: array of {name, quantity, price}
-                - confidence: your confidence level 0-1
+                system_message="""You are a receipt scanning assistant. Extract information from receipt images accurately.
+                Always return a valid JSON object with these exact fields:
+                {
+                    "vendor": "store/business name as string",
+                    "amount": total amount as number (e.g., 45.99),
+                    "date": "date in YYYY-MM-DD format",
+                    "category": "one of: office, travel, marketing, software, utilities, equipment, professional_services, other",
+                    "items": [{"name": "item name", "quantity": 1, "price": 10.00}],
+                    "confidence": 0.8
+                }
                 
-                Return ONLY valid JSON, no markdown formatting."""
+                IMPORTANT: Return ONLY the JSON object, no markdown code blocks, no explanatory text."""
             )
-            
-            # Prepare image
-            image_data = data.imageBase64
-            if not image_data.startswith("data:"):
-                image_data = f"data:image/jpeg;base64,{image_data}"
             
             response = await chat.send_async(
                 message=UserMessage(
-                    text="Please extract all information from this receipt image.",
-                    images=[ImageUrl(url=image_data)]
+                    text="Please analyze this receipt image and extract: vendor name, total amount, date, expense category, and line items. Return only a JSON object.",
+                    images=[ImageUrl(url=full_image_url)]
                 )
             )
             
-            # Parse response
-            import json
+            # Parse response with multiple fallback strategies
+            text = response.text.strip()
+            
+            # Strategy 1: Try to extract JSON from markdown code blocks
+            if "```json" in text:
+                text = text.split("```json")[1].split("```")[0].strip()
+            elif "```" in text:
+                text = text.split("```")[1].split("```")[0].strip()
+            
+            # Strategy 2: Try to find JSON object pattern
+            if not text.startswith("{"):
+                json_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', text, re.DOTALL)
+                if json_match:
+                    text = json_match.group()
+            
             try:
-                text = response.text
-                if "```json" in text:
-                    text = text.split("```json")[1].split("```")[0]
-                elif "```" in text:
-                    text = text.split("```")[1].split("```")[0]
+                result = json.loads(text)
                 
-                result = json.loads(text.strip())
+                # Validate and sanitize the result
+                vendor = result.get("vendor") or "Unknown Vendor"
+                amount = result.get("amount")
+                if isinstance(amount, str):
+                    # Remove currency symbols and convert to float
+                    amount = float(re.sub(r'[£$€,]', '', amount))
+                
+                date = result.get("date")
+                if not date or not re.match(r'\d{4}-\d{2}-\d{2}', str(date)):
+                    date = datetime.now().strftime("%Y-%m-%d")
+                
+                category = result.get("category", "other")
+                valid_categories = ["office", "travel", "marketing", "software", "utilities", "equipment", "professional_services", "other"]
+                if category not in valid_categories:
+                    category = "other"
+                
+                items = result.get("items", [])
+                if not isinstance(items, list):
+                    items = []
+                
+                confidence = result.get("confidence", 0.8)
+                if not isinstance(confidence, (int, float)):
+                    confidence = 0.8
+                
                 return {
-                    "vendor": result.get("vendor"),
-                    "amount": result.get("amount"),
-                    "date": result.get("date"),
-                    "category": result.get("category", "other"),
-                    "items": result.get("items", []),
-                    "confidence": result.get("confidence", 0.8),
+                    "vendor": vendor,
+                    "amount": amount,
+                    "date": date,
+                    "category": category,
+                    "items": items,
+                    "confidence": min(max(float(confidence), 0), 1),  # Clamp between 0-1
                     "rawText": None
                 }
-            except Exception:
-                return FinanceService._get_mock_receipt_data()
+                
+            except json.JSONDecodeError as je:
+                print(f"JSON parsing failed: {je}, text was: {text[:200]}")
+                # Try to extract key information with regex as last resort
+                extracted = FinanceService._extract_with_regex(text)
+                if extracted:
+                    return extracted
+                return FinanceService._get_mock_receipt_data("Could not parse AI response")
                 
         except Exception as e:
-            print(f"Receipt scan error: {e}")
-            return FinanceService._get_mock_receipt_data()
+            print(f"Receipt scan error: {type(e).__name__}: {e}")
+            return FinanceService._get_mock_receipt_data(f"Scan error: {str(e)[:100]}")
+    
+    @staticmethod
+    def _extract_with_regex(text: str) -> dict:
+        """Fallback regex extraction from AI text response"""
+        import re
+        
+        result = {
+            "vendor": None,
+            "amount": None,
+            "date": datetime.now().strftime("%Y-%m-%d"),
+            "category": "other",
+            "items": [],
+            "confidence": 0.5,
+            "rawText": text[:500] if text else None
+        }
+        
+        # Try to extract amount
+        amount_match = re.search(r'(?:total|amount|£|\$|€)\s*[:=]?\s*([£$€]?\s*[\d,]+\.?\d*)', text, re.IGNORECASE)
+        if amount_match:
+            amount_str = re.sub(r'[£$€,\s]', '', amount_match.group(1))
+            try:
+                result["amount"] = float(amount_str)
+            except ValueError:
+                pass
+        
+        # Try to extract vendor
+        vendor_match = re.search(r'(?:vendor|store|merchant|from)\s*[:=]?\s*["\']?([^"\'\n,]+)', text, re.IGNORECASE)
+        if vendor_match:
+            result["vendor"] = vendor_match.group(1).strip()
+        
+        # Try to extract date
+        date_match = re.search(r'(\d{4}-\d{2}-\d{2})', text)
+        if date_match:
+            result["date"] = date_match.group(1)
+        
+        if result["amount"] is not None:
+            return result
+        return None
     
     @staticmethod
     def _get_mock_receipt_data() -> dict:
