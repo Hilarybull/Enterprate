@@ -775,7 +775,7 @@ You must complete the actual registration at Companies House.
                             <div>
                               <h5 className="font-semibold text-green-800">Name Appears Available!</h5>
                               <p className="text-sm text-green-700">
-                                "{formData.companyName}" does not have an exact match in Companies House records.
+                                &ldquo;{formData.companyName}&rdquo; does not have an exact match in Companies House records.
                                 {nameCheckResult.confidence >= 0.9 && ' High confidence result.'}
                               </p>
                             </div>
@@ -786,7 +786,7 @@ You must complete the actual registration at Companies House.
                             <div>
                               <h5 className="font-semibold text-red-800">Name May Be Taken</h5>
                               <p className="text-sm text-red-700">
-                                "{formData.companyName}" has exact or similar matches. Please choose a different name.
+                                &ldquo;{formData.companyName}&rdquo; has exact or similar matches. Please choose a different name.
                               </p>
                             </div>
                           </>
