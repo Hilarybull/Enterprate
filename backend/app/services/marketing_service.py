@@ -290,11 +290,11 @@ Do NOT include any markdown formatting, explanatory text, or code blocks. Just t
             
             chat = LlmChat(
                 api_key=llm_key,
-                model="gpt-4o",
+                session_id="marketing-content",
                 system_message="You are a social media marketing expert. Create engaging, platform-appropriate content. Always respond with ONLY a valid JSON object, no markdown or explanatory text."
-            )
+            ).with_model("openai", "gpt-4o")
             
-            response = await chat.send_async(message=UserMessage(text=prompt))
+            response = await chat.send_message(UserMessage(text=prompt))
             
             # Parse response with multiple strategies
             text = response.text.strip()
