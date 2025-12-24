@@ -358,11 +358,11 @@ class BlueprintService:
             
             chat = LlmChat(
                 api_key=llm_key,
-                model="gpt-4o",
+                session_id=f"blueprint-{section_type}",
                 system_message="You are a professional business consultant creating business plan sections. Write clear, professional, and actionable content."
-            )
+            ).with_model("openai", "gpt-4o")
             
-            response = await chat.send_async(message=UserMessage(text=prompt))
+            response = await chat.send_message(UserMessage(text=prompt))
             return response.text
             
         except Exception as e:
