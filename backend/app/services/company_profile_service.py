@@ -617,24 +617,46 @@ class CompanyProfileService:
                 db = get_db()
                 now = datetime.now(timezone.utc).isoformat()
                 
-                await db.company_profiles.update_one(
-                    {"workspaceId": workspace_id},
-                    {
-                        "$set": {
-                            "isRegistrationConfirmed": True,
-                            "legalName": company_data.get("company_name"),
-                            "legalNameConfirmed": True,
-                            "officialProfile": official_profile,
-                            "updatedAt": now
+                # Check if profile exists
+                existing = await db.company_profiles.find_one({"workspaceId": workspace_id})
+                
+                if existing:
+                    await db.company_profiles.update_one(
+                        {"workspaceId": workspace_id},
+                        {
+                            "$set": {
+                                "isRegistrationConfirmed": True,
+                                "legalName": company_data.get("company_name"),
+                                "legalNameConfirmed": True,
+                                "officialProfile": official_profile,
+                                "updatedAt": now
+                            }
                         }
-                    },
-                    upsert=True
+                    )
+                else:
+                    # Create new profile with id and createdAt
+                    new_profile = {
+                        "id": f"cp_{uuid.uuid4().hex[:12]}",
+                        "workspaceId": workspace_id,
+                        "isRegistrationConfirmed": True,
+                        "legalName": company_data.get("company_name"),
+                        "legalNameConfirmed": True,
+                        "officialProfile": official_profile,
+                        "createdAt": now,
+                        "updatedAt": now
+                    }
+                    await db.company_profiles.insert_one(new_profile)
+                
+                # Return the updated profile
+                updated_profile = await db.company_profiles.find_one(
+                    {"workspaceId": workspace_id},
+                    {"_id": 0}
                 )
                 
                 return {
                     "success": True,
                     "message": "Company registration confirmed successfully!",
-                    "companyData": official_profile
+                    "companyProfile": updated_profile
                 }
                 
         except Exception as e:
