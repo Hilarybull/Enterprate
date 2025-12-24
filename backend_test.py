@@ -1749,6 +1749,87 @@ def test_bug_fix_company_profile_router():
         return False
 
 
+# ===== GOOGLE OAUTH TESTS =====
+
+def test_google_oauth_callback_invalid_session():
+    """Test Google OAuth callback with invalid session_id"""
+    print("\n🔐 Testing Google OAuth Callback (Invalid Session)...")
+    
+    # Test with invalid session_id - should return 401
+    invalid_callback_data = {
+        "session_id": "invalid_session_12345"
+    }
+    
+    success, response = make_request("POST", "/auth/google/callback", invalid_callback_data, expect_success=False)
+    
+    # We expect this to fail with 401
+    if not success and "401" in str(response):
+        log_test("Google OAuth Callback (Invalid)", True, 
+                "✅ PASS: Invalid session_id correctly rejected with 401")
+        return True
+    elif success:
+        log_test("Google OAuth Callback (Invalid)", False, 
+                "❌ FAIL: Invalid session_id was accepted (should be 401)", response)
+        return False
+    else:
+        log_test("Google OAuth Callback (Invalid)", False, 
+                f"❌ FAIL: Unexpected error response: {response}")
+        return False
+
+
+def test_existing_user_login_compatibility():
+    """Test that existing email/password login still works alongside Google OAuth"""
+    print("\n🔑 Testing Existing User Login Compatibility...")
+    
+    # Test with existing user credentials from review request
+    login_data = {
+        "email": EXISTING_USER["email"],
+        "password": EXISTING_USER["password"]
+    }
+    
+    success, response = make_request("POST", "/auth/login", login_data)
+    
+    if success and isinstance(response, dict):
+        if "token" in response and "user" in response:
+            log_test("Existing User Login Compatibility", True, 
+                    "✅ PASS: Existing email/password login works alongside Google OAuth")
+            return True
+        else:
+            log_test("Existing User Login Compatibility", False, 
+                    "❌ FAIL: Missing token or user in login response", response)
+            return False
+    else:
+        log_test("Existing User Login Compatibility", False, 
+                "❌ FAIL: Existing user login failed", response)
+        return False
+
+
+def test_google_oauth_logout():
+    """Test Google OAuth logout endpoint (requires authentication)"""
+    print("\n🚪 Testing Google OAuth Logout...")
+    
+    if not auth_token:
+        log_test("Google OAuth Logout", False, "No auth token available for logout test")
+        return False
+    
+    headers = {"Authorization": f"Bearer {auth_token}"}
+    success, response = make_request("POST", "/auth/google/logout", None, headers)
+    
+    if success and isinstance(response, dict):
+        if "message" in response and "success" in response.get("message", "").lower():
+            log_test("Google OAuth Logout", True, 
+                    "✅ PASS: Google OAuth logout endpoint working")
+            return True
+        else:
+            log_test("Google OAuth Logout", False, 
+                    "❌ FAIL: Logout response missing success message", response)
+            return False
+    else:
+        log_test("Google OAuth Logout", False, 
+                "❌ FAIL: Google OAuth logout failed", response)
+        return False
+
+
 def test_bug_fix_receipt_scanning():
     """Test Bug Fix #5: Receipt Scanning (Optional - requires image)"""
     print("\n🐛 Testing Bug Fix #5: Receipt Scanning...")
