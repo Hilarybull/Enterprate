@@ -37,6 +37,12 @@ TEST_USER = {
     "name": "Enterprate Test User"
 }
 
+# Test credentials for existing auth (from review request)
+EXISTING_USER = {
+    "email": "test-bugfix@example.com",
+    "password": "TestPass123!"
+}
+
 TEST_WORKSPACE = {
     "name": "Enterprate Test Company",
     "country": "United States",
