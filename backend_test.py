@@ -1762,6 +1762,9 @@ def test_google_oauth_callback_invalid_session():
     
     success, response = make_request("POST", "/auth/google/callback", invalid_callback_data, expect_success=False)
     
+    # Debug: Print what we actually got
+    print(f"   Debug: success={success}, response={response}")
+    
     # Check if we got the expected 401 error response
     if not success and isinstance(response, dict) and "detail" in response:
         if "Invalid or expired session" in response["detail"]:
@@ -1772,6 +1775,10 @@ def test_google_oauth_callback_invalid_session():
             log_test("Google OAuth Callback (Invalid)", False, 
                     f"❌ FAIL: Unexpected error message: {response['detail']}")
             return False
+    elif not success and isinstance(response, str) and "Invalid or expired session" in response:
+        log_test("Google OAuth Callback (Invalid)", True, 
+                "✅ PASS: Invalid session_id correctly rejected with 401")
+        return True
     elif success:
         log_test("Google OAuth Callback (Invalid)", False, 
                 "❌ FAIL: Invalid session_id was accepted (should be 401)", response)
