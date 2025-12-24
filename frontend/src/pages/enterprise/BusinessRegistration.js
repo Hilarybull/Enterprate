@@ -895,15 +895,15 @@ You must complete the actual registration at Companies House.
             <InfoBox type="warning" title="Naming Rules">
               <ul className="space-y-1 mt-1">
                 <li>• Must be <strong>unique</strong> (not too similar to existing companies)</li>
-                <li>• Cannot include restricted words (e.g., "Bank", "Royal") without permission</li>
-                <li>• Must end with "Limited" or "Ltd" for private limited companies</li>
+                <li>• Cannot include restricted words (e.g., &ldquo;Bank&rdquo;, &ldquo;Royal&rdquo;) without permission</li>
+                <li>• Must end with &ldquo;Limited&rdquo; or &ldquo;Ltd&rdquo; for private limited companies</li>
                 <li>• Cannot be offensive or misleading</li>
               </ul>
             </InfoBox>
 
             {!nameVerified && formData.companyName.length >= 3 && (
               <InfoBox type="tip" title="Next Step">
-                Click "Check Availability" above to verify your company name before proceeding.
+                Click &ldquo;Check Availability&rdquo; above to verify your company name before proceeding.
               </InfoBox>
             )}
           </div>
