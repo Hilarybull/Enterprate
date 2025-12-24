@@ -2125,9 +2125,18 @@ def run_all_tests():
     return failed == 0
 
 if __name__ == "__main__":
-    # Check if we should run bug fix tests specifically
-    if len(sys.argv) > 1 and sys.argv[1] == "--bug-fixes":
-        success = run_bug_fix_tests()
+    # Check command line arguments for specific test types
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "--bug-fixes":
+            success = run_bug_fix_tests()
+        elif sys.argv[1] == "--google-oauth":
+            success = run_google_oauth_tests()
+        else:
+            print("Usage: python backend_test.py [--bug-fixes|--google-oauth]")
+            print("  --bug-fixes: Run bug fix verification tests")
+            print("  --google-oauth: Run Google OAuth integration tests")
+            print("  (no args): Run all comprehensive tests")
+            sys.exit(1)
     else:
         success = run_all_tests()
     sys.exit(0 if success else 1)
