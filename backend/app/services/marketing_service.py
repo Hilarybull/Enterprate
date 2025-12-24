@@ -296,8 +296,8 @@ Do NOT include any markdown formatting, explanatory text, or code blocks. Just t
             
             response = await chat.send_message(UserMessage(text=prompt))
             
-            # Parse response with multiple strategies
-            text = response.text.strip()
+            # Parse response with multiple strategies - response is the text directly
+            text = response.strip() if isinstance(response, str) else (response.text.strip() if hasattr(response, 'text') else str(response).strip())
             
             # Strategy 1: Remove markdown code blocks
             if "```json" in text:
