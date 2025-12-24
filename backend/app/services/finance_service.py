@@ -167,20 +167,6 @@ class FinanceService:
             if "base64," in image_data:
                 image_data = image_data.split("base64,")[1]
             
-            # Detect image type from base64 header or filename
-            image_type = "jpeg"  # default
-            if data.filename:
-                lower_filename = data.filename.lower()
-                if lower_filename.endswith(".png"):
-                    image_type = "png"
-                elif lower_filename.endswith(".gif"):
-                    image_type = "gif"
-                elif lower_filename.endswith(".webp"):
-                    image_type = "webp"
-            
-            # Rebuild proper data URL
-            full_image_url = f"data:image/{image_type};base64,{image_data}"
-            
             # Create chat with vision capability using correct API
             chat = LlmChat(
                 api_key=llm_key,
