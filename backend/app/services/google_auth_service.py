@@ -64,8 +64,8 @@ class GoogleAuthService:
             db, email, name, picture
         )
         
-        # Step 3: Create session
-        session_token = await GoogleAuthService._create_session(
+        # Step 3: Create session (stored in database for future validation)
+        await GoogleAuthService._create_session(
             db, user_id, emergent_session_token
         )
         
