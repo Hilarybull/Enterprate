@@ -1567,20 +1567,93 @@ You must complete the actual registration at Companies House.
           </div>
         );
 
-      // STEP 7: Summary
+      // STEP 7: Copy-Paste Registration Guide
       case 7:
         const businessType = BUSINESS_TYPES.find(t => t.id === formData.businessType);
+        const fullCompanyName = `${formData.companyName}${formData.businessType === 'ltd' ? ' Ltd' : ''}`;
+        const mainDirector = formData.directors[0] || {};
+        
+        // Copyable text sections for each registration stage
+        const copyableBlocks = {
+          companyName: fullCompanyName,
+          alternativeNames: formData.alternativeNames.filter(n => n).join('\n'),
+          sicCodes: formData.selectedSicCodes.join(', '),
+          businessDescription: formData.businessDescription,
+          directorName: `${mainDirector.firstName || ''} ${mainDirector.lastName || ''}`.trim(),
+          directorDob: mainDirector.dob || '',
+          directorNationality: mainDirector.nationality || '',
+          directorOccupation: mainDirector.occupation || '',
+          directorAddress: mainDirector.address || '',
+          registeredAddress: formData.registeredAddress,
+          shareStructure: formData.directorIsShareholder 
+            ? '100 ordinary shares of £1 each' 
+            : formData.shareholders.map(s => `${s.firstName} ${s.lastName}: ${s.shares} shares`).join('\n')
+        };
+        
+        // Copy individual field
+        const copyField = (text, fieldName) => {
+          navigator.clipboard.writeText(text);
+          toast.success(`${fieldName} copied to clipboard!`);
+        };
+
+        // CopyableField component for inline copy
+        const CopyableField = ({ label, value, fieldName }) => (
+          <div className="bg-white border rounded-lg p-3 group hover:border-purple-300 transition-colors">
+            <div className="flex items-center justify-between mb-1">
+              <Label className="text-xs text-gray-500 uppercase">{label}</Label>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => copyField(value, fieldName)}
+              >
+                <Copy size={12} className="mr-1" /> Copy
+              </Button>
+            </div>
+            <p className="font-medium text-gray-900 select-all">{value || '-'}</p>
+          </div>
+        );
+
+        // Stage component for registration flow
+        const RegistrationStage = ({ number, title, description, fields, link, linkText }) => (
+          <Card className="border-l-4 border-l-purple-500">
+            <CardContent className="p-5">
+              <div className="flex items-start space-x-4">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
+                  {number}
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-lg text-gray-900 mb-1">{title}</h4>
+                  <p className="text-sm text-gray-600 mb-4">{description}</p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                    {fields.map((field, idx) => (
+                      <CopyableField key={idx} {...field} />
+                    ))}
+                  </div>
+                  
+                  {link && (
+                    <ExternalLinkButton href={link} variant="primary">
+                      {linkText}
+                    </ExternalLinkButton>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
         
         return (
           <div className="space-y-6 print:space-y-4" id="registration-summary">
+            {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold mb-2">Your Registration Summary</h2>
-                <p className="text-gray-500">Use this summary to complete your registration on Companies House.</p>
+                <h2 className="text-xl font-semibold mb-2">Copy-Paste Registration Guide</h2>
+                <p className="text-gray-500">Follow these stages on Companies House. Click any field to copy it directly.</p>
               </div>
               <div className="flex space-x-2 print:hidden">
                 <Button variant="outline" size="sm" onClick={copySummary}>
-                  <Copy size={14} className="mr-1" /> Copy
+                  <Copy size={14} className="mr-1" /> Copy All
                 </Button>
                 <Button variant="outline" size="sm" onClick={printSummary}>
                   <Printer size={14} className="mr-1" /> Print
@@ -1588,148 +1661,301 @@ You must complete the actual registration at Companies House.
               </div>
             </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardContent className="p-4">
-                  <h4 className="font-semibold text-sm text-gray-500 mb-2">COMPANY NAME</h4>
-                  <p className="font-semibold text-lg">
-                    {formData.companyName} {formData.businessType === 'ltd' ? 'Ltd' : ''}
-                  </p>
-                  {formData.alternativeNames.filter(n => n).length > 0 && (
-                    <div className="mt-2">
-                      <p className="text-xs text-gray-500">Alternative names:</p>
-                      {formData.alternativeNames.filter(n => n).map((n, i) => (
-                        <p key={i} className="text-sm text-gray-600">• {n}</p>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4">
-                  <h4 className="font-semibold text-sm text-gray-500 mb-2">BUSINESS TYPE</h4>
-                  <p className="font-semibold">{businessType?.title}</p>
-                  <p className="text-sm text-purple-600">Fee: {businessType?.registrationFee}</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
+            {/* Quick Summary Card */}
+            <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
               <CardContent className="p-4">
-                <h4 className="font-semibold text-sm text-gray-500 mb-2">SIC CODES</h4>
-                <div className="space-y-2">
-                  {formData.selectedSicCodes.map(code => {
-                    const sic = SIC_CODE_DATABASE.find(s => s.code === code);
-                    return (
-                      <div key={code} className="flex items-center">
-                        <Badge variant="outline" className="mr-2 font-mono">{code}</Badge>
-                        <span className="text-sm">{sic?.name || 'Unknown'}</span>
-                      </div>
-                    );
-                  })}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                  <div>
+                    <p className="text-xs text-gray-500">Company Name</p>
+                    <p className="font-semibold text-purple-700">{fullCompanyName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Entity Type</p>
+                    <p className="font-semibold text-purple-700">{businessType?.title?.split('(')[0]?.trim()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Registration Fee</p>
+                    <p className="font-semibold text-purple-700">{businessType?.registrationFee?.split('/')[0]}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Processing Time</p>
+                    <p className="font-semibold text-purple-700">Usually 24 hours</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <h4 className="font-semibold text-sm text-gray-500 mb-2">BUSINESS DESCRIPTION</h4>
-                <p className="text-sm text-gray-700">{formData.businessDescription}</p>
-              </CardContent>
-            </Card>
+            {/* Registration Flow Stages */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg flex items-center">
+                <ClipboardList className="w-5 h-5 mr-2 text-purple-600" />
+                Companies House Registration Flow
+              </h3>
 
-            <Card>
-              <CardContent className="p-4">
-                <h4 className="font-semibold text-sm text-gray-500 mb-2">DIRECTORS</h4>
-                {formData.directors.map((d, i) => (
-                  <div key={i} className="mb-3 last:mb-0">
-                    <p className="font-semibold">{d.firstName} {d.lastName}</p>
-                    <p className="text-sm text-gray-600">DOB: {d.dob} | Nationality: {d.nationality}</p>
-                    <p className="text-sm text-gray-600">Occupation: {d.occupation}</p>
-                    <p className="text-sm text-gray-600">Address: {d.address}</p>
-                  </div>
-                ))}
-                {formData.directorIsShareholder && (
-                  <p className="text-sm text-purple-600 mt-2">
-                    ✓ Director is also the sole shareholder (100 ordinary shares)
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+              {/* Stage 1: Company Details */}
+              <RegistrationStage
+                number={1}
+                title="Company Details"
+                description="Enter your company name and type. Copy these values directly into the form."
+                fields={[
+                  { label: 'Proposed Company Name', value: copyableBlocks.companyName, fieldName: 'Company Name' },
+                  { label: 'Company Type', value: businessType?.title || 'Private Limited Company', fieldName: 'Company Type' },
+                  ...(copyableBlocks.alternativeNames ? [{ label: 'Alternative Names', value: copyableBlocks.alternativeNames, fieldName: 'Alternative Names' }] : [])
+                ]}
+                link={OFFICIAL_LINKS.registerOnline}
+                linkText="Start Registration on GOV.UK"
+              />
 
-            <Card>
-              <CardContent className="p-4">
-                <h4 className="font-semibold text-sm text-gray-500 mb-2">REGISTERED ADDRESS</h4>
-                <Badge variant="outline" className="mb-2">
-                  {formData.addressType === 'home' ? 'Home Address' : 
-                   formData.addressType === 'office' ? 'Office Address' : 'Virtual Office'}
-                </Badge>
-                <p className="text-sm text-gray-700 whitespace-pre-line">{formData.registeredAddress}</p>
-              </CardContent>
-            </Card>
+              {/* Stage 2: Business Activity */}
+              <RegistrationStage
+                number={2}
+                title="Business Activity (SIC Codes)"
+                description="Describe what your company does and select your SIC codes."
+                fields={[
+                  { label: 'SIC Codes (copy all)', value: copyableBlocks.sicCodes, fieldName: 'SIC Codes' },
+                  { label: 'Business Description', value: copyableBlocks.businessDescription, fieldName: 'Business Description' }
+                ]}
+                link={OFFICIAL_LINKS.sicCodes}
+                linkText="View SIC Code Reference"
+              />
 
-            {/* Action Links */}
-            <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
-              <CardContent className="p-6">
-                <h4 className="font-semibold text-lg mb-4 flex items-center">
-                  <Link2 className="w-5 h-5 mr-2 text-purple-600" />
-                  Next Steps - Complete Your Registration
-                </h4>
-                
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">1</div>
-                    <div>
-                      <p className="font-medium">Check Name Availability</p>
-                      <p className="text-sm text-gray-600 mb-2">Verify your chosen company name is available.</p>
-                      <ExternalLinkButton href={OFFICIAL_LINKS.nameCheck}>
-                        Check Name on Companies House
-                      </ExternalLinkButton>
+              {/* Stage 3: Registered Office */}
+              <RegistrationStage
+                number={3}
+                title="Registered Office Address"
+                description="This will be your company's official UK address (publicly visible)."
+                fields={[
+                  { label: 'Full Address', value: copyableBlocks.registeredAddress, fieldName: 'Registered Address' },
+                  { label: 'Address Type', value: formData.addressType === 'home' ? 'Residential Address' : formData.addressType === 'office' ? 'Business Address' : 'Virtual Office', fieldName: 'Address Type' }
+                ]}
+              />
+
+              {/* Stage 4: Directors */}
+              <RegistrationStage
+                number={4}
+                title="Director Information"
+                description="Details for each director of the company."
+                fields={[
+                  { label: 'Full Name', value: copyableBlocks.directorName, fieldName: 'Director Name' },
+                  { label: 'Date of Birth', value: copyableBlocks.directorDob, fieldName: 'DOB' },
+                  { label: 'Nationality', value: copyableBlocks.directorNationality, fieldName: 'Nationality' },
+                  { label: 'Occupation', value: copyableBlocks.directorOccupation, fieldName: 'Occupation' },
+                  { label: 'Service Address', value: copyableBlocks.directorAddress, fieldName: 'Director Address' }
+                ]}
+              />
+
+              {/* Stage 5: Shareholders */}
+              <RegistrationStage
+                number={5}
+                title="Shareholders & Share Capital"
+                description="Define who owns the company and how many shares."
+                fields={[
+                  { label: 'Share Structure', value: copyableBlocks.shareStructure, fieldName: 'Share Structure' },
+                  { label: 'Total Share Capital', value: formData.directorIsShareholder ? '£100' : '£' + formData.shareholders.reduce((sum, s) => sum + (parseInt(s.shares) || 0), 0), fieldName: 'Share Capital' },
+                  { label: 'Share Type', value: 'Ordinary shares', fieldName: 'Share Type' },
+                  { label: 'Value per Share', value: '£1', fieldName: 'Share Value' }
+                ]}
+              />
+
+              {/* Stage 6: PSC */}
+              <Card className="border-l-4 border-l-purple-500">
+                <CardContent className="p-5">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
+                      6
                     </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">2</div>
-                    <div>
-                      <p className="font-medium">Register Your Company</p>
-                      <p className="text-sm text-gray-600 mb-2">Use this summary to complete registration (approx. 24 hours for approval).</p>
-                      <ExternalLinkButton href={OFFICIAL_LINKS.registerOnline} variant="primary">
-                        Register on GOV.UK
-                      </ExternalLinkButton>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">3</div>
-                    <div>
-                      <p className="font-medium">After Registration</p>
-                      <p className="text-sm text-gray-600">
-                        Once registered, you will receive your Certificate of Incorporation and Company Number. 
-                        Then register for taxes with HMRC.
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-lg text-gray-900 mb-1">Person with Significant Control (PSC)</h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Anyone owning 25%+ shares or voting rights. For single-founder companies, this is usually the same as the director/shareholder.
                       </p>
-                      <div className="flex space-x-2 mt-2">
-                        <ExternalLinkButton href={OFFICIAL_LINKS.hmrcRegister}>
-                          Register with HMRC
-                        </ExternalLinkButton>
-                        <ExternalLinkButton href={OFFICIAL_LINKS.vatRegister}>
-                          VAT Registration
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <p className="text-sm text-purple-800">
+                          <strong>For single founder:</strong> The director who owns 100% of shares is automatically the PSC with &ldquo;Ownership of shares - More than 75%&rdquo; control.
+                        </p>
+                      </div>
+                      <div className="mt-3">
+                        <ExternalLinkButton href={OFFICIAL_LINKS.pscRegister}>
+                          Learn about PSC Requirements
                         </ExternalLinkButton>
                       </div>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Stage 7: Articles of Association */}
+              <Card className="border-l-4 border-l-purple-500">
+                <CardContent className="p-5">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
+                      7
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-lg text-gray-900 mb-1">Articles of Association</h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Your company&apos;s rulebook. Most new companies use the standard Model Articles.
+                      </p>
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <p className="text-sm text-green-800">
+                          <strong>Recommended:</strong> Select &ldquo;Use model articles&rdquo; during registration. This is suitable for 95% of new companies.
+                        </p>
+                      </div>
+                      <div className="mt-3">
+                        <ExternalLinkButton href={OFFICIAL_LINKS.modelArticles}>
+                          View Model Articles
+                        </ExternalLinkButton>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Stage 8: Payment */}
+              <Card className="border-l-4 border-l-green-500">
+                <CardContent className="p-5">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
+                      8
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-lg text-gray-900 mb-1">Payment & Submission</h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Pay the registration fee and submit your application.
+                      </p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white border rounded-lg p-3">
+                          <p className="text-xs text-gray-500">Standard Service</p>
+                          <p className="font-semibold text-green-700">£50 online</p>
+                          <p className="text-xs text-gray-500">Usually 24 hours</p>
+                        </div>
+                        <div className="bg-white border rounded-lg p-3">
+                          <p className="text-xs text-gray-500">Same-Day Service</p>
+                          <p className="font-semibold text-blue-700">£78 online</p>
+                          <p className="text-xs text-gray-500">By end of day</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Separator />
+
+            {/* Post-Registration Confirmation Section */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg flex items-center">
+                <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
+                After Registration - Confirm Your Company
+              </h3>
+              
+              <Card className="border-green-200 bg-green-50">
+                <CardContent className="p-5">
+                  <p className="text-sm text-green-800 mb-4">
+                    Once Companies House approves your registration, you&apos;ll receive a <strong>Company Number</strong> (8 digits).
+                    Enter it below to confirm your registration and sync your company details to this platform.
+                  </p>
+                  
+                  <div className="flex space-x-3">
+                    <Input 
+                      placeholder="e.g., 12345678"
+                      className="max-w-xs bg-white"
+                      id="company-number-confirm"
+                    />
+                    <Button 
+                      className="gradient-primary border-0"
+                      onClick={async () => {
+                        const input = document.getElementById('company-number-confirm');
+                        const companyNumber = input?.value?.trim();
+                        if (!companyNumber || companyNumber.length < 7) {
+                          toast.error('Please enter a valid company number');
+                          return;
+                        }
+                        try {
+                          const response = await axios.post(
+                            `${API_URL}/company-profile/confirm-registration`,
+                            { companyNumber },
+                            { headers: getHeaders() }
+                          );
+                          if (response.data.success) {
+                            toast.success('Company registration confirmed! Your details have been synced.');
+                          } else {
+                            toast.error(response.data.message || 'Confirmation failed');
+                          }
+                        } catch (error) {
+                          toast.error(error.response?.data?.detail || 'Failed to confirm registration');
+                        }
+                      }}
+                    >
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Confirm Registration
+                    </Button>
+                  </div>
+                  
+                  <p className="text-xs text-green-700 mt-3">
+                    This will fetch your official company details from Companies House and save them for use across this platform.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* After Registration Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center">
+                  <ArrowRight className="w-5 h-5 mr-2 text-purple-600" />
+                  After Your Company is Registered
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-gray-600">Once registered, complete these additional steps:</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div>
+                      <p className="font-medium text-sm">Register for Corporation Tax</p>
+                      <p className="text-xs text-gray-500">Within 3 months of starting business</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div>
+                      <p className="font-medium text-sm">Set up PAYE (if hiring)</p>
+                      <p className="text-xs text-gray-500">Before first employee starts</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div>
+                      <p className="font-medium text-sm">Register for VAT (if applicable)</p>
+                      <p className="text-xs text-gray-500">Required if turnover exceeds £85,000</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div>
+                      <p className="font-medium text-sm">Open Business Bank Account</p>
+                      <p className="text-xs text-gray-500">Keep business finances separate</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 mt-4">
+                  <ExternalLinkButton href={OFFICIAL_LINKS.hmrcRegister}>
+                    Register with HMRC
+                  </ExternalLinkButton>
+                  <ExternalLinkButton href={OFFICIAL_LINKS.vatRegister}>
+                    VAT Registration
+                  </ExternalLinkButton>
                 </div>
               </CardContent>
             </Card>
 
             <InfoBox type="success" title="You are ready!">
-              You have all the information you need to register your company. 
-              Use the links above to complete the official registration process on Companies House. Good luck! 🎉
+              Your Copy-Paste Registration Guide is complete. Follow the stages above on Companies House, 
+              copying each field as needed. After approval, confirm your registration to sync your company details. Good luck! 🎉
             </InfoBox>
           </div>
         );
