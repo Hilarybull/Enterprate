@@ -172,7 +172,7 @@ class GoogleAuthService:
     @staticmethod
     async def validate_session(session_token: str) -> dict:
         """Validate a session token and return user data"""
-        db = await get_database()
+        db = get_db()
         
         # Find session
         session = await db.user_sessions.find_one(
@@ -211,7 +211,7 @@ class GoogleAuthService:
     @staticmethod
     async def logout(user_id: str) -> bool:
         """Delete user sessions (logout)"""
-        db = await get_database()
+        db = get_db()
         
         result = await db.user_sessions.delete_many({"user_id": user_id})
         return result.deleted_count > 0
