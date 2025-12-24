@@ -1745,6 +1745,7 @@ You must complete the actual registration at Companies House.
                   { label: 'Occupation', value: copyableBlocks.directorOccupation, fieldName: 'Occupation' },
                   { label: 'Service Address', value: copyableBlocks.directorAddress, fieldName: 'Director Address' }
                 ]}
+                onCopy={copyField}
               />
 
               {/* Stage 5: Shareholders */}
@@ -1758,6 +1759,7 @@ You must complete the actual registration at Companies House.
                   { label: 'Share Type', value: 'Ordinary shares', fieldName: 'Share Type' },
                   { label: 'Value per Share', value: '£1', fieldName: 'Share Value' }
                 ]}
+                onCopy={copyField}
               />
 
               {/* Stage 6: PSC */}
