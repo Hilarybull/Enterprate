@@ -1637,58 +1637,11 @@ You must complete the actual registration at Companies House.
             : formData.shareholders.map(s => `${s.firstName} ${s.lastName}: ${s.shares} shares`).join('\n')
         };
         
-        // Copy individual field
+        // Copy individual field callback
         const copyField = (text, fieldName) => {
           navigator.clipboard.writeText(text);
           toast.success(`${fieldName} copied to clipboard!`);
         };
-
-        // CopyableField component for inline copy
-        const CopyableField = ({ label, value, fieldName }) => (
-          <div className="bg-white border rounded-lg p-3 group hover:border-purple-300 transition-colors">
-            <div className="flex items-center justify-between mb-1">
-              <Label className="text-xs text-gray-500 uppercase">{label}</Label>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-6 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => copyField(value, fieldName)}
-              >
-                <Copy size={12} className="mr-1" /> Copy
-              </Button>
-            </div>
-            <p className="font-medium text-gray-900 select-all">{value || '-'}</p>
-          </div>
-        );
-
-        // Stage component for registration flow
-        const RegistrationStage = ({ number, title, description, fields, link, linkText }) => (
-          <Card className="border-l-4 border-l-purple-500">
-            <CardContent className="p-5">
-              <div className="flex items-start space-x-4">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
-                  {number}
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-lg text-gray-900 mb-1">{title}</h4>
-                  <p className="text-sm text-gray-600 mb-4">{description}</p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                    {fields.map((field, idx) => (
-                      <CopyableField key={idx} {...field} />
-                    ))}
-                  </div>
-                  
-                  {link && (
-                    <ExternalLinkButton href={link} variant="primary">
-                      {linkText}
-                    </ExternalLinkButton>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
         
         return (
           <div className="space-y-6 print:space-y-4" id="registration-summary">
