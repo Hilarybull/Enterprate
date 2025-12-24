@@ -312,15 +312,44 @@ export default function FinanceAutomation() {
       const response = await axios.get(`${API_URL}/finance/compliance/defaults`, { headers: getHeaders() });
       const defaults = response.data;
       
-      // Create each default item
-      for (const item of defaults) {
-        await axios.post(`${API_URL}/finance/compliance`, item, { headers: getHeaders() });
+      if (!defaults || defaults.length === 0) {
+        toast.info('No default checklist items available');
+        return;
       }
       
-      toast.success('Default compliance checklist loaded!');
-      loadComplianceItems();
+      let successCount = 0;
+      let errorCount = 0;
+      
+      // Create each default item with proper error handling
+      for (const item of defaults) {
+        try {
+          // Ensure all required fields are present
+          const complianceItem = {
+            title: item.title || 'Untitled Item',
+            description: item.description || 'No description',
+            category: item.category || 'legal',
+            priority: item.priority || 'medium',
+            dueDate: item.dueDate || null
+          };
+          
+          await axios.post(`${API_URL}/finance/compliance`, complianceItem, { headers: getHeaders() });
+          successCount++;
+        } catch (itemError) {
+          console.error('Failed to create compliance item:', item.title, itemError);
+          errorCount++;
+        }
+      }
+      
+      if (successCount > 0) {
+        toast.success(`Loaded ${successCount} compliance items!`);
+        loadComplianceItems();
+      }
+      if (errorCount > 0) {
+        toast.warning(`${errorCount} items failed to load`);
+      }
     } catch (error) {
-      toast.error('Failed to load defaults');
+      console.error('Failed to load defaults:', error);
+      toast.error('Failed to load default checklist');
     }
   };
 
