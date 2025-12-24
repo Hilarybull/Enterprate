@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import AuthProvider, { useAuth } from '@/context/AuthContext';
 import WorkspaceProvider from '@/context/WorkspaceContext';
@@ -9,6 +9,7 @@ import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
+import AuthCallback from '@/pages/AuthCallback';
 
 // Enterprise Layout
 import { EnterpriseLayout } from '@/components/enterprise';
@@ -53,6 +54,12 @@ if (typeof window !== 'undefined') {
 
 function PrivateRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
+  
+  // Skip auth check if user data was passed from AuthCallback
+  if (location.state?.user) {
+    return children;
+  }
   
   if (loading) {
     return (
@@ -72,7 +79,20 @@ function PrivateRoute({ children }) {
   return isAuthenticated ? children : <Navigate to="/auth/login" />;
 }
 
-function AppRoutes() {
+/**
+ * AppRouter Component
+ * CRITICAL: Check for session_id in URL hash BEFORE rendering normal routes
+ * This prevents race conditions with Google OAuth callback
+ */
+function AppRouter() {
+  const location = useLocation();
+  
+  // Check URL hash for session_id (Google OAuth callback)
+  // This must be synchronous during render to prevent race conditions
+  if (location.hash?.includes('session_id=')) {
+    return <AuthCallback />;
+  }
+  
   return (
     <Routes>
       {/* Auth Routes */}
@@ -80,6 +100,7 @@ function AppRoutes() {
       <Route path="/auth/register" element={<Register />} />
       <Route path="/auth/forgot-password" element={<ForgotPassword />} />
       <Route path="/auth/reset-password" element={<ResetPassword />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       
       {/* Protected Enterprise Routes */}
       <Route path="/" element={
@@ -125,7 +146,7 @@ function App() {
     <div className="App">
       <AuthProvider>
         <BrowserRouter>
-          <AppRoutes />
+          <AppRouter />
           <Toaster position="top-right" richColors />
         </BrowserRouter>
       </AuthProvider>
