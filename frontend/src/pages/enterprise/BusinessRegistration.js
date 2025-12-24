@@ -518,7 +518,8 @@ export default function BusinessRegistration() {
       case 1:
         return !!formData.businessType;
       case 2:
-        return formData.companyName.length >= 3;
+        // Must have company name and it must be verified as available
+        return formData.companyName.length >= 3 && nameVerified;
       case 3:
         // Must have description, generated SIC codes, and selected exactly 4
         return formData.businessDescription.length >= 20 && 
