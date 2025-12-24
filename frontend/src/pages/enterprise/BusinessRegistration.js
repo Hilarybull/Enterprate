@@ -70,37 +70,164 @@ const STEPS = [
 ];
 
 // Business type options with updated fees from Companies House (as of 2024)
+// Source: https://www.gov.uk/government/publications/companies-house-fees/companies-house-fees
 const BUSINESS_TYPES = [
+  // === COMPANIES HOUSE REGISTERED ===
   {
     id: 'ltd',
-    title: 'Private Limited Company (Ltd)',
-    description: 'Separate legal entity with limited liability. Best for credibility and growth.',
+    title: 'Private Company Limited by Shares (Ltd)',
+    description: 'Most common UK company structure. Shareholders\' liability limited to unpaid share value.',
     recommended: true,
+    registrationAuthority: 'Companies House',
+    isCompaniesHouse: true,
     registrationFee: '£50 (online) / £71 (paper)',
-    benefits: ['Limited liability protection', 'Professional credibility', 'Tax advantages', 'Easier to raise investment']
+    sameDayFee: '£78 (online)',
+    useCases: ['SMEs & startups', 'Consultants & freelancers', 'Trading businesses', 'Investment vehicles'],
+    benefits: ['Limited liability protection', 'Professional credibility', 'Tax planning flexibility', 'Easier to raise investment', 'Separate legal entity'],
+    requirements: ['Min 1 director', 'Min 1 shareholder', 'Registered office in UK', 'Annual accounts & confirmation statement']
   },
+  {
+    id: 'ltd_guarantee',
+    title: 'Private Company Limited by Guarantee',
+    description: 'No shareholders; members act as guarantors. Profits reinvested, not distributed.',
+    registrationAuthority: 'Companies House',
+    isCompaniesHouse: true,
+    registrationFee: '£50 (online) / £71 (paper)',
+    sameDayFee: '£78 (online)',
+    useCases: ['Non-profit organisations', 'Membership bodies', 'Charities & associations', 'Clubs & societies'],
+    benefits: ['Limited liability for members', 'No share capital required', 'Democratic structure', 'Asset lock protection'],
+    requirements: ['Min 1 director', 'Min 1 guarantor member', 'Memorandum of association', 'Cannot distribute profits']
+  },
+  {
+    id: 'plc',
+    title: 'Public Limited Company (PLC)',
+    description: 'Can offer shares to the public. Required for stock exchange listing.',
+    registrationAuthority: 'Companies House',
+    isCompaniesHouse: true,
+    registrationFee: '£50 (online) / £71 (paper)',
+    sameDayFee: '£78 (online)',
+    useCases: ['Large enterprises', 'Companies planning IPO', 'Stock exchange listing', 'Public investment raising'],
+    benefits: ['Can raise capital publicly', 'Enhanced credibility', 'Share liquidity', 'Growth potential'],
+    requirements: ['Min £50,000 share capital', '25% must be paid up', 'Min 2 directors', 'Company secretary required', 'Higher compliance standards']
+  },
+  {
+    id: 'unlimited',
+    title: 'Unlimited Company',
+    description: 'Members have unlimited personal liability. Rarely used; chosen for privacy or tax structuring.',
+    registrationAuthority: 'Companies House',
+    isCompaniesHouse: true,
+    registrationFee: '£50 (online) / £71 (paper)',
+    sameDayFee: '£78 (online)',
+    useCases: ['Privacy-focused structures', 'Tax planning vehicles', 'Professional practices', 'Family investment vehicles'],
+    benefits: ['No public accounts filing', 'Privacy advantages', 'Flexible profit distribution', 'No audit requirements for small companies'],
+    requirements: ['Unlimited personal liability', 'Rarely used structure', 'Same registration process as Ltd']
+  },
+  {
+    id: 'llp',
+    title: 'Limited Liability Partnership (LLP)',
+    description: 'Hybrid of partnership and limited company. Members have limited liability.',
+    registrationAuthority: 'Companies House',
+    isCompaniesHouse: true,
+    registrationFee: '£50 (online) / £71 (paper)',
+    sameDayFee: '£78 (online)',
+    useCases: ['Law firms', 'Accountancy practices', 'Consulting firms', 'Professional services'],
+    benefits: ['Limited liability for partners', 'Tax-transparent structure', 'Flexibility in profit sharing', 'Professional credibility'],
+    requirements: ['Min 2 designated members', 'Members taxed as self-employed', 'Annual accounts required', 'Confirmation statement required']
+  },
+  {
+    id: 'lp',
+    title: 'Limited Partnership (LP)',
+    description: 'At least one general partner (unlimited liability) and one limited partner.',
+    registrationAuthority: 'Companies House',
+    isCompaniesHouse: true,
+    registrationFee: '£20 (paper only)',
+    useCases: ['Investment funds', 'Private equity structures', 'Venture capital', 'Real estate investments'],
+    benefits: ['Tax transparency', 'Limited liability for LPs', 'Flexible profit allocation', 'Pass-through taxation'],
+    requirements: ['Min 1 general partner (unlimited liability)', 'Min 1 limited partner (capital only)', 'Paper registration only', 'LP cannot manage business']
+  },
+  {
+    id: 'cic_shares',
+    title: 'Community Interest Company (CIC) - Limited by Shares',
+    description: 'Social enterprise structure. Profits must benefit the community.',
+    registrationAuthority: 'Companies House + CIC Regulator',
+    isCompaniesHouse: true,
+    registrationFee: '£35 (online) / £71 (paper)',
+    useCases: ['Social enterprises', 'Community projects', 'Ethical businesses', 'Impact investing'],
+    benefits: ['Community benefit focus', 'Can pay dividends (capped)', 'Social credibility', 'Asset lock protection'],
+    requirements: ['Community interest statement', 'Asset lock', 'Regulated by CIC Regulator', 'Annual CIC report required']
+  },
+  {
+    id: 'cic_guarantee',
+    title: 'Community Interest Company (CIC) - Limited by Guarantee',
+    description: 'Social enterprise without share capital. All profits reinvested in community.',
+    registrationAuthority: 'Companies House + CIC Regulator',
+    isCompaniesHouse: true,
+    registrationFee: '£35 (online) / £71 (paper)',
+    useCases: ['Non-profit social enterprises', 'Community organisations', 'Charitable trading', 'Social housing'],
+    benefits: ['No shareholder dividends', 'Community asset lock', 'Grant eligibility', 'Social enterprise status'],
+    requirements: ['Community interest statement', 'Asset lock', 'No profit distribution', 'Annual CIC report']
+  },
+  {
+    id: 'overseas',
+    title: 'Overseas Company (UK Establishment)',
+    description: 'Non-UK company operating in the UK. Must register UK establishment or branch.',
+    registrationAuthority: 'Companies House',
+    isCompaniesHouse: true,
+    registrationFee: '£71 (paper) / £50 (online where available)',
+    useCases: ['International expansion', 'UK branch operations', 'Foreign subsidiaries', 'Global businesses'],
+    benefits: ['UK trading presence', 'Local credibility', 'Access to UK market', 'Local banking'],
+    requirements: ['Parent company must exist abroad', 'UK registered address', 'UK disclosure requirements', 'Annual accounts filing']
+  },
+  // === OTHER REGISTRATION AUTHORITIES ===
   {
     id: 'sole_trader',
     title: 'Sole Trader',
-    description: 'Simplest structure. You and the business are legally the same.',
-    registrationFee: 'Free (register with HMRC)',
-    benefits: ['Easy to set up', 'Minimal paperwork', 'Full control', 'Simple taxes']
+    description: 'Simplest structure. You and the business are legally the same entity.',
+    registrationAuthority: 'HMRC',
+    isCompaniesHouse: false,
+    registrationFee: 'Free (register with HMRC for Self Assessment)',
+    useCases: ['Freelancers', 'Small service providers', 'Hobbyists turning pro', 'Testing business ideas'],
+    benefits: ['Easiest to set up', 'Minimal paperwork', 'Full control', 'Simple tax (Self Assessment)', 'Keep all profits'],
+    requirements: ['Register for Self Assessment', 'Keep business records', 'Submit annual tax return', 'Pay Income Tax & NI']
   },
   {
-    id: 'partnership',
-    title: 'Partnership / LLP',
-    description: 'Business owned by two or more people with shared profits.',
-    registrationFee: '£50 (online) / £71 (paper)',
-    benefits: ['Shared responsibility', 'Combined expertise', 'Flexible structure']
+    id: 'cio',
+    title: 'Charitable Incorporated Organisation (CIO)',
+    description: 'Legal structure exclusively for charities. Limited liability without company status.',
+    registrationAuthority: 'Charity Commission (not Companies House)',
+    isCompaniesHouse: false,
+    registrationFee: 'Free (Charity Commission)',
+    useCases: ['Charities', 'Grant-funded organisations', 'Religious organisations', 'Educational charities'],
+    benefits: ['Charity tax exemptions', 'Limited liability', 'No Companies House reporting', 'Charity credibility'],
+    requirements: ['Must be charitable purposes only', 'Registered with Charity Commission', 'Annual charity returns', 'Public benefit requirement']
   },
   {
-    id: 'charity',
-    title: 'Charity / CIC',
-    description: 'Community Interest Company or charitable organization.',
-    registrationFee: '£65 (online) / £86 (paper)',
-    benefits: ['Tax exemptions', 'Grant eligibility', 'Community focus']
+    id: 'royal_charter',
+    title: 'Royal Charter Company',
+    description: 'Incorporated by Royal Charter. Used by universities, professional bodies, and institutions.',
+    registrationAuthority: 'Privy Council',
+    isCompaniesHouse: false,
+    registrationFee: 'By application (very rare)',
+    useCases: ['Universities', 'Professional bodies', 'Historic institutions', 'Learned societies'],
+    benefits: ['Prestigious status', 'Royal recognition', 'Permanent existence', 'Public trust'],
+    requirements: ['Privy Council approval', 'Outstanding national importance', 'Royal Charter petition', 'Extremely rare']
+  },
+  {
+    id: 'coop',
+    title: 'Co-operative / Community Benefit Society',
+    description: 'Member-owned organisations with democratic control (one member, one vote).',
+    registrationAuthority: 'Financial Conduct Authority (FCA)',
+    isCompaniesHouse: false,
+    registrationFee: 'Varies (register with FCA)',
+    useCases: ['Worker co-operatives', 'Consumer co-operatives', 'Housing associations', 'Credit unions'],
+    benefits: ['Democratic control', 'Community ownership', 'Profit sharing', 'Social purpose'],
+    requirements: ['FCA registration', 'Democratic governance rules', 'Member-focused', 'Annual returns to FCA']
   }
 ];
+
+// Group business types by registration authority
+const COMPANIES_HOUSE_TYPES = BUSINESS_TYPES.filter(t => t.isCompaniesHouse);
+const OTHER_AUTHORITY_TYPES = BUSINESS_TYPES.filter(t => !t.isCompaniesHouse);
 
 // SIC code database (expanded)
 const SIC_CODE_DATABASE = [
