@@ -144,16 +144,36 @@ export default function BusinessOperations() {
     e.preventDefault();
     setCreatingTask(true);
     try {
-      await axios.post(`${API_URL}/operations/tasks`, {
-        ...newTask,
-        tags: newTask.tags ? newTask.tags.split(',').map(t => t.trim()) : []
-      }, { headers: getHeaders() });
-      toast.success('Task created!');
-      setShowTaskDialog(false);
-      setNewTask({ title: '', description: '', priority: 'medium', dueDate: '', assignee: '', tags: '' });
-      loadTasks();
+      // Build task payload with only non-empty values
+      const taskPayload = {
+        title: newTask.title.trim(),
+        description: newTask.description?.trim() || null,
+        priority: newTask.priority || 'medium',
+        tags: newTask.tags ? newTask.tags.split(',').map(t => t.trim()).filter(t => t) : []
+      };
+      
+      // Only add dueDate if it has a value
+      if (newTask.dueDate) {
+        taskPayload.dueDate = newTask.dueDate;
+      }
+      
+      // Only add assignee if it has a value
+      if (newTask.assignee?.trim()) {
+        taskPayload.assignee = newTask.assignee.trim();
+      }
+      
+      const response = await axios.post(`${API_URL}/operations/tasks`, taskPayload, { headers: getHeaders() });
+      
+      if (response.data) {
+        toast.success('Task created!');
+        setShowTaskDialog(false);
+        setNewTask({ title: '', description: '', priority: 'medium', dueDate: '', assignee: '', tags: '' });
+        loadTasks();
+      }
     } catch (error) {
-      toast.error('Failed to create task');
+      console.error('Task creation error:', error.response?.data || error.message);
+      const errorMessage = error.response?.data?.detail || 'Failed to create task';
+      toast.error(errorMessage);
     } finally {
       setCreatingTask(false);
     }
