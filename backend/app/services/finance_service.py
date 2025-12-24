@@ -181,10 +181,10 @@ class FinanceService:
             # Rebuild proper data URL
             full_image_url = f"data:image/{image_type};base64,{image_data}"
             
-            # Create chat with vision capability
+            # Create chat with vision capability using correct API
             chat = LlmChat(
                 api_key=llm_key,
-                model="gpt-4o",
+                session_id=f"receipt-scan-{workspace_id}",
                 system_message="""You are a receipt scanning assistant. Extract information from receipt images accurately.
                 Always return a valid JSON object with these exact fields:
                 {
@@ -197,12 +197,16 @@ class FinanceService:
                 }
                 
                 IMPORTANT: Return ONLY the JSON object, no markdown code blocks, no explanatory text."""
-            )
+            ).with_model("openai", "gpt-4o")
             
-            response = await chat.send_async(
-                message=UserMessage(
+            # Create image content
+            from emergentintegrations.llm.chat import ImageContent
+            image_content = ImageContent(image_base64=image_data)
+            
+            response = await chat.send_message(
+                UserMessage(
                     text="Please analyze this receipt image and extract: vendor name, total amount, date, expense category, and line items. Return only a JSON object.",
-                    images=[ImageUrl(url=full_image_url)]
+                    file_contents=[image_content]
                 )
             )
             
