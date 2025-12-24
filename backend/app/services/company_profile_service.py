@@ -495,11 +495,11 @@ class CompanyProfileService:
             
             chat = LlmChat(
                 api_key=llm_key,
-                model="gpt-4o",
+                session_id="company-naming",
                 system_message="You are a company naming expert. Return only valid JSON."
-            )
+            ).with_model("openai", "gpt-4o")
             
-            response = await chat.send_async(message=UserMessage(text=prompt))
+            response = await chat.send_message(UserMessage(text=prompt))
             
             import json
             text = response.text
