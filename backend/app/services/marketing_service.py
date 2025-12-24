@@ -252,6 +252,9 @@ class MarketingService:
     @staticmethod
     async def generate_social_post(workspace_id: str, data: SocialPostGenerateRequest) -> dict:
         """Generate social post content with AI"""
+        import json
+        import re
+        
         if not LLM_AVAILABLE:
             return MarketingService._get_fallback_social_post(data)
         
@@ -271,46 +274,80 @@ class MarketingService:
             
             prompt = f"""Generate a social media post for {data.platform}.
             
-            Topic: {data.topic}
-            Tone: {data.tone}
-            Character limit: {char_limit}
-            Include emojis: {data.includeEmojis}
-            Include hashtags: {data.includeHashtags}
-            
-            Return a JSON object with:
-            - content: the post text
-            - hashtags: array of relevant hashtags (without #)
-            
-            Return ONLY valid JSON."""
+Topic: {data.topic}
+Tone: {data.tone}
+Character limit: {char_limit}
+Include emojis: {data.includeEmojis}
+Include hashtags: {data.includeHashtags}
+
+Return ONLY a JSON object with these exact fields:
+{{
+    "content": "the post text goes here",
+    "hashtags": ["hashtag1", "hashtag2", "hashtag3"]
+}}
+
+Do NOT include any markdown formatting, explanatory text, or code blocks. Just the raw JSON object."""
             
             chat = LlmChat(
                 api_key=llm_key,
                 model="gpt-4o",
-                system_message="You are a social media marketing expert. Create engaging, platform-appropriate content."
+                system_message="You are a social media marketing expert. Create engaging, platform-appropriate content. Always respond with ONLY a valid JSON object, no markdown or explanatory text."
             )
             
             response = await chat.send_async(message=UserMessage(text=prompt))
             
-            import json
+            # Parse response with multiple strategies
+            text = response.text.strip()
+            
+            # Strategy 1: Remove markdown code blocks
+            if "```json" in text:
+                text = text.split("```json")[1].split("```")[0].strip()
+            elif "```" in text:
+                text = text.split("```")[1].split("```")[0].strip()
+            
+            # Strategy 2: Find JSON object pattern
+            if not text.startswith("{"):
+                json_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', text, re.DOTALL)
+                if json_match:
+                    text = json_match.group()
+            
             try:
-                text = response.text
-                if "```json" in text:
-                    text = text.split("```json")[1].split("```")[0]
-                elif "```" in text:
-                    text = text.split("```")[1].split("```")[0]
+                result = json.loads(text)
                 
-                result = json.loads(text.strip())
+                content = result.get("content", "")
+                if not content:
+                    return MarketingService._get_fallback_social_post(data)
+                
+                hashtags = result.get("hashtags", [])
+                if isinstance(hashtags, str):
+                    hashtags = [h.strip().replace("#", "") for h in hashtags.split(",")]
+                elif isinstance(hashtags, list):
+                    hashtags = [str(h).strip().replace("#", "") for h in hashtags]
+                else:
+                    hashtags = []
+                
                 return {
                     "platform": data.platform,
-                    "content": result.get("content", ""),
-                    "hashtags": result.get("hashtags", []),
+                    "content": content[:char_limit],  # Enforce character limit
+                    "hashtags": hashtags[:10],  # Limit hashtags
                     "generated": True
                 }
-            except Exception:
+                
+            except json.JSONDecodeError as je:
+                print(f"Social post JSON parsing failed: {je}, text: {text[:200]}")
+                # Try to extract content directly from text
+                if len(text) > 10 and not text.startswith("{"):
+                    # AI returned plain text, use it as content
+                    return {
+                        "platform": data.platform,
+                        "content": text[:char_limit],
+                        "hashtags": [],
+                        "generated": True
+                    }
                 return MarketingService._get_fallback_social_post(data)
                 
         except Exception as e:
-            print(f"Social post generation error: {e}")
+            print(f"Social post generation error: {type(e).__name__}: {e}")
             return MarketingService._get_fallback_social_post(data)
     
     @staticmethod
