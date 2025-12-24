@@ -502,7 +502,8 @@ class CompanyProfileService:
             response = await chat.send_message(UserMessage(text=prompt))
             
             import json
-            text = response.text
+            # Handle both string and object response
+            text = response if isinstance(response, str) else (response.text if hasattr(response, 'text') else str(response))
             if "```json" in text:
                 text = text.split("```json")[1].split("```")[0]
             elif "```" in text:
