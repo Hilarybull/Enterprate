@@ -4,7 +4,7 @@ import uuid
 import httpx
 from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException
-from app.core.database import get_database
+from app.core.database import get_db
 from app.schemas.google_auth import GoogleAuthCallback, GoogleUserResponse, GoogleAuthResponse
 import jwt
 
@@ -23,7 +23,7 @@ class GoogleAuthService:
         2. Create or update user in database
         3. Create session and return JWT token
         """
-        db = await get_database()
+        db = get_db()
         
         # Step 1: Exchange session_id for user data from Emergent Auth
         try:
