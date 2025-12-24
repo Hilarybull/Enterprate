@@ -492,7 +492,7 @@ Key highlights include:
 - Trust and credibility building
 - Customer success stories""",
             
-            "operations_plan": f"""Our operations are designed for efficiency and scalability:
+            "operations_plan": """Our operations are designed for efficiency and scalability:
 
 **Core Processes**:
 - Service delivery workflow
