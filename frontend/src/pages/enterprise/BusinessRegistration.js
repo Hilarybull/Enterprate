@@ -305,6 +305,11 @@ export default function BusinessRegistration() {
   const [generatingSicCodes, setGeneratingSicCodes] = useState(false);
   const [sicCodesGenerated, setSicCodesGenerated] = useState(false);
   
+  // Name availability check state
+  const [checkingName, setCheckingName] = useState(false);
+  const [nameCheckResult, setNameCheckResult] = useState(null);
+  const [nameVerified, setNameVerified] = useState(false);
+  
   // Form data state
   const [formData, setFormData] = useState({
     // Step 1: Business Type
@@ -331,6 +336,66 @@ export default function BusinessRegistration() {
     understandsNotFormationAgent: false,
     understandsOfficialRegistration: false
   });
+
+  // Get auth headers
+  const getHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+      Authorization: `Bearer ${token}`,
+      'X-Workspace-ID': currentWorkspace?.id || ''
+    };
+  };
+
+  // Check company name availability via Companies House API
+  const checkNameAvailability = async () => {
+    if (!formData.companyName || formData.companyName.length < 3) {
+      toast.error('Please enter at least 3 characters for the company name');
+      return;
+    }
+
+    setCheckingName(true);
+    setNameCheckResult(null);
+    setNameVerified(false);
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/company-profile/check-name`,
+        { companyName: formData.companyName },
+        { headers: getHeaders() }
+      );
+
+      setNameCheckResult(response.data);
+      
+      if (response.data.isAvailable) {
+        setNameVerified(true);
+        toast.success('Name appears to be available!');
+      } else {
+        toast.warning('This name may already be taken. See suggestions below.');
+      }
+    } catch (error) {
+      console.error('Name check error:', error);
+      toast.error('Failed to check name availability. Please try again.');
+    } finally {
+      setCheckingName(false);
+    }
+  };
+
+  // Select a suggested name
+  const selectSuggestedName = (name) => {
+    updateFormData('companyName', name);
+    setNameCheckResult(null);
+    setNameVerified(false);
+    toast.info(`Selected: ${name}. Click "Check Availability" to verify.`);
+  };
+
+  // Reset name check when name changes
+  const handleNameChange = (newName) => {
+    updateFormData('companyName', newName);
+    if (nameVerified) {
+      setNameVerified(false);
+      setNameCheckResult(null);
+    }
+  };
 
   // Calculate progress
   const progress = Math.round((currentStep / STEPS.length) * 100);
