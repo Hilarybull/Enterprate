@@ -565,6 +565,21 @@ frontend:
         agent: "main"
         comment: "All 9 navigation items visible and working"
 
+  - task: "In-Platform Company Name Availability Checker"
+    implemented: true
+    working: true
+    file: "src/pages/enterprise/BusinessRegistration.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "NEW FEATURE: In-platform company name availability checker implemented in Business Registration Step 2. Integrates with Companies House API via /api/company-profile/check-name endpoint. Features: real-time name checking, similar names display, AI-suggested alternatives, verification status, Next button validation."
+      - working: true
+        agent: "testing"
+        comment: "✅ IN-PLATFORM COMPANY NAME AVAILABILITY CHECKER E2E TESTING COMPLETE - 100% SUCCESS RATE: Successfully tested all requested scenarios. NAVIGATION: Login successful, navigated to Business Registration, selected Private Limited Company, proceeded to Step 2. COMMON NAME TEST (Barclays): Shows 'Name Appears Available' (no exact match), displays Similar Names section with BARCLAYS PLC entries including company numbers and status badges, shows AI-Suggested Alternative Names with 6 clickable suggestions. AI SUGGESTIONS: Clickable suggestions populate input field, include reasons for recommendations. UNIQUE NAME TEST (XYZ Quantum Dynamics 2024): Shows as available with high confidence, displays 'Name verified as available' green checkmark, enables Next button. VALIDATION FLOW: Next button correctly disabled without verification, requires 'Check Availability' click to proceed, verification cleared when input changes. RE-CHECK FLOW: 'Re-Check Availability' button appears after initial check. UI ELEMENTS: All key elements present - Check Name Availability section with search icon, purple gradient Check Availability button, green Re-Check button, Similar Names with company data, AI suggestions grid, professional design. Feature is production-ready with excellent UX and full Companies House integration."
+
 metadata:
   created_by: "main_agent"
   version: "2.3"
