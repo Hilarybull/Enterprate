@@ -702,7 +702,7 @@ You must complete the actual registration at Companies House.
           <div className="space-y-6">
             <div>
               <h2 className="text-xl font-semibold mb-2">Choose Your Company Name</h2>
-              <p className="text-gray-500">Your company name must be unique and follow Companies House naming rules.</p>
+              <p className="text-gray-500">Your company name must be unique and follow Companies House naming rules. We'll check availability for you.</p>
             </div>
 
             <Card>
@@ -712,18 +712,162 @@ You must complete the actual registration at Companies House.
                   <div className="flex space-x-2">
                     <Input 
                       value={formData.companyName}
-                      onChange={(e) => updateFormData('companyName', e.target.value)}
+                      onChange={(e) => handleNameChange(e.target.value)}
                       placeholder="e.g., Acme Consulting"
-                      className="flex-1"
+                      className={`flex-1 ${nameVerified ? 'border-green-500' : ''}`}
                     />
                     {formData.businessType === 'ltd' && (
                       <span className="flex items-center text-gray-500 bg-gray-100 px-3 rounded-md">Ltd</span>
                     )}
                   </div>
+                  {nameVerified && (
+                    <p className="text-sm text-green-600 mt-1 flex items-center">
+                      <CheckCircle2 className="w-4 h-4 mr-1" />
+                      Name verified as available
+                    </p>
+                  )}
                 </div>
 
+                {/* In-Platform Name Availability Check */}
+                <div className={`border rounded-lg p-4 ${nameVerified ? 'bg-green-50 border-green-200' : 'bg-purple-50 border-purple-200'}`}>
+                  <h4 className={`font-semibold flex items-center mb-2 ${nameVerified ? 'text-green-800' : 'text-purple-800'}`}>
+                    <Search className="w-4 h-4 mr-2" />
+                    Check Name Availability
+                  </h4>
+                  <p className={`text-sm mb-3 ${nameVerified ? 'text-green-700' : 'text-purple-700'}`}>
+                    {nameVerified 
+                      ? 'Your company name has been verified as available via Companies House.'
+                      : 'Check if your chosen name is available using the Companies House database.'}
+                  </p>
+                  <Button 
+                    onClick={checkNameAvailability}
+                    disabled={checkingName || formData.companyName.length < 3}
+                    className={nameVerified ? 'bg-green-600 hover:bg-green-700' : 'gradient-primary border-0'}
+                  >
+                    {checkingName ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Checking Companies House...
+                      </>
+                    ) : nameVerified ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Re-Check Availability
+                      </>
+                    ) : (
+                      <>
+                        <Search className="w-4 h-4 mr-2" />
+                        Check Availability
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Name Check Results */}
+                {nameCheckResult && (
+                  <div className="space-y-4">
+                    {/* Availability Status */}
+                    <div className={`p-4 rounded-lg ${nameCheckResult.isAvailable ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                      <div className="flex items-center">
+                        {nameCheckResult.isAvailable ? (
+                          <>
+                            <CheckCircle2 className="w-6 h-6 text-green-600 mr-3" />
+                            <div>
+                              <h5 className="font-semibold text-green-800">Name Appears Available!</h5>
+                              <p className="text-sm text-green-700">
+                                "{formData.companyName}" does not have an exact match in Companies House records.
+                                {nameCheckResult.confidence >= 0.9 && ' High confidence result.'}
+                              </p>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="w-6 h-6 text-red-600 mr-3" />
+                            <div>
+                              <h5 className="font-semibold text-red-800">Name May Be Taken</h5>
+                              <p className="text-sm text-red-700">
+                                "{formData.companyName}" has exact or similar matches. Please choose a different name.
+                              </p>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Exact Matches */}
+                    {nameCheckResult.exactMatches && nameCheckResult.exactMatches.length > 0 && (
+                      <div className="border rounded-lg p-4">
+                        <h5 className="font-semibold text-red-700 mb-2 flex items-center">
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Exact Matches Found ({nameCheckResult.exactMatches.length})
+                        </h5>
+                        <div className="space-y-2">
+                          {nameCheckResult.exactMatches.slice(0, 3).map((match, idx) => (
+                            <div key={idx} className="text-sm bg-red-50 p-2 rounded">
+                              <span className="font-medium">{match.companyName}</span>
+                              <span className="text-gray-500 ml-2">({match.companyNumber})</span>
+                              <Badge className="ml-2" variant={match.companyStatus === 'active' ? 'default' : 'secondary'}>
+                                {match.companyStatus}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Similar Matches */}
+                    {nameCheckResult.similarMatches && nameCheckResult.similarMatches.length > 0 && (
+                      <div className="border rounded-lg p-4">
+                        <h5 className="font-semibold text-amber-700 mb-2 flex items-center">
+                          <AlertCircle className="w-4 h-4 mr-2" />
+                          Similar Names ({nameCheckResult.similarMatches.length})
+                        </h5>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {nameCheckResult.similarMatches.slice(0, 5).map((match, idx) => (
+                            <div key={idx} className="text-sm bg-amber-50 p-2 rounded">
+                              <span className="font-medium">{match.companyName}</span>
+                              <span className="text-gray-500 ml-2">({match.companyNumber})</span>
+                              <Badge className="ml-2" variant={match.companyStatus === 'active' ? 'default' : 'secondary'}>
+                                {match.companyStatus}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* AI Suggestions */}
+                    {nameCheckResult.suggestions && nameCheckResult.suggestions.length > 0 && (
+                      <div className="border border-purple-200 rounded-lg p-4 bg-purple-50">
+                        <h5 className="font-semibold text-purple-800 mb-2 flex items-center">
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          AI-Suggested Alternative Names
+                        </h5>
+                        <p className="text-sm text-purple-700 mb-3">
+                          Click on a suggestion to use it, then verify availability.
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {nameCheckResult.suggestions.slice(0, 6).map((suggestion, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => selectSuggestedName(suggestion.name)}
+                              className="text-left p-3 bg-white border border-purple-200 rounded-lg hover:border-purple-400 hover:bg-purple-100 transition-colors"
+                            >
+                              <span className="font-medium text-purple-800">{suggestion.name}</span>
+                              {formData.businessType === 'ltd' && (
+                                <span className="text-gray-500 ml-1">Ltd</span>
+                              )}
+                              <p className="text-xs text-gray-500 mt-1">{suggestion.reason}</p>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div>
-                  <Label>Alternative Names (in case your first choice is taken)</Label>
+                  <Label>Alternative Names (optional backup choices)</Label>
                   <div className="space-y-2 mt-2">
                     <Input 
                       value={formData.alternativeNames[0]}
@@ -745,20 +889,6 @@ You must complete the actual registration at Companies House.
                     />
                   </div>
                 </div>
-
-                {/* Check Name Availability Link */}
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-purple-800 flex items-center mb-2">
-                    <Globe className="w-4 h-4 mr-2" />
-                    Check Name Availability
-                  </h4>
-                  <p className="text-sm text-purple-700 mb-3">
-                    Use the official Companies House service to check if your chosen name is available.
-                  </p>
-                  <ExternalLinkButton href={OFFICIAL_LINKS.nameCheck} variant="primary">
-                    Check Name on Companies House
-                  </ExternalLinkButton>
-                </div>
               </CardContent>
             </Card>
 
@@ -770,6 +900,12 @@ You must complete the actual registration at Companies House.
                 <li>• Cannot be offensive or misleading</li>
               </ul>
             </InfoBox>
+
+            {!nameVerified && formData.companyName.length >= 3 && (
+              <InfoBox type="tip" title="Next Step">
+                Click "Check Availability" above to verify your company name before proceeding.
+              </InfoBox>
+            )}
           </div>
         );
 
