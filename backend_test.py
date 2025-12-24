@@ -1760,32 +1760,35 @@ def test_google_oauth_callback_invalid_session():
         "session_id": "invalid_session_12345"
     }
     
-    success, response = make_request("POST", "/auth/google/callback", invalid_callback_data, expect_success=False)
-    
-    # Debug: Print what we actually got
-    print(f"   Debug: success={success}, response={response}")
-    
-    # Check if we got the expected 401 error response
-    if not success and isinstance(response, dict) and "detail" in response:
-        if "Invalid or expired session" in response["detail"]:
-            log_test("Google OAuth Callback (Invalid)", True, 
-                    "✅ PASS: Invalid session_id correctly rejected with 401")
-            return True
+    # Make request and check the actual HTTP status code
+    url = f"{API_BASE}/auth/google/callback"
+    try:
+        response = requests.post(url, json=invalid_callback_data, headers={"Content-Type": "application/json"}, timeout=30)
+        
+        # Check if we got 401 status code
+        if response.status_code == 401:
+            try:
+                response_data = response.json()
+                if "detail" in response_data and "Invalid or expired session" in response_data["detail"]:
+                    log_test("Google OAuth Callback (Invalid)", True, 
+                            "✅ PASS: Invalid session_id correctly rejected with 401")
+                    return True
+                else:
+                    log_test("Google OAuth Callback (Invalid)", False, 
+                            f"❌ FAIL: Unexpected error message: {response_data}")
+                    return False
+            except:
+                log_test("Google OAuth Callback (Invalid)", True, 
+                        "✅ PASS: Invalid session_id correctly rejected with 401")
+                return True
         else:
             log_test("Google OAuth Callback (Invalid)", False, 
-                    f"❌ FAIL: Unexpected error message: {response['detail']}")
+                    f"❌ FAIL: Expected 401, got {response.status_code}: {response.text}")
             return False
-    elif not success and isinstance(response, str) and "Invalid or expired session" in response:
-        log_test("Google OAuth Callback (Invalid)", True, 
-                "✅ PASS: Invalid session_id correctly rejected with 401")
-        return True
-    elif success:
+            
+    except Exception as e:
         log_test("Google OAuth Callback (Invalid)", False, 
-                "❌ FAIL: Invalid session_id was accepted (should be 401)", response)
-        return False
-    else:
-        log_test("Google OAuth Callback (Invalid)", False, 
-                f"❌ FAIL: Unexpected response format: {response}")
+                f"❌ FAIL: Request error: {e}")
         return False
 
 
