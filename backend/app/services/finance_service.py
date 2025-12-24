@@ -309,7 +309,7 @@ class FinanceService:
         return None
     
     @staticmethod
-    def _get_mock_receipt_data() -> dict:
+    def _get_mock_receipt_data(reason: str = "AI scanning unavailable") -> dict:
         """Mock receipt data when AI unavailable"""
         return {
             "vendor": "Example Store",
@@ -321,7 +321,7 @@ class FinanceService:
                 {"name": "Item 2", "quantity": 2, "price": 10.00}
             ],
             "confidence": 0.0,
-            "rawText": "AI scanning unavailable - please enter details manually"
+            "rawText": f"{reason} - please enter details manually"
         }
     
     # === TAX ESTIMATION ===
