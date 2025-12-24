@@ -47,9 +47,16 @@ import {
   BookOpen,
   Link2,
   ClipboardList,
-  Globe
+  Globe,
+  Search,
+  RefreshCw,
+  XCircle,
+  CheckCircle2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
 // Step configuration
 const STEPS = [
