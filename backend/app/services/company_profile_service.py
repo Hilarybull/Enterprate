@@ -277,7 +277,21 @@ class CompanyProfileService:
         db = get_db()
         profile = await db.company_profiles.find_one({"workspaceId": workspace_id})
         if profile:
-            return {k: v for k, v in profile.items() if k != '_id'}
+            result = {k: v for k, v in profile.items() if k != '_id'}
+            # Ensure required fields exist
+            if 'id' not in result:
+                result['id'] = f"cp_{uuid.uuid4().hex[:12]}"
+                await db.company_profiles.update_one(
+                    {"workspaceId": workspace_id},
+                    {"$set": {"id": result['id']}}
+                )
+            if 'createdAt' not in result:
+                result['createdAt'] = datetime.now(timezone.utc).isoformat()
+                await db.company_profiles.update_one(
+                    {"workspaceId": workspace_id},
+                    {"$set": {"createdAt": result['createdAt']}}
+                )
+            return result
         return None
     
     @staticmethod
