@@ -765,61 +765,187 @@ You must complete the actual registration at Companies House.
   // Render step content
   const renderStepContent = () => {
     switch (currentStep) {
-      // STEP 1: Business Type
+      // STEP 1: Business Type - Comprehensive Entity Selection
       case 1:
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold mb-2">What type of business are you creating?</h2>
-              <p className="text-gray-500">Choose the structure that best fits your needs. This will determine where and how you register.</p>
+              <h2 className="text-xl font-semibold mb-2">Companies and Entities You Can Register</h2>
+              <p className="text-gray-500">Choose the legal structure that best fits your business needs. Different structures have different registration authorities, fees, and requirements.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {BUSINESS_TYPES.map(type => (
-                <Card 
-                  key={type.id}
-                  className={`cursor-pointer transition-all ${
-                    formData.businessType === type.id 
-                      ? 'border-purple-500 ring-2 ring-purple-200' 
-                      : 'hover:border-purple-300'
-                  }`}
-                  onClick={() => updateFormData('businessType', type.id)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 flex-wrap gap-1">
-                          <h3 className="font-semibold">{type.title}</h3>
-                          {type.recommended && (
-                            <Badge className="bg-purple-100 text-purple-700">Recommended</Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-500 mt-1">{type.description}</p>
-                        <p className="text-xs text-purple-600 mt-2 font-medium">Fee: {type.registrationFee}</p>
-                        <div className="mt-3 space-y-1">
-                          {type.benefits.map((b, i) => (
-                            <div key={i} className="flex items-center text-xs text-gray-600">
-                              <Check className="w-3 h-3 text-green-500 mr-1 flex-shrink-0" />
-                              {b}
+            {/* Companies House Registered Entities */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Building2 className="w-5 h-5 text-purple-600" />
+                <h3 className="font-semibold text-lg">Companies House Registered</h3>
+                <Badge className="bg-purple-100 text-purple-700">9 Entity Types</Badge>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-3">
+                {COMPANIES_HOUSE_TYPES.map(type => (
+                  <Card 
+                    key={type.id}
+                    className={`cursor-pointer transition-all ${
+                      formData.businessType === type.id 
+                        ? 'border-purple-500 ring-2 ring-purple-200 bg-purple-50' 
+                        : 'hover:border-purple-300 hover:bg-gray-50'
+                    }`}
+                    onClick={() => updateFormData('businessType', type.id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 flex-wrap gap-1">
+                            <h4 className="font-semibold text-gray-900">{type.title}</h4>
+                            {type.recommended && (
+                              <Badge className="bg-green-100 text-green-700">Recommended</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">{type.description}</p>
+                          
+                          <div className="flex flex-wrap items-center gap-3 mt-2 text-xs">
+                            <span className="text-purple-600 font-medium">
+                              Registration: {type.registrationFee}
+                            </span>
+                            {type.sameDayFee && (
+                              <span className="text-blue-600">
+                                Same-day: {type.sameDayFee}
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Use Cases */}
+                          <div className="mt-3">
+                            <p className="text-xs font-medium text-gray-500 mb-1">Ideal for:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {type.useCases.slice(0, 4).map((useCase, i) => (
+                                <span key={i} className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
+                                  {useCase}
+                                </span>
+                              ))}
                             </div>
-                          ))}
+                          </div>
+                          
+                          {/* Benefits */}
+                          <div className="mt-3 grid grid-cols-2 gap-1">
+                            {type.benefits.slice(0, 4).map((b, i) => (
+                              <div key={i} className="flex items-center text-xs text-gray-600">
+                                <Check className="w-3 h-3 text-green-500 mr-1 flex-shrink-0" />
+                                {b}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Selection indicator */}
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3 ${
+                          formData.businessType === type.id ? 'border-purple-600 bg-purple-600' : 'border-gray-300'
+                        }`}>
+                          {formData.businessType === type.id && <Check className="w-4 h-4 text-white" />}
                         </div>
                       </div>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-2 ${
-                        formData.businessType === type.id ? 'border-purple-600 bg-purple-600' : 'border-gray-300'
-                      }`}>
-                        {formData.businessType === type.id && <Check className="w-3 h-3 text-white" />}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
 
-            <InfoBox type="tip" title="Recommendation for beginners">
-              If you want credibility, liability protection, and room to grow → <strong>Private Limited Company (Ltd)</strong> is the best choice. 
-              It separates your personal assets from the business.
+            <Separator />
+
+            {/* Other Registration Authorities */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Globe className="w-5 h-5 text-blue-600" />
+                <h3 className="font-semibold text-lg">Other Registration Authorities</h3>
+                <Badge className="bg-blue-100 text-blue-700">{OTHER_AUTHORITY_TYPES.length} Entity Types</Badge>
+              </div>
+              <p className="text-sm text-gray-500">These entities are registered with different authorities (HMRC, Charity Commission, FCA, etc.)</p>
+              
+              <div className="grid grid-cols-1 gap-3">
+                {OTHER_AUTHORITY_TYPES.map(type => (
+                  <Card 
+                    key={type.id}
+                    className={`cursor-pointer transition-all ${
+                      formData.businessType === type.id 
+                        ? 'border-blue-500 ring-2 ring-blue-200 bg-blue-50' 
+                        : 'hover:border-blue-300 hover:bg-gray-50'
+                    }`}
+                    onClick={() => updateFormData('businessType', type.id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 flex-wrap gap-1">
+                            <h4 className="font-semibold text-gray-900">{type.title}</h4>
+                            <Badge variant="outline" className="text-xs">
+                              {type.registrationAuthority}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">{type.description}</p>
+                          
+                          <div className="flex flex-wrap items-center gap-3 mt-2 text-xs">
+                            <span className="text-blue-600 font-medium">
+                              Fee: {type.registrationFee}
+                            </span>
+                          </div>
+                          
+                          {/* Use Cases */}
+                          <div className="mt-3">
+                            <p className="text-xs font-medium text-gray-500 mb-1">Ideal for:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {type.useCases.slice(0, 4).map((useCase, i) => (
+                                <span key={i} className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
+                                  {useCase}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* Benefits */}
+                          <div className="mt-3 grid grid-cols-2 gap-1">
+                            {type.benefits.slice(0, 4).map((b, i) => (
+                              <div key={i} className="flex items-center text-xs text-gray-600">
+                                <Check className="w-3 h-3 text-green-500 mr-1 flex-shrink-0" />
+                                {b}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Selection indicator */}
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3 ${
+                          formData.businessType === type.id ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
+                        }`}>
+                          {formData.businessType === type.id && <Check className="w-4 h-4 text-white" />}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Recommendation Box */}
+            <InfoBox type="tip" title="Recommendation for Most Entrepreneurs">
+              If you want <strong>credibility</strong>, <strong>limited liability protection</strong>, and <strong>room to grow</strong> → 
+              <strong> Private Company Limited by Shares (Ltd)</strong> is the most popular choice for UK businesses. 
+              It separates your personal assets from the business and is relatively simple to set up.
             </InfoBox>
+
+            {/* Fee Source Link */}
+            <div className="text-xs text-gray-500 text-center">
+              Fees sourced from{' '}
+              <a 
+                href="https://www.gov.uk/government/publications/companies-house-fees/companies-house-fees" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-purple-600 hover:underline"
+              >
+                GOV.UK Companies House Fees
+              </a>
+              {' '}(Updated 2024)
+            </div>
           </div>
         );
 
