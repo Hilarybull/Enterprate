@@ -392,11 +392,11 @@ class BlueprintService:
             
             chat = LlmChat(
                 api_key=llm_key,
-                model="gpt-4o",
+                session_id="blueprint-swot",
                 system_message="You are a business analyst. Return only valid JSON."
-            )
+            ).with_model("openai", "gpt-4o")
             
-            response = await chat.send_async(message=UserMessage(text=prompt))
+            response = await chat.send_message(UserMessage(text=prompt))
             
             # Try to parse JSON from response
             import json
