@@ -702,7 +702,7 @@ You must complete the actual registration at Companies House.
           <div className="space-y-6">
             <div>
               <h2 className="text-xl font-semibold mb-2">Choose Your Company Name</h2>
-              <p className="text-gray-500">Your company name must be unique and follow Companies House naming rules. We'll check availability for you.</p>
+              <p className="text-gray-500">Your company name must be unique and follow Companies House naming rules. We&apos;ll check availability for you.</p>
             </div>
 
             <Card>
