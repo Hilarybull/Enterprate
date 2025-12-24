@@ -7,7 +7,7 @@ from app.core.database import init_db, close_db
 from app.routes import (
     auth, workspaces, projects, genesis, navigator, growth, websites, 
     intel, chat, password_reset, validation_reports,
-    blueprint, finance, operations, marketing
+    blueprint, finance, operations, marketing, company_profile
 )
 
 # Configure logging
@@ -39,6 +39,7 @@ api_router.include_router(blueprint.router)
 api_router.include_router(finance.router)
 api_router.include_router(operations.router)
 api_router.include_router(marketing.router)
+api_router.include_router(company_profile.router)
 
 # Include API router in main app
 app.include_router(api_router)
