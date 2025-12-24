@@ -363,7 +363,8 @@ class BlueprintService:
             ).with_model("openai", "gpt-4o")
             
             response = await chat.send_message(UserMessage(text=prompt))
-            return response.text
+            # Handle both string response and object response
+            return response if isinstance(response, str) else (response.text if hasattr(response, 'text') else str(response))
             
         except Exception as e:
             print(f"AI generation error: {e}")
@@ -398,11 +399,11 @@ class BlueprintService:
             
             response = await chat.send_message(UserMessage(text=prompt))
             
-            # Try to parse JSON from response
+            # Try to parse JSON from response - handle both string and object response
             import json
             try:
                 # Extract JSON from response
-                text = response.text
+                text = response if isinstance(response, str) else (response.text if hasattr(response, 'text') else str(response))
                 if "```json" in text:
                     text = text.split("```json")[1].split("```")[0]
                 elif "```" in text:
