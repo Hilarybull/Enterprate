@@ -14,7 +14,7 @@ from app.schemas.finance import (
 
 # Try to import LLM integration for vision
 try:
-    from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageUrl
+    from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
     LLM_AVAILABLE = True
 except ImportError:
     LLM_AVAILABLE = False
