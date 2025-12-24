@@ -185,8 +185,7 @@ class FinanceService:
                 IMPORTANT: Return ONLY the JSON object, no markdown code blocks, no explanatory text."""
             ).with_model("openai", "gpt-4o")
             
-            # Create image content
-            from emergentintegrations.llm.chat import ImageContent
+            # Create image content - ImageContent is already imported at module level
             image_content = ImageContent(image_base64=image_data)
             
             response = await chat.send_message(
