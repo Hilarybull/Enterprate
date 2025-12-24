@@ -1704,6 +1704,7 @@ You must complete the actual registration at Companies House.
                 ]}
                 link={OFFICIAL_LINKS.registerOnline}
                 linkText="Start Registration on GOV.UK"
+                onCopy={copyField}
               />
 
               {/* Stage 2: Business Activity */}
@@ -1717,6 +1718,7 @@ You must complete the actual registration at Companies House.
                 ]}
                 link={OFFICIAL_LINKS.sicCodes}
                 linkText="View SIC Code Reference"
+                onCopy={copyField}
               />
 
               {/* Stage 3: Registered Office */}
@@ -1728,6 +1730,7 @@ You must complete the actual registration at Companies House.
                   { label: 'Full Address', value: copyableBlocks.registeredAddress, fieldName: 'Registered Address' },
                   { label: 'Address Type', value: formData.addressType === 'home' ? 'Residential Address' : formData.addressType === 'office' ? 'Business Address' : 'Virtual Office', fieldName: 'Address Type' }
                 ]}
+                onCopy={copyField}
               />
 
               {/* Stage 4: Directors */}
