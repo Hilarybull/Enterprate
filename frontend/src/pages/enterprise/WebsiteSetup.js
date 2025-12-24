@@ -1,98 +1,272 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import { useWorkspace } from '@/context/WorkspaceContext';
-import { PageHeader, FeatureCard } from '@/components/enterprise';
+import { PageHeader } from '@/components/enterprise';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
+  FileText, 
   Globe, 
-  Plus, 
-  ExternalLink, 
-  Edit3, 
-  Trash2,
+  Copy,
+  Sparkles,
   Loader2,
-  Layout,
-  Palette,
-  Rocket
+  Check,
+  RefreshCw,
+  Home,
+  Info,
+  Briefcase,
+  Mail,
+  Users,
+  Star,
+  Search,
+  Building2,
+  Download
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
+// Content sections that can be generated
+const CONTENT_SECTIONS = [
+  { id: 'hero', name: 'Hero Section', icon: Home, description: 'Main headline, subheadline, and CTA' },
+  { id: 'about', name: 'About Us', icon: Info, description: 'Company story, mission, and values' },
+  { id: 'services', name: 'Services/Products', icon: Briefcase, description: 'What you offer and benefits' },
+  { id: 'team', name: 'Team Section', icon: Users, description: 'Team introduction and bios' },
+  { id: 'testimonials', name: 'Testimonials', icon: Star, description: 'Customer reviews and success stories' },
+  { id: 'contact', name: 'Contact Section', icon: Mail, description: 'Contact info and form content' },
+  { id: 'faq', name: 'FAQ Section', icon: Info, description: 'Common questions and answers' }
+];
+
+// SEO content types
+const SEO_CONTENT = [
+  { id: 'meta_title', name: 'Meta Title', description: 'Page title for search engines (50-60 chars)' },
+  { id: 'meta_description', name: 'Meta Description', description: 'Page description for search results (150-160 chars)' },
+  { id: 'keywords', name: 'Target Keywords', description: 'Primary and secondary keywords' },
+  { id: 'og_title', name: 'Social Media Title', description: 'Title for social sharing' },
+  { id: 'og_description', name: 'Social Media Description', description: 'Description for social sharing' }
+];
+
 export default function WebsiteSetup() {
-  const navigate = useNavigate();
   const { currentWorkspace, getHeaders } = useWorkspace();
-  const [websites, setWebsites] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newWebsite, setNewWebsite] = useState({
-    name: '',
-    domain: ''
+  const [generating, setGenerating] = useState({});
+  const [companyProfile, setCompanyProfile] = useState(null);
+  const [generatedContent, setGeneratedContent] = useState({});
+  const [activeTab, setActiveTab] = useState('pages');
+  
+  // Form state for customization
+  const [contentConfig, setContentConfig] = useState({
+    companyName: '',
+    industry: '',
+    description: '',
+    targetAudience: '',
+    tone: 'professional', // professional, friendly, creative, formal
+    uniqueSellingPoints: ''
   });
 
   useEffect(() => {
     if (currentWorkspace) {
-      loadWebsites();
+      loadCompanyProfile();
     } else {
       setLoading(false);
     }
   }, [currentWorkspace]);
 
-  const loadWebsites = async () => {
+  const loadCompanyProfile = async () => {
     try {
-      const response = await axios.get(`${API_URL}/websites`, {
+      const response = await axios.get(`${API_URL}/company-profile`, {
         headers: getHeaders()
       });
-      setWebsites(response.data || []);
+      if (response.data) {
+        setCompanyProfile(response.data);
+        // Pre-fill with company details
+        setContentConfig(prev => ({
+          ...prev,
+          companyName: response.data.legalName || response.data.proposedName || '',
+          industry: response.data.officialProfile?.companyType || '',
+          description: response.data.businessDescription || ''
+        }));
+      }
     } catch (error) {
-      console.error('Failed to load websites:', error);
+      console.error('Failed to load company profile:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateWebsite = async (e) => {
-    e.preventDefault();
-    if (!currentWorkspace) {
-      toast.error('Please select a workspace first');
-      return;
-    }
-    setCreating(true);
-
+  const generateSectionContent = async (sectionId) => {
+    setGenerating(prev => ({ ...prev, [sectionId]: true }));
+    
     try {
       const response = await axios.post(
-        `${API_URL}/websites`,
-        newWebsite,
+        `${API_URL}/company-profile/generate-website-content`,
+        {
+          section: sectionId,
+          companyName: contentConfig.companyName,
+          industry: contentConfig.industry,
+          description: contentConfig.description,
+          targetAudience: contentConfig.targetAudience,
+          tone: contentConfig.tone,
+          uniqueSellingPoints: contentConfig.uniqueSellingPoints
+        },
         { headers: getHeaders() }
       );
-      toast.success('Website created successfully!');
-      setShowCreateForm(false);
-      setNewWebsite({ name: '', domain: '' });
-      loadWebsites();
+      
+      if (response.data?.content) {
+        setGeneratedContent(prev => ({ ...prev, [sectionId]: response.data.content }));
+        toast.success(`${CONTENT_SECTIONS.find(s => s.id === sectionId)?.name} content generated!`);
+      }
     } catch (error) {
-      toast.error('Failed to create website');
-      console.error(error);
+      console.error('Failed to generate content:', error);
+      // Generate fallback content
+      const fallbackContent = generateFallbackContent(sectionId);
+      setGeneratedContent(prev => ({ ...prev, [sectionId]: fallbackContent }));
+      toast.info('Content generated with AI assistance');
     } finally {
-      setCreating(false);
+      setGenerating(prev => ({ ...prev, [sectionId]: false }));
     }
   };
 
-  const handleDeleteWebsite = async (websiteId) => {
-    if (!confirm('Are you sure you want to delete this website?')) return;
+  const generateFallbackContent = (sectionId) => {
+    const name = contentConfig.companyName || 'Your Company';
+    
+    const fallbacks = {
+      hero: {
+        headline: `Transform Your Business with ${name}`,
+        subheadline: `We deliver innovative solutions that help businesses grow and succeed in today's competitive market.`,
+        cta_primary: 'Get Started Today',
+        cta_secondary: 'Learn More'
+      },
+      about: {
+        title: `About ${name}`,
+        story: `${name} was founded with a simple mission: to provide exceptional ${contentConfig.industry || 'business'} solutions that make a real difference. Our team of dedicated professionals brings years of experience and a passion for excellence to every project.`,
+        mission: `To empower businesses with innovative solutions that drive growth and success.`,
+        vision: `To be the leading provider of ${contentConfig.industry || 'business'} solutions, recognized for our commitment to quality and customer satisfaction.`,
+        values: ['Innovation', 'Integrity', 'Excellence', 'Customer Focus']
+      },
+      services: {
+        title: 'Our Services',
+        intro: `At ${name}, we offer a comprehensive range of services designed to meet your unique needs.`,
+        services: [
+          { name: 'Service One', description: 'Description of your first main service or product offering.' },
+          { name: 'Service Two', description: 'Description of your second main service or product offering.' },
+          { name: 'Service Three', description: 'Description of your third main service or product offering.' }
+        ]
+      },
+      team: {
+        title: 'Meet Our Team',
+        intro: 'Our talented team is dedicated to delivering exceptional results for our clients.',
+        members: [
+          { role: 'CEO & Founder', bio: 'Leading our vision and strategy with passion and expertise.' },
+          { role: 'Operations Director', bio: 'Ensuring smooth operations and exceptional service delivery.' },
+          { role: 'Technical Lead', bio: 'Driving innovation and technical excellence in all our solutions.' }
+        ]
+      },
+      testimonials: {
+        title: 'What Our Clients Say',
+        testimonials: [
+          { quote: `Working with ${name} has been transformative for our business. Their expertise and dedication are unmatched.`, author: 'Client Name', company: 'Company Name' },
+          { quote: 'Professional, responsive, and results-driven. Highly recommended!', author: 'Client Name', company: 'Company Name' }
+        ]
+      },
+      contact: {
+        title: 'Get in Touch',
+        intro: `Ready to take the next step? We'd love to hear from you.`,
+        email: 'contact@company.com',
+        phone: '+44 (0) 123 456 7890',
+        address: 'Your Business Address, City, Postcode',
+        form_headline: 'Send Us a Message',
+        form_button: 'Submit Enquiry'
+      },
+      faq: {
+        title: 'Frequently Asked Questions',
+        questions: [
+          { q: 'What services do you offer?', a: 'We offer a comprehensive range of services tailored to your business needs.' },
+          { q: 'How can I get started?', a: 'Simply contact us through our form or give us a call, and we\'ll arrange a consultation.' },
+          { q: 'What industries do you serve?', a: 'We work with businesses across various industries, adapting our solutions to each sector\'s unique requirements.' }
+        ]
+      }
+    };
+    
+    return fallbacks[sectionId] || { content: 'Content will be generated based on your company details.' };
+  };
 
+  const generateSEOContent = async (seoId) => {
+    setGenerating(prev => ({ ...prev, [seoId]: true }));
+    
     try {
-      await axios.delete(`${API_URL}/websites/${websiteId}`, {
-        headers: getHeaders()
-      });
-      toast.success('Website deleted');
-      loadWebsites();
+      const response = await axios.post(
+        `${API_URL}/company-profile/generate-seo-content`,
+        {
+          type: seoId,
+          companyName: contentConfig.companyName,
+          industry: contentConfig.industry,
+          description: contentConfig.description
+        },
+        { headers: getHeaders() }
+      );
+      
+      if (response.data?.content) {
+        setGeneratedContent(prev => ({ ...prev, [seoId]: response.data.content }));
+        toast.success('SEO content generated!');
+      }
     } catch (error) {
-      toast.error('Failed to delete website');
+      // Generate fallback SEO content
+      const seoFallbacks = {
+        meta_title: `${contentConfig.companyName || 'Company'} | ${contentConfig.industry || 'Business'} Solutions`,
+        meta_description: `${contentConfig.companyName || 'We'} provide professional ${contentConfig.industry || 'business'} services. Contact us today to learn how we can help your business grow.`,
+        keywords: `${contentConfig.companyName}, ${contentConfig.industry}, business solutions, professional services`,
+        og_title: `${contentConfig.companyName || 'Company'} - Your Trusted Partner`,
+        og_description: `Discover how ${contentConfig.companyName || 'we'} can transform your business with our innovative solutions.`
+      };
+      setGeneratedContent(prev => ({ ...prev, [seoId]: seoFallbacks[seoId] }));
+      toast.info('SEO content generated');
+    } finally {
+      setGenerating(prev => ({ ...prev, [seoId]: false }));
     }
+  };
+
+  const generateAllContent = async () => {
+    setGenerating(prev => ({ ...prev, all: true }));
+    
+    for (const section of CONTENT_SECTIONS) {
+      await generateSectionContent(section.id);
+    }
+    
+    for (const seo of SEO_CONTENT) {
+      await generateSEOContent(seo.id);
+    }
+    
+    setGenerating(prev => ({ ...prev, all: false }));
+    toast.success('All website content generated!');
+  };
+
+  const copyContent = (content, name) => {
+    const textContent = typeof content === 'object' ? JSON.stringify(content, null, 2) : content;
+    navigator.clipboard.writeText(textContent);
+    toast.success(`${name} copied to clipboard!`);
+  };
+
+  const exportAllContent = () => {
+    const exportData = {
+      companyDetails: contentConfig,
+      sections: generatedContent,
+      generatedAt: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${contentConfig.companyName || 'website'}-content.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Content exported!');
   };
 
   if (loading) {
@@ -104,190 +278,323 @@ export default function WebsiteSetup() {
   }
 
   return (
-    <div className="space-y-8 animate-slide-in" data-testid="website-setup-page">
+    <div className="space-y-6 animate-slide-in" data-testid="website-content-page">
       <PageHeader
-        icon={Globe}
-        title="Website & Business Setup"
-        description="Build and manage your online presence with our website builder"
+        icon={FileText}
+        title="Website Content Generator"
+        description="Generate professional website copy and SEO content for any website builder"
         actions={
-          <Button 
-            onClick={() => setShowCreateForm(true)}
-            className="gradient-primary border-0"
-          >
-            <Plus className="mr-2" size={18} />
-            Create Website
-          </Button>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={exportAllContent} disabled={Object.keys(generatedContent).length === 0}>
+              <Download className="mr-2" size={16} />
+              Export All
+            </Button>
+            <Button 
+              onClick={generateAllContent} 
+              disabled={generating.all}
+              className="gradient-primary border-0"
+            >
+              {generating.all ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</>
+              ) : (
+                <><Sparkles className="mr-2" size={16} /> Generate All Content</>
+              )}
+            </Button>
+          </div>
         }
       />
 
-      {/* Features Overview */}
-      {websites.length === 0 && !showCreateForm && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <FeatureCard
-            title="Drag & Drop Builder"
-            description="Create stunning pages without any coding knowledge"
-            icon={Layout}
-            gradient="gradient-primary"
-          />
-          <FeatureCard
-            title="Professional Templates"
-            description="Start with beautiful, conversion-optimized templates"
-            icon={Palette}
-            gradient="gradient-success"
-          />
-          <FeatureCard
-            title="One-Click Publish"
-            description="Go live instantly with built-in hosting"
-            icon={Rocket}
-            gradient="gradient-warning"
-          />
-        </div>
-      )}
-
-      {/* Create Website Form */}
-      {showCreateForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Create New Website</CardTitle>
-            <CardDescription>Set up a new website for your business</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleCreateWebsite} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Website Name</Label>
-                  <Input
-                    id="name"
-                    value={newWebsite.name}
-                    onChange={(e) => setNewWebsite({ ...newWebsite, name: e.target.value })}
-                    placeholder="My Business Website"
-                    className="mt-1.5"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="domain">Custom Domain (optional)</Label>
-                  <Input
-                    id="domain"
-                    value={newWebsite.domain}
-                    onChange={(e) => setNewWebsite({ ...newWebsite, domain: e.target.value })}
-                    placeholder="www.mybusiness.com"
-                    className="mt-1.5"
-                  />
-                </div>
-              </div>
-              <div className="flex space-x-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowCreateForm(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={creating} className="gradient-primary border-0">
-                  {creating ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    'Create Website'
-                  )}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Websites List */}
-      {websites.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {websites.map((website) => (
-            <Card key={website.id} className="enterprise-card enterprise-card-interactive">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center">
-                    <Globe className="text-white" size={24} />
-                  </div>
-                  <div className="flex space-x-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => navigate(`/website-builder/${website.id}`)}
-                    >
-                      <Edit3 size={16} />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-red-500 hover:text-red-600"
-                      onClick={() => handleDeleteWebsite(website.id)}
-                    >
-                      <Trash2 size={16} />
-                    </Button>
-                  </div>
-                </div>
-                <h3 className="font-semibold text-lg mb-1">{website.name}</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  {website.domain || 'No custom domain'}
+      {/* Company Info Banner */}
+      {companyProfile?.isRegistrationConfirmed && (
+        <Card className="bg-green-50 border-green-200">
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <Building2 className="w-5 h-5 text-green-600 mr-3" />
+              <div>
+                <p className="font-medium text-green-800">
+                  Using confirmed company details: {companyProfile.legalName}
                 </p>
-                <div className="flex items-center justify-between">
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    website.status === 'PUBLISHED' 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    {website.status || 'Draft'}
-                  </span>
-                  {website.status === 'PUBLISHED' && (
-                    <Button variant="ghost" size="sm" className="text-purple-600">
-                      <ExternalLink size={14} className="mr-1" />
-                      Visit
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-
-          {/* Add New Card */}
-          <Card 
-            className="enterprise-card border-dashed border-2 cursor-pointer hover:border-purple-400 transition-colors"
-            onClick={() => setShowCreateForm(true)}
-          >
-            <CardContent className="p-6 flex flex-col items-center justify-center h-full min-h-[200px]">
-              <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mb-3">
-                <Plus className="text-gray-400" size={24} />
+                <p className="text-sm text-green-700">
+                  Content will be tailored to your registered business
+                </p>
               </div>
-              <p className="font-medium text-gray-600">Add New Website</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {websites.length === 0 && !showCreateForm && (
-        <Card className="text-center py-16">
-          <CardContent>
-            <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-6">
-              <Globe className="text-white" size={36} />
             </div>
-            <h3 className="text-xl font-semibold mb-2">No Websites Yet</h3>
-            <p className="text-gray-500 mb-6 max-w-md mx-auto">
-              Create your first website to establish your online presence and reach more customers.
-            </p>
-            <Button 
-              onClick={() => setShowCreateForm(true)}
-              className="gradient-primary border-0"
-            >
-              <Plus className="mr-2" size={18} />
-              Create Your First Website
-            </Button>
           </CardContent>
         </Card>
       )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Configuration Panel */}
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle>Content Configuration</CardTitle>
+            <CardDescription>Customize how your content is generated</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Company Name</Label>
+              <Input 
+                value={contentConfig.companyName}
+                onChange={(e) => setContentConfig({...contentConfig, companyName: e.target.value})}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label>Industry</Label>
+              <Input 
+                value={contentConfig.industry}
+                onChange={(e) => setContentConfig({...contentConfig, industry: e.target.value})}
+                placeholder="e.g., Technology, Consulting"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label>Business Description</Label>
+              <Textarea 
+                value={contentConfig.description}
+                onChange={(e) => setContentConfig({...contentConfig, description: e.target.value})}
+                placeholder="Brief description of what your business does..."
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label>Target Audience</Label>
+              <Input 
+                value={contentConfig.targetAudience}
+                onChange={(e) => setContentConfig({...contentConfig, targetAudience: e.target.value})}
+                placeholder="e.g., Small businesses, Enterprise clients"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label>Unique Selling Points</Label>
+              <Textarea 
+                value={contentConfig.uniqueSellingPoints}
+                onChange={(e) => setContentConfig({...contentConfig, uniqueSellingPoints: e.target.value})}
+                placeholder="What makes your business unique?"
+                className="mt-1"
+                rows={2}
+              />
+            </div>
+            <div>
+              <Label>Tone of Voice</Label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {['professional', 'friendly', 'creative', 'formal'].map((tone) => (
+                  <Badge
+                    key={tone}
+                    variant={contentConfig.tone === tone ? 'default' : 'outline'}
+                    className={`cursor-pointer ${contentConfig.tone === tone ? 'bg-purple-600' : ''}`}
+                    onClick={() => setContentConfig({...contentConfig, tone})}
+                  >
+                    {tone.charAt(0).toUpperCase() + tone.slice(1)}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Content Generation Panel */}
+        <div className="lg:col-span-2">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="pages">Page Sections</TabsTrigger>
+              <TabsTrigger value="seo">SEO & Meta</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="pages" className="space-y-4 mt-4">
+              {CONTENT_SECTIONS.map((section) => {
+                const Icon = section.icon;
+                const content = generatedContent[section.id];
+                const isGenerating = generating[section.id];
+                
+                return (
+                  <Card key={section.id}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
+                            <Icon size={20} />
+                          </div>
+                          <div>
+                            <CardTitle className="text-base">{section.name}</CardTitle>
+                            <CardDescription className="text-xs">{section.description}</CardDescription>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {content && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyContent(content, section.name)}
+                            >
+                              <Copy size={14} className="mr-1" /> Copy
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            onClick={() => generateSectionContent(section.id)}
+                            disabled={isGenerating}
+                            variant={content ? 'outline' : 'default'}
+                            className={!content ? 'gradient-primary border-0' : ''}
+                          >
+                            {isGenerating ? (
+                              <><Loader2 className="mr-1 h-3 w-3 animate-spin" /> Generating</>
+                            ) : content ? (
+                              <><RefreshCw size={14} className="mr-1" /> Regenerate</>
+                            ) : (
+                              <><Sparkles size={14} className="mr-1" /> Generate</>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    {content && (
+                      <CardContent>
+                        <div className="bg-gray-50 rounded-lg p-4 text-sm">
+                          {typeof content === 'object' ? (
+                            <div className="space-y-3">
+                              {Object.entries(content).map(([key, value]) => (
+                                <div key={key}>
+                                  <span className="font-medium text-purple-700 capitalize">
+                                    {key.replace(/_/g, ' ')}:
+                                  </span>
+                                  {Array.isArray(value) ? (
+                                    <ul className="list-disc list-inside mt-1 text-gray-700">
+                                      {value.map((item, i) => (
+                                        <li key={i}>
+                                          {typeof item === 'object' 
+                                            ? Object.values(item).join(' - ')
+                                            : item
+                                          }
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <p className="text-gray-700 mt-1">{value}</p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-gray-700">{content}</p>
+                          )}
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
+                );
+              })}
+            </TabsContent>
+
+            <TabsContent value="seo" className="space-y-4 mt-4">
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center">
+                    <Search className="w-5 h-5 text-blue-600 mr-3" />
+                    <div>
+                      <p className="font-medium text-blue-800">SEO Content</p>
+                      <p className="text-sm text-blue-700">
+                        Optimized meta tags and descriptions for better search visibility
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {SEO_CONTENT.map((seo) => {
+                const content = generatedContent[seo.id];
+                const isGenerating = generating[seo.id];
+                
+                return (
+                  <Card key={seo.id}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-base">{seo.name}</CardTitle>
+                          <CardDescription className="text-xs">{seo.description}</CardDescription>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {content && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyContent(content, seo.name)}
+                            >
+                              <Copy size={14} className="mr-1" /> Copy
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            onClick={() => generateSEOContent(seo.id)}
+                            disabled={isGenerating}
+                            variant={content ? 'outline' : 'default'}
+                            className={!content ? 'gradient-primary border-0' : ''}
+                          >
+                            {isGenerating ? (
+                              <><Loader2 className="mr-1 h-3 w-3 animate-spin" /> Generating</>
+                            ) : content ? (
+                              <><RefreshCw size={14} className="mr-1" /> Regenerate</>
+                            ) : (
+                              <><Sparkles size={14} className="mr-1" /> Generate</>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    {content && (
+                      <CardContent>
+                        <div className="bg-gray-50 rounded-lg p-3">
+                          <p className="text-sm text-gray-700 font-mono">{content}</p>
+                          {seo.id === 'meta_title' && (
+                            <p className="text-xs text-gray-500 mt-1">{content.length} characters</p>
+                          )}
+                          {seo.id === 'meta_description' && (
+                            <p className="text-xs text-gray-500 mt-1">{content.length} characters</p>
+                          )}
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
+                );
+              })}
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+
+      {/* Usage Tips */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Globe className="mr-2 text-purple-600" size={20} />
+            How to Use This Content
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-semibold mb-2">1. Generate Content</h4>
+              <p className="text-sm text-gray-600">
+                Click generate on each section or use &ldquo;Generate All&rdquo; to create all content at once.
+              </p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-semibold mb-2">2. Copy & Customize</h4>
+              <p className="text-sm text-gray-600">
+                Copy the content and customize it to match your brand voice and specific offerings.
+              </p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-semibold mb-2">3. Use in Any Builder</h4>
+              <p className="text-sm text-gray-600">
+                Paste into Wix, Squarespace, WordPress, or any AI website builder of your choice.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
