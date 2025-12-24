@@ -467,7 +467,12 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Task Creation Bug Fix"
+    - "Load Default Compliance Bug Fix"
+    - "AI Post Generator Bug Fix"
+    - "Receipt Scanning Bug Fix"
+    - "Company Profile Router Integration"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
