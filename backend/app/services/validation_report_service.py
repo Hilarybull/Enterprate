@@ -172,8 +172,8 @@ Be realistic but constructive. Base scores on the information provided. Return O
                 if llm_key:
                     chat = LlmChat(
                         api_key=llm_key,
-                        model="gpt-4o"
-                    )
+                        session_id="validation-report"
+                    ).with_model("openai", "gpt-4o")
                     response = await chat.send_message(
                         UserMessage(content=prompt)
                     )
