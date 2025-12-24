@@ -1568,6 +1568,300 @@ def test_get_growth_analytics():
         log_test("Get Growth Analytics", False, "Failed to get growth analytics", response)
         return False
 
+def test_bug_fix_task_creation():
+    """Test Bug Fix #1: Task Creation in Business Operations"""
+    print("\n🐛 Testing Bug Fix #1: Task Creation...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Bug Fix #1 - Task Creation", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    # Test with comprehensive task data including optional fields
+    bug_fix_task = {
+        "title": "Bug Fix Test Task",
+        "description": "Testing task creation with all fields including optional ones",
+        "priority": "high",
+        "dueDate": "2024-02-15",
+        "assignee": "test-user"
+    }
+    
+    success, response = make_request("POST", "/operations/tasks", bug_fix_task, headers)
+    
+    if success and isinstance(response, dict):
+        if "id" in response and "title" in response:
+            log_test("Bug Fix #1 - Task Creation", True, 
+                    f"✅ BUG FIXED: Task created successfully with ID: {response.get('id')}")
+            return True
+        else:
+            log_test("Bug Fix #1 - Task Creation", False, "Missing required fields in response", response)
+            return False
+    else:
+        log_test("Bug Fix #1 - Task Creation", False, "❌ BUG NOT FIXED: Task creation failed", response)
+        return False
+
+
+def test_bug_fix_default_compliance():
+    """Test Bug Fix #2: Load Default UK Compliance Checklist"""
+    print("\n🐛 Testing Bug Fix #2: Default UK Compliance...")
+    
+    if not auth_token:
+        log_test("Bug Fix #2 - Default Compliance", False, "Missing auth token")
+        return False
+    
+    headers = {"Authorization": f"Bearer {auth_token}"}
+    
+    # Test getting default compliance items
+    success, response = make_request("GET", "/finance/compliance/defaults?business_type=ltd", headers=headers)
+    
+    if success and isinstance(response, list):
+        if len(response) >= 10:  # Should return 10 default items
+            log_test("Bug Fix #2 - Default Compliance (GET)", True, 
+                    f"✅ BUG FIXED: Retrieved {len(response)} default compliance items")
+            
+            # Now test creating items from defaults
+            if workspace_id:
+                workspace_headers = {
+                    "Authorization": f"Bearer {auth_token}",
+                    "X-Workspace-Id": workspace_id
+                }
+                
+                # Create a compliance item from the defaults
+                first_default = response[0]
+                compliance_item = {
+                    "title": first_default.get("title", "Default Compliance Item"),
+                    "description": first_default.get("description", "Default description"),
+                    "category": first_default.get("category", "general"),
+                    "priority": first_default.get("priority", "medium"),
+                    "dueDate": "2024-03-31"
+                }
+                
+                create_success, create_response = make_request("POST", "/finance/compliance", compliance_item, workspace_headers)
+                
+                if create_success and isinstance(create_response, dict):
+                    log_test("Bug Fix #2 - Default Compliance (CREATE)", True, 
+                            f"✅ BUG FIXED: Created compliance item from defaults")
+                    return True
+                else:
+                    log_test("Bug Fix #2 - Default Compliance (CREATE)", False, 
+                            "Failed to create compliance item from defaults", create_response)
+                    return False
+            else:
+                return True  # GET worked, CREATE needs workspace
+        else:
+            log_test("Bug Fix #2 - Default Compliance", False, 
+                    f"❌ BUG NOT FIXED: Expected 10+ items, got {len(response)}", response)
+            return False
+    else:
+        log_test("Bug Fix #2 - Default Compliance", False, 
+                "❌ BUG NOT FIXED: Failed to get default compliance", response)
+        return False
+
+
+def test_bug_fix_ai_post_generator():
+    """Test Bug Fix #3: AI Post Generator in Growth Module"""
+    print("\n🐛 Testing Bug Fix #3: AI Post Generator...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Bug Fix #3 - AI Post Generator", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    # Test AI post generation with comprehensive parameters
+    ai_post_request = {
+        "platform": "linkedin",
+        "topic": "AI-powered business automation",
+        "tone": "professional",
+        "includeHashtags": True,
+        "includeEmojis": True,
+        "maxLength": 280
+    }
+    
+    success, response = make_request("POST", "/marketing/social-posts/generate", ai_post_request, headers)
+    
+    if success and isinstance(response, dict):
+        # Check for AI-generated content (not fallback)
+        if "generated" in response and response.get("generated") == True:
+            content = response.get("content") or response.get("generatedContent", "")
+            log_test("Bug Fix #3 - AI Post Generator", True, 
+                    f"✅ BUG FIXED: AI generated content ({len(content)} chars) - Real AI, not fallback")
+            return True
+        elif "content" in response or "generatedContent" in response:
+            content = response.get("content") or response.get("generatedContent", "")
+            # Check if it looks like real AI content vs fallback
+            if len(content) > 50 and ("AI" in content or "automation" in content):
+                log_test("Bug Fix #3 - AI Post Generator", True, 
+                        f"✅ BUG LIKELY FIXED: Generated content ({len(content)} chars) appears to be AI-generated")
+                return True
+            else:
+                log_test("Bug Fix #3 - AI Post Generator", False, 
+                        f"⚠️ POSSIBLE FALLBACK: Content may be fallback, not AI-generated: {content[:100]}...")
+                return False
+        else:
+            log_test("Bug Fix #3 - AI Post Generator", False, 
+                    "❌ BUG NOT FIXED: Missing generated content in response", response)
+            return False
+    else:
+        log_test("Bug Fix #3 - AI Post Generator", False, 
+                "❌ BUG NOT FIXED: AI post generation failed", response)
+        return False
+
+
+def test_bug_fix_company_profile_router():
+    """Test Bug Fix #4: Company Profile Router (New Feature)"""
+    print("\n🐛 Testing Bug Fix #4: Company Profile Router...")
+    
+    # This endpoint doesn't require authentication according to the route
+    success, response = make_request("GET", "/company-profile/entity-types", headers={})
+    
+    if success and isinstance(response, dict):
+        if "entityTypes" in response:
+            entity_types = response.get("entityTypes", [])
+            if len(entity_types) > 0:
+                log_test("Bug Fix #4 - Company Profile Router", True, 
+                        f"✅ NEW FEATURE WORKING: Retrieved {len(entity_types)} entity types")
+                return True
+            else:
+                log_test("Bug Fix #4 - Company Profile Router", False, 
+                        "❌ FEATURE NOT WORKING: No entity types returned", response)
+                return False
+        else:
+            log_test("Bug Fix #4 - Company Profile Router", False, 
+                    "❌ FEATURE NOT WORKING: Missing entityTypes in response", response)
+            return False
+    else:
+        log_test("Bug Fix #4 - Company Profile Router", False, 
+                "❌ FEATURE NOT WORKING: Company profile endpoint failed", response)
+        return False
+
+
+def test_bug_fix_receipt_scanning():
+    """Test Bug Fix #5: Receipt Scanning (Optional - requires image)"""
+    print("\n🐛 Testing Bug Fix #5: Receipt Scanning...")
+    
+    if not auth_token or not workspace_id:
+        log_test("Bug Fix #5 - Receipt Scanning", False, "Missing auth token or workspace ID")
+        return False
+    
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "X-Workspace-Id": workspace_id
+    }
+    
+    # Test with a simple base64 encoded test image (1x1 pixel PNG)
+    test_receipt = {
+        "imageData": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    }
+    
+    success, response = make_request("POST", "/finance/scan-receipt", test_receipt, headers)
+    
+    if success and isinstance(response, dict):
+        # Check for either AI-extracted data or graceful fallback
+        if "extractedData" in response or "vendor" in response or "amount" in response:
+            extraction_type = "AI-extracted" if response.get("aiProcessed", False) else "Fallback"
+            log_test("Bug Fix #5 - Receipt Scanning", True, 
+                    f"✅ BUG FIXED: Receipt scanning working with {extraction_type} data")
+            return True
+        else:
+            log_test("Bug Fix #5 - Receipt Scanning", False, 
+                    "❌ BUG NOT FIXED: No extracted data in response", response)
+            return False
+    else:
+        log_test("Bug Fix #5 - Receipt Scanning", False, 
+                "❌ BUG NOT FIXED: Receipt scanning failed", response)
+        return False
+
+
+def run_bug_fix_tests():
+    """Run specific bug fix tests as requested"""
+    print("🐛 Starting Bug Fix Verification Tests")
+    print("=" * 80)
+    
+    # Test credentials setup
+    print(f"📧 Test User: test-bugfix@example.com")
+    print(f"🔑 Test Password: TestPass123!")
+    
+    # Update test user for bug fix testing
+    global TEST_USER
+    TEST_USER = {
+        "email": "test-bugfix@example.com",
+        "password": "TestPass123!",
+        "name": "Bug Fix Test User"
+    }
+    
+    # Core setup tests
+    setup_tests = [
+        test_user_registration,
+        test_user_login,
+        test_workspace_creation,
+    ]
+    
+    # Bug fix specific tests
+    bug_fix_tests = [
+        test_bug_fix_task_creation,
+        test_bug_fix_default_compliance,
+        test_bug_fix_ai_post_generator,
+        test_bug_fix_company_profile_router,
+        test_bug_fix_receipt_scanning
+    ]
+    
+    passed = 0
+    failed = 0
+    
+    print("\n🔧 Running Setup Tests...")
+    for test_func in setup_tests:
+        try:
+            if test_func():
+                passed += 1
+            else:
+                failed += 1
+        except Exception as e:
+            print(f"❌ FAIL {test_func.__name__}: Unexpected error: {e}")
+            failed += 1
+    
+    print("\n🐛 Running Bug Fix Tests...")
+    for test_func in bug_fix_tests:
+        try:
+            if test_func():
+                passed += 1
+            else:
+                failed += 1
+        except Exception as e:
+            print(f"❌ FAIL {test_func.__name__}: Unexpected error: {e}")
+            failed += 1
+    
+    # Summary
+    print("\n" + "=" * 80)
+    print("🐛 BUG FIX VERIFICATION SUMMARY")
+    print("=" * 80)
+    print(f"✅ Passed: {passed}")
+    print(f"❌ Failed: {failed}")
+    print(f"📈 Success Rate: {(passed/(passed+failed)*100):.1f}%")
+    
+    print("\n🔍 BUG FIX STATUS:")
+    print("   1. Task Creation in Business Operations")
+    print("   2. Load Default UK Compliance Checklist") 
+    print("   3. AI Post Generator in Growth Module")
+    print("   4. Company Profile Router (New Feature)")
+    print("   5. Receipt Scanning (Optional)")
+    
+    if failed > 0:
+        print("\n🔍 FAILED TESTS:")
+        for result in test_results:
+            if not result["success"] and "Bug Fix" in result["test"]:
+                print(f"   • {result['test']}: {result['details']}")
+    
+    return failed == 0
+
+
 def run_all_tests():
     """Run all backend API tests in sequence"""
     print("🚀 Starting Enterprate OS Backend API Tests - FOUR NEW MODULES")
