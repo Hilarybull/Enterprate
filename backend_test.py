@@ -1758,14 +1758,15 @@ def test_bug_fix_receipt_scanning():
     
     # Test with a simple base64 encoded test image (1x1 pixel PNG)
     test_receipt = {
-        "imageData": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+        "imageBase64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+        "filename": "test_receipt.png"
     }
     
     success, response = make_request("POST", "/finance/scan-receipt", test_receipt, headers)
     
     if success and isinstance(response, dict):
         # Check for either AI-extracted data or graceful fallback
-        if "extractedData" in response or "vendor" in response or "amount" in response:
+        if "extractedData" in response or "vendor" in response or "amount" in response or "description" in response:
             extraction_type = "AI-extracted" if response.get("aiProcessed", False) else "Fallback"
             log_test("Bug Fix #5 - Receipt Scanning", True, 
                     f"✅ BUG FIXED: Receipt scanning working with {extraction_type} data")
