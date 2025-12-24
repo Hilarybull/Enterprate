@@ -579,7 +579,7 @@ class CompanyProfileService:
                 if response.status_code != 200:
                     return {
                         "success": False,
-                        "message": f"Failed to fetch company details. Please try again later.",
+                        "message": "Failed to fetch company details. Please try again later.",
                         "companyData": None
                     }
                 
