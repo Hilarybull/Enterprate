@@ -211,7 +211,7 @@ class FinanceService:
             )
             
             # Parse response with multiple fallback strategies
-            text = response.text.strip()
+            text = response.text.strip() if hasattr(response, 'text') else str(response).strip()
             
             # Strategy 1: Try to extract JSON from markdown code blocks
             if "```json" in text:
