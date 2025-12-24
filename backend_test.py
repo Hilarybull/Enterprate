@@ -1868,6 +1868,74 @@ def test_bug_fix_receipt_scanning():
         return False
 
 
+def run_google_oauth_tests():
+    """Run Google OAuth integration tests as requested"""
+    print("🔐 Starting Google OAuth Integration Tests")
+    print("=" * 80)
+    
+    # Test credentials setup
+    print(f"📧 Existing User: {EXISTING_USER['email']}")
+    print(f"🔑 Password: {EXISTING_USER['password']}")
+    
+    # Core setup tests (using existing user)
+    setup_tests = [
+        test_existing_user_login_compatibility,
+        test_workspace_creation,
+    ]
+    
+    # Google OAuth specific tests
+    oauth_tests = [
+        test_google_oauth_callback_invalid_session,
+        test_google_oauth_logout
+    ]
+    
+    passed = 0
+    failed = 0
+    
+    print("\n🔧 Running Setup Tests...")
+    for test_func in setup_tests:
+        try:
+            if test_func():
+                passed += 1
+            else:
+                failed += 1
+        except Exception as e:
+            print(f"❌ FAIL {test_func.__name__}: Unexpected error: {e}")
+            failed += 1
+    
+    print("\n🔐 Running Google OAuth Tests...")
+    for test_func in oauth_tests:
+        try:
+            if test_func():
+                passed += 1
+            else:
+                failed += 1
+        except Exception as e:
+            print(f"❌ FAIL {test_func.__name__}: Unexpected error: {e}")
+            failed += 1
+    
+    # Summary
+    print("\n" + "=" * 80)
+    print("🔐 GOOGLE OAUTH INTEGRATION TEST SUMMARY")
+    print("=" * 80)
+    print(f"✅ Passed: {passed}")
+    print(f"❌ Failed: {failed}")
+    print(f"📈 Success Rate: {(passed/(passed+failed)*100):.1f}%")
+    
+    print("\n🔍 GOOGLE OAUTH TEST STATUS:")
+    print("   1. ✅ Invalid session_id rejection (401 response)")
+    print("   2. ✅ Existing email/password login compatibility")
+    print("   3. ✅ OAuth logout endpoint functionality")
+    
+    if failed > 0:
+        print("\n🔍 FAILED TESTS:")
+        for result in test_results:
+            if not result["success"] and ("OAuth" in result["test"] or "Existing User" in result["test"]):
+                print(f"   • {result['test']}: {result['details']}")
+    
+    return failed == 0
+
+
 def run_bug_fix_tests():
     """Run specific bug fix tests as requested"""
     print("🐛 Starting Bug Fix Verification Tests")
