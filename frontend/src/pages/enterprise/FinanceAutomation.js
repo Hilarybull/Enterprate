@@ -43,7 +43,9 @@ import {
   Camera,
   Trash2,
   Upload,
-  Check
+  Check,
+  Edit,
+  Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
 
