@@ -623,64 +623,308 @@ Key highlights include:
         try:
             llm = LlmChat(api_key=os.environ.get("EMERGENT_LLM_KEY", ""))
             
+            # Professional preamble for all documents
+            base_context = f"""You are a professional document drafting expert with expertise in UK business law and industry best practices.
+
+COMPANY CONTEXT:
+- Company Name: {company_name}
+- Industry: {industry or 'General Business Services'}
+- Description: {description or 'Professional services provider'}
+
+CRITICAL REQUIREMENTS:
+1. Write in perfect British English with correct grammar, spelling, and punctuation
+2. Follow UK legal standards and industry best practices
+3. Make it specific to the company - use the company name throughout, NOT generic placeholders
+4. Structure with clear headings and professional formatting
+5. Include relevant dates formatted as DD/MM/YYYY
+6. Be comprehensive yet concise
+7. Ensure legal validity where applicable
+
+"""
+            
             doc_prompts = {
-                "quote": f"""Create a professional quotation/estimate template for {company_name}.
-                    Include: Header, client info section, itemized table, terms, signature line.
-                    Format as plain text with clear sections.""",
+                "quote": base_context + """Create a professional quotation/estimate document.
+
+REQUIRED SECTIONS:
+1. Company letterhead with full contact details
+2. Quote reference number and date
+3. Client information section
+4. Detailed itemised pricing table with columns: Item, Description, Quantity, Unit Price (£), Total (£)
+5. Subtotal, VAT (20%), and Grand Total
+6. Validity period (typically 30 days)
+7. Payment terms
+8. Terms and conditions summary
+9. Acceptance signature block
+
+Make it look professional and ready to send to clients.""",
                 
-                "simple_contract": f"""Create a simple service agreement contract template for {company_name}.
-                    Industry: {industry}
-                    Include: Parties, services, payment terms, duration, termination, signatures.
-                    Keep it concise and professional.""",
+                "simple_contract": base_context + """Create a legally sound service agreement contract.
+
+REQUIRED SECTIONS:
+1. Agreement header with parties' details
+2. Recitals (background/whereas clauses)
+3. Definitions
+4. Scope of Services
+5. Fees and Payment Terms
+6. Term and Termination
+7. Confidentiality
+8. Intellectual Property
+9. Limitation of Liability
+10. General Provisions (Force Majeure, Notices, Governing Law - England and Wales)
+11. Signature blocks for both parties
+
+Ensure it is enforceable under UK law.""",
                 
-                "proposal": f"""Create a business proposal template for {company_name}.
-                    Industry: {industry}
-                    Description: {description}
-                    Include: Executive summary, scope, timeline, investment, call to action.""",
+                "proposal": base_context + """Create a compelling business proposal.
+
+REQUIRED SECTIONS:
+1. Cover page with company branding
+2. Executive Summary
+3. Understanding of Client Needs
+4. Proposed Solution/Approach
+5. Methodology and Timeline
+6. Team/Resources
+7. Investment Summary (pricing)
+8. Why Choose Us (differentiators)
+9. Case Studies/Testimonials (placeholder)
+10. Next Steps and Call to Action
+11. Terms and Conditions Summary
+
+Make it persuasive and professional.""",
                 
-                "invoice_template": f"""Create an invoice template for {company_name}.
-                    Include: Company header, client details, invoice number, itemized list, totals, payment info.""",
+                "invoice_template": base_context + """Create a professional invoice template.
+
+REQUIRED ELEMENTS:
+1. Company logo/letterhead area
+2. "INVOICE" header
+3. Invoice number, date, and due date
+4. Company VAT number (placeholder)
+5. Bill To section
+6. Itemised services/products table
+7. Subtotal, VAT breakdown, Total Due
+8. Payment methods and bank details section
+9. Payment terms
+10. Thank you note
+
+Format for easy customisation.""",
                 
-                "privacy_policy": f"""Create a GDPR-compliant privacy policy for {company_name}.
-                    Include: Data collection, use, sharing, security, user rights, contact info.
-                    Make it comprehensive but readable.""",
+                "privacy_policy": base_context + """Create a comprehensive GDPR and UK Data Protection Act 2018 compliant privacy policy.
+
+REQUIRED SECTIONS:
+1. Introduction and company identification
+2. What information we collect
+3. How we collect your information
+4. How we use your information (legal bases)
+5. Data sharing and third parties
+6. International transfers
+7. Data retention
+8. Your rights under GDPR (access, rectification, erasure, portability, objection)
+9. Cookies (brief, link to cookie policy)
+10. Security measures
+11. Children's privacy
+12. Changes to this policy
+13. Contact details and Data Protection Officer
+14. Right to complain to ICO
+
+Ensure full legal compliance.""",
                 
-                "cookie_notice": f"""Create a cookie consent notice for {company_name}'s website.
-                    Include: What cookies are, types used, how to manage them.""",
+                "cookie_notice": base_context + """Create a PECR and GDPR compliant cookie policy.
+
+REQUIRED SECTIONS:
+1. What are cookies
+2. Types of cookies we use:
+   - Strictly necessary
+   - Performance/Analytics
+   - Functionality
+   - Targeting/Advertising
+3. Specific cookies table (name, purpose, duration, type)
+4. Third-party cookies
+5. How to manage cookies (browser settings)
+6. Consent management
+7. Changes to policy
+8. Contact information
+
+Include practical guidance for users.""",
                 
-                "terms_conditions": f"""Create terms and conditions for {company_name}.
-                    Industry: {industry}
-                    Include: Acceptance, services, payment, liability, termination, governing law.""",
+                "terms_conditions": base_context + """Create comprehensive terms and conditions.
+
+REQUIRED SECTIONS:
+1. Introduction and acceptance
+2. Definitions
+3. Services description
+4. Account registration (if applicable)
+5. Pricing and payment
+6. Cancellation and refunds
+7. User obligations
+8. Intellectual property
+9. Disclaimer and limitation of liability
+10. Indemnification
+11. Termination
+12. Dispute resolution
+13. Governing law (England and Wales)
+14. Changes to terms
+15. Contact information
+16. Severability
+
+Ensure enforceability under UK consumer law.""",
                 
-                "refund_policy": f"""Create a refund policy for {company_name}.
-                    Include: Eligibility, process, timeframes, exceptions, contact info.""",
+                "refund_policy": base_context + """Create a clear refund and returns policy compliant with UK Consumer Rights Act 2015.
+
+REQUIRED SECTIONS:
+1. Policy overview
+2. Eligibility for refunds
+3. Statutory rights (14-day cooling-off period for online sales)
+4. How to request a refund
+5. Refund process and timeline
+6. Refund methods
+7. Non-refundable items/services
+8. Partial refunds
+9. Exchanges
+10. Faulty goods/services
+11. Contact information
+
+Be clear and customer-friendly while protecting the business.""",
                 
-                "employee_handbook": f"""Create a basic employee handbook outline for {company_name}.
-                    Include: Welcome, values, policies, benefits, conduct, acknowledgment.""",
+                "employee_handbook": base_context + """Create a professional employee handbook.
+
+REQUIRED SECTIONS:
+1. Welcome message from leadership
+2. Company overview, mission, and values
+3. Employment policies
+   - Equal opportunities
+   - Recruitment and probation
+   - Working hours and flexible working
+4. Code of conduct
+5. Leave policies (annual, sick, parental)
+6. Benefits summary
+7. Performance management
+8. Disciplinary and grievance procedures
+9. Health and safety
+10. Data protection and confidentiality
+11. IT and social media policy
+12. Termination of employment
+13. Acknowledgment form
+
+Comply with UK employment law.""",
                 
-                "remote_work_policy": f"""Create a remote work policy for {company_name}.
-                    Include: Eligibility, expectations, equipment, communication, security.""",
+                "remote_work_policy": base_context + """Create a comprehensive remote/hybrid working policy.
+
+REQUIRED SECTIONS:
+1. Policy purpose and scope
+2. Eligibility criteria
+3. Application process
+4. Working arrangements (hours, availability)
+5. Workspace requirements
+6. Equipment and expenses
+7. Health and safety (DSE assessments)
+8. Data security and confidentiality
+9. Communication expectations
+10. Performance management
+11. Team collaboration
+12. Return to office provisions
+13. Policy review
+
+Reflect modern working practices.""",
                 
-                "leave_policy": f"""Create a leave policy for {company_name} (UK context).
-                    Include: Annual leave, sick leave, parental leave, public holidays, request process.""",
+                "leave_policy": base_context + """Create a UK-compliant leave policy.
+
+REQUIRED SECTIONS:
+1. Annual leave entitlement (minimum 28 days including bank holidays)
+2. Leave year and carry-over
+3. Booking process
+4. Sick leave and SSP
+5. Maternity leave (52 weeks statutory)
+6. Paternity leave (2 weeks statutory)
+7. Shared parental leave
+8. Adoption leave
+9. Parental bereavement leave
+10. Compassionate leave
+11. Jury service
+12. Time off for dependants
+13. Unpaid leave
+
+Ensure statutory compliance.""",
                 
-                "code_of_conduct": f"""Create a code of conduct for {company_name}.
-                    Include: Expected behavior, discrimination, confidentiality, conflicts of interest.""",
+                "code_of_conduct": base_context + """Create a professional code of conduct.
+
+REQUIRED SECTIONS:
+1. Introduction and purpose
+2. Core values and principles
+3. Professional behaviour expectations
+4. Equality, diversity, and inclusion
+5. Anti-harassment and bullying
+6. Conflicts of interest
+7. Gifts and hospitality
+8. Confidentiality
+9. Use of company resources
+10. Social media guidelines
+11. Reporting concerns (whistleblowing)
+12. Consequences of violations
+13. Acknowledgment
+
+Set clear expectations for all employees.""",
                 
-                "welcome_email": f"""Create a welcome email template for new clients of {company_name}.
-                    Make it warm, professional, and informative.""",
+                "welcome_email": base_context + """Create a warm, professional welcome email template for new clients.
+
+INCLUDE:
+1. Personalised greeting
+2. Expression of appreciation
+3. Brief reminder of what they've signed up for
+4. What to expect next (clear next steps)
+5. Key contact information
+6. Helpful resources or links
+7. Invitation to reach out with questions
+8. Professional sign-off
+
+Make the client feel valued and informed.""",
                 
-                "follow_up_email": f"""Create a sales follow-up email template for {company_name}.
-                    Include: Reference previous contact, value proposition, clear CTA.""",
+                "follow_up_email": base_context + """Create a professional sales follow-up email template.
+
+INCLUDE:
+1. Personalised opening referencing previous interaction
+2. Value reminder (what problem you solve)
+3. Specific benefit or case study mention
+4. Gentle handling of potential objections
+5. Clear, specific call-to-action
+6. Easy response mechanism
+7. Professional sign-off
+8. P.S. with added value or urgency
+
+Be persuasive without being pushy.""",
                 
-                "thank_you_note": f"""Create a client thank you note template for {company_name}.
-                    Express gratitude, mention specific value, maintain relationship.""",
+                "thank_you_note": base_context + """Create a sincere client thank you note template.
+
+INCLUDE:
+1. Genuine expression of gratitude
+2. Specific mention of what you're thanking them for
+3. Recognition of the relationship value
+4. Brief mention of positive outcomes or impact
+5. Forward-looking statement
+6. Offer of continued support
+7. Warm, professional close
+
+Make it personal and memorable.""",
                 
-                "meeting_agenda": f"""Create a professional meeting agenda template for {company_name}.
-                    Include: Header, attendees, topics with time allocations, action items section."""
+                "meeting_agenda": base_context + """Create a professional meeting agenda template.
+
+INCLUDE:
+1. Meeting header (title, date, time, location/link)
+2. Attendees list
+3. Meeting objective
+4. Agenda items with:
+   - Topic
+   - Presenter/Lead
+   - Time allocation
+5. Discussion points
+6. Action items section
+7. Next steps
+8. Next meeting date placeholder
+9. Notes section
+
+Keep it structured and actionable."""
             }
             
-            prompt = doc_prompts.get(document_type, f"Create a {document_type} document for {company_name}")
+            prompt = doc_prompts.get(document_type, base_context + f"Create a professional {document_type} document.")
             
             response = await llm.send_message(
                 model="gpt-4o",
