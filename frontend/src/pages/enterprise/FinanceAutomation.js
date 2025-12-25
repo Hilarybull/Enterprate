@@ -107,7 +107,9 @@ export default function FinanceAutomation() {
   // Compliance
   const [complianceItems, setComplianceItems] = useState([]);
   const [showComplianceDialog, setShowComplianceDialog] = useState(false);
+  const [showEditComplianceDialog, setShowEditComplianceDialog] = useState(false);
   const [creatingCompliance, setCreatingCompliance] = useState(false);
+  const [editingCompliance, setEditingCompliance] = useState(null);
   const [newCompliance, setNewCompliance] = useState({
     title: '', description: '', category: 'tax', dueDate: '', priority: 'medium'
   });
