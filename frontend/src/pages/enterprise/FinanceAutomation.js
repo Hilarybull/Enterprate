@@ -976,6 +976,78 @@ export default function FinanceAutomation() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* EDIT COMPLIANCE DIALOG */}
+      <Dialog open={showEditComplianceDialog} onOpenChange={setShowEditComplianceDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Edit Compliance Item</DialogTitle></DialogHeader>
+          {editingCompliance && (
+            <form onSubmit={handleSaveEditCompliance} className="space-y-4">
+              <div>
+                <Label>Title</Label>
+                <Input 
+                  value={editingCompliance.title} 
+                  onChange={(e) => setEditingCompliance({ ...editingCompliance, title: e.target.value })} 
+                  required 
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea 
+                  value={editingCompliance.description} 
+                  onChange={(e) => setEditingCompliance({ ...editingCompliance, description: e.target.value })} 
+                  rows={2} 
+                  required 
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Category</Label>
+                  <Select 
+                    value={editingCompliance.category} 
+                    onValueChange={(v) => setEditingCompliance({ ...editingCompliance, category: v })}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {complianceCategories.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Priority</Label>
+                  <Select 
+                    value={editingCompliance.priority} 
+                    onValueChange={(v) => setEditingCompliance({ ...editingCompliance, priority: v })}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label>Due Date</Label>
+                <Input 
+                  type="date" 
+                  value={editingCompliance.dueDate || ''} 
+                  onChange={(e) => setEditingCompliance({ ...editingCompliance, dueDate: e.target.value })} 
+                />
+              </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => setShowEditComplianceDialog(false)}>Cancel</Button>
+                <Button type="submit" className="gradient-primary border-0">
+                  Save Changes
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
