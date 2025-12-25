@@ -144,11 +144,14 @@ export default function BusinessOperations() {
   });
   const [agenticEmailRequest, setAgenticEmailRequest] = useState({
     purpose: '',
-    recipientContext: '',
+    recipientName: '',
+    recipientEmail: '',
+    recipientTitle: '',
     tone: 'professional',
     includeCallToAction: true
   });
   const [generatedEmail, setGeneratedEmail] = useState(null);
+  const [editableEmail, setEditableEmail] = useState({ subject: '', body: '' });
 
   // AI Document Drafting
   const [showDocumentDraftDialog, setShowDocumentDraftDialog] = useState(false);
