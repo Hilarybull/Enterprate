@@ -802,38 +802,67 @@ export default function BusinessOperations() {
 
       {/* AGENTIC EMAIL DIALOG */}
       <Dialog open={showAgenticEmailDialog} onOpenChange={setShowAgenticEmailDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="text-purple-600" size={20} />
               AI Email Generator
             </DialogTitle>
             <DialogDescription>
-              Describe what you need and AI will draft it. You will review before sending.
+              Provide details and AI will craft a professional email. You can edit before sending.
             </DialogDescription>
           </DialogHeader>
           
           {!generatedEmail ? (
             <form onSubmit={handleGenerateAgenticEmail} className="space-y-4">
+              {/* Recipient Details */}
+              <div className="border rounded-lg p-4 space-y-3 bg-gray-50">
+                <h4 className="font-medium text-sm text-gray-700">Recipient Details</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Recipient Name *</Label>
+                    <Input 
+                      value={agenticEmailRequest.recipientName}
+                      onChange={e => setAgenticEmailRequest({...agenticEmailRequest, recipientName: e.target.value})}
+                      placeholder="e.g., Mr Paul Johnson"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label>Recipient Email *</Label>
+                    <Input 
+                      type="email"
+                      value={agenticEmailRequest.recipientEmail}
+                      onChange={e => setAgenticEmailRequest({...agenticEmailRequest, recipientEmail: e.target.value})}
+                      placeholder="e.g., paul@company.com"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label>Recipient Title/Role (optional)</Label>
+                  <Input 
+                    value={agenticEmailRequest.recipientTitle}
+                    onChange={e => setAgenticEmailRequest({...agenticEmailRequest, recipientTitle: e.target.value})}
+                    placeholder="e.g., Marketing Director at TechCorp"
+                  />
+                </div>
+              </div>
+
+              {/* Email Purpose */}
               <div>
-                <Label>What is this email for?</Label>
+                <Label>Email Purpose *</Label>
                 <Textarea 
                   value={agenticEmailRequest.purpose}
                   onChange={e => setAgenticEmailRequest({...agenticEmailRequest, purpose: e.target.value})}
-                  placeholder="e.g., Follow up with a potential client about our web design services. They showed interest in our portfolio last week."
-                  rows={3}
+                  placeholder="Describe the purpose clearly. E.g., 'Follow up with Mr Paul who expressed interest in our web design services on 20th December. He specifically liked our e-commerce portfolio.'"
+                  rows={4}
                   required
                 />
+                <p className="text-xs text-gray-500 mt-1">Be specific - include dates, context, and any relevant details.</p>
               </div>
-              <div>
-                <Label>Recipient Email / Context</Label>
-                <Input 
-                  value={agenticEmailRequest.recipientContext}
-                  onChange={e => setAgenticEmailRequest({...agenticEmailRequest, recipientContext: e.target.value})}
-                  placeholder="e.g., john@company.com or 'Marketing Manager at TechCorp'"
-                  required
-                />
-              </div>
+
+              {/* Tone and Options */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Tone</Label>
@@ -841,9 +870,9 @@ export default function BusinessOperations() {
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="professional">Professional</SelectItem>
-                      <SelectItem value="friendly">Friendly</SelectItem>
-                      <SelectItem value="formal">Formal</SelectItem>
-                      <SelectItem value="casual">Casual</SelectItem>
+                      <SelectItem value="friendly">Friendly & Warm</SelectItem>
+                      <SelectItem value="formal">Formal & Corporate</SelectItem>
+                      <SelectItem value="persuasive">Persuasive & Sales-focused</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -859,9 +888,10 @@ export default function BusinessOperations() {
                   </label>
                 </div>
               </div>
+
               <Button type="submit" className="w-full gradient-primary border-0" disabled={generatingEmail}>
                 {generatingEmail ? (
-                  <><Loader2 className="mr-2 animate-spin" size={18} /> Generating...</>
+                  <><Loader2 className="mr-2 animate-spin" size={18} /> Generating Professional Email...</>
                 ) : (
                   <><Sparkles className="mr-2" size={18} /> Generate Email Draft</>
                 )}
@@ -869,14 +899,36 @@ export default function BusinessOperations() {
             </form>
           ) : (
             <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm font-medium text-gray-500 mb-1">Subject:</p>
-                <p className="font-medium">{generatedEmail.subject}</p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
+                <strong>Review & Edit:</strong> You can modify the subject and body below before sending.
               </div>
-              <div className="bg-gray-50 p-4 rounded-lg max-h-64 overflow-y-auto">
-                <p className="text-sm font-medium text-gray-500 mb-2">Body:</p>
-                <div className="prose prose-sm" dangerouslySetInnerHTML={{ __html: generatedEmail.body?.replace(/\n/g, '<br/>') }} />
+              
+              {/* Editable Subject */}
+              <div>
+                <Label>Subject Line</Label>
+                <Input 
+                  value={editableEmail.subject}
+                  onChange={e => setEditableEmail({...editableEmail, subject: e.target.value})}
+                  className="font-medium"
+                />
               </div>
+
+              {/* Editable Body */}
+              <div>
+                <Label>Email Body</Label>
+                <Textarea 
+                  value={editableEmail.body}
+                  onChange={e => setEditableEmail({...editableEmail, body: e.target.value})}
+                  rows={12}
+                  className="font-mono text-sm"
+                />
+              </div>
+
+              {/* Recipient Preview */}
+              <div className="text-sm text-gray-500">
+                <strong>To:</strong> {agenticEmailRequest.recipientName} ({agenticEmailRequest.recipientEmail})
+              </div>
+
               <DialogFooter className="flex gap-2">
                 <Button variant="outline" onClick={handleRejectEmail}>
                   <ThumbsDown className="mr-2" size={16} /> Reject & Redo
