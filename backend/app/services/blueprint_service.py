@@ -608,3 +608,194 @@ Key highlights include:
             })
         
         return projections
+    
+    @staticmethod
+    async def generate_document(data: dict) -> dict:
+        """Generate business document using AI"""
+        document_type = data.get("documentType", "quote")
+        company_name = data.get("companyName", "Company")
+        industry = data.get("industry", "")
+        description = data.get("description", "")
+        
+        if not LLM_AVAILABLE:
+            return {"content": BlueprintService._get_fallback_document(document_type, company_name)}
+        
+        try:
+            llm = LlmChat(api_key=os.environ.get("EMERGENT_LLM_KEY", ""))
+            
+            doc_prompts = {
+                "quote": f"""Create a professional quotation/estimate template for {company_name}.
+                    Include: Header, client info section, itemized table, terms, signature line.
+                    Format as plain text with clear sections.""",
+                
+                "simple_contract": f"""Create a simple service agreement contract template for {company_name}.
+                    Industry: {industry}
+                    Include: Parties, services, payment terms, duration, termination, signatures.
+                    Keep it concise and professional.""",
+                
+                "proposal": f"""Create a business proposal template for {company_name}.
+                    Industry: {industry}
+                    Description: {description}
+                    Include: Executive summary, scope, timeline, investment, call to action.""",
+                
+                "invoice_template": f"""Create an invoice template for {company_name}.
+                    Include: Company header, client details, invoice number, itemized list, totals, payment info.""",
+                
+                "privacy_policy": f"""Create a GDPR-compliant privacy policy for {company_name}.
+                    Include: Data collection, use, sharing, security, user rights, contact info.
+                    Make it comprehensive but readable.""",
+                
+                "cookie_notice": f"""Create a cookie consent notice for {company_name}'s website.
+                    Include: What cookies are, types used, how to manage them.""",
+                
+                "terms_conditions": f"""Create terms and conditions for {company_name}.
+                    Industry: {industry}
+                    Include: Acceptance, services, payment, liability, termination, governing law.""",
+                
+                "refund_policy": f"""Create a refund policy for {company_name}.
+                    Include: Eligibility, process, timeframes, exceptions, contact info.""",
+                
+                "employee_handbook": f"""Create a basic employee handbook outline for {company_name}.
+                    Include: Welcome, values, policies, benefits, conduct, acknowledgment.""",
+                
+                "remote_work_policy": f"""Create a remote work policy for {company_name}.
+                    Include: Eligibility, expectations, equipment, communication, security.""",
+                
+                "leave_policy": f"""Create a leave policy for {company_name} (UK context).
+                    Include: Annual leave, sick leave, parental leave, public holidays, request process.""",
+                
+                "code_of_conduct": f"""Create a code of conduct for {company_name}.
+                    Include: Expected behavior, discrimination, confidentiality, conflicts of interest.""",
+                
+                "welcome_email": f"""Create a welcome email template for new clients of {company_name}.
+                    Make it warm, professional, and informative.""",
+                
+                "follow_up_email": f"""Create a sales follow-up email template for {company_name}.
+                    Include: Reference previous contact, value proposition, clear CTA.""",
+                
+                "thank_you_note": f"""Create a client thank you note template for {company_name}.
+                    Express gratitude, mention specific value, maintain relationship.""",
+                
+                "meeting_agenda": f"""Create a professional meeting agenda template for {company_name}.
+                    Include: Header, attendees, topics with time allocations, action items section."""
+            }
+            
+            prompt = doc_prompts.get(document_type, f"Create a {document_type} document for {company_name}")
+            
+            response = await llm.send_message(
+                model="gpt-4o",
+                messages=[UserMessage(content=prompt)]
+            )
+            
+            text = response if isinstance(response, str) else (response.text if hasattr(response, 'text') else str(response))
+            
+            return {"content": text.strip()}
+            
+        except Exception as e:
+            print(f"Document generation error: {e}")
+            return {"content": BlueprintService._get_fallback_document(document_type, company_name)}
+    
+    @staticmethod
+    def _get_fallback_document(document_type: str, company_name: str) -> str:
+        """Fallback documents when AI is unavailable"""
+        date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        
+        templates = {
+            "quote": f"""QUOTATION
+
+{company_name}
+Date: {date_str}
+Quote #: [Number]
+Valid Until: [Date]
+
+TO:
+[Client Name]
+[Client Address]
+
+DESCRIPTION OF SERVICES:
+
+| Item | Description | Quantity | Unit Price | Total |
+|------|-------------|----------|------------|-------|
+| 1    | [Service]   | 1        | £0.00      | £0.00 |
+
+Subtotal: £0.00
+VAT (20%): £0.00
+TOTAL: £0.00
+
+Terms: Payment due within 30 days
+
+Accepted by: _______________ Date: ___________""",
+
+            "privacy_policy": f"""PRIVACY POLICY
+
+Last Updated: {date_str}
+
+{company_name} ("we", "us", or "our") is committed to protecting your privacy.
+
+1. INFORMATION WE COLLECT
+We collect information you provide directly to us.
+
+2. HOW WE USE YOUR INFORMATION
+We use the information to provide and improve our services.
+
+3. INFORMATION SHARING
+We do not sell or rent your personal information.
+
+4. DATA SECURITY
+We implement appropriate security measures.
+
+5. YOUR RIGHTS
+You have the right to access, correct, or delete your data.
+
+6. CONTACT US
+For questions, please contact us at: [email]""",
+
+            "simple_contract": f"""SERVICE AGREEMENT
+
+This Agreement is entered into on {date_str}
+
+BETWEEN:
+{company_name} ("Provider")
+AND:
+[Client Name] ("Client")
+
+1. SERVICES
+The Provider agrees to provide [describe services].
+
+2. PAYMENT TERMS
+[Payment details]
+
+3. TERM
+This agreement begins on [date] and continues until [date/completion].
+
+4. TERMINATION
+Either party may terminate with [X] days written notice.
+
+5. CONFIDENTIALITY
+Both parties agree to keep confidential information private.
+
+SIGNATURES:
+
+Provider: _______________ Date: ___________
+Client: _______________ Date: ___________""",
+
+            "welcome_email": f"""Subject: Welcome to {company_name}!
+
+Dear [Client Name],
+
+We're delighted to welcome you to {company_name}!
+
+Thank you for choosing us. We're committed to providing you with exceptional service.
+
+What happens next:
+• [Step 1]
+• [Step 2]
+• [Step 3]
+
+If you have any questions, don't hesitate to reach out.
+
+Best regards,
+The {company_name} Team"""
+        }
+        
+        return templates.get(document_type, f"[{document_type.replace('_', ' ').title()} Template for {company_name}]")
