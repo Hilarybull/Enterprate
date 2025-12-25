@@ -658,6 +658,18 @@ export default function FinanceAutomation() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleEstimateTax} className="space-y-4">
+                  {/* Auto-populate button */}
+                  <div className="mb-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={handleAutoPopulateTax}
+                      className="w-full border-dashed"
+                    >
+                      <Sparkles className="mr-2" size={16} />
+                      Auto-Fill from Invoices & Expenses
+                    </Button>
+                  </div>
                   <div>
                     <Label>Annual Revenue (£)</Label>
                     <Input
@@ -684,7 +696,8 @@ export default function FinanceAutomation() {
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="sole_proprietor">Sole Proprietor</SelectItem>
-                        <SelectItem value="llc">Limited Company (LLC)</SelectItem>
+                        <SelectItem value="partnership">Partnership</SelectItem>
+                        <SelectItem value="limited_company">Limited Company</SelectItem>
                         <SelectItem value="corporation">Corporation</SelectItem>
                       </SelectContent>
                     </Select>
