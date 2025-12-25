@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useWorkspace } from '@/context/WorkspaceContext';
-import { PageHeader, StatsCard, FeatureCard } from '@/components/enterprise';
+import { PageHeader, StatsCard } from '@/components/enterprise';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   Tabs,
@@ -28,13 +30,8 @@ import {
 } from '@/components/ui/tabs';
 import { 
   Briefcase, 
-  Users, 
-  Calendar, 
   CheckSquare,
   Clock,
-  BarChart3,
-  Workflow,
-  Settings2,
   Plus,
   Loader2,
   Mail,
@@ -44,7 +41,16 @@ import {
   AlertCircle,
   CheckCircle,
   Circle,
-  FolderOpen
+  Sparkles,
+  Copy,
+  Eye,
+  ThumbsUp,
+  ThumbsDown,
+  FileSignature,
+  ScrollText,
+  Shield,
+  Users,
+  MessageSquare
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -64,12 +70,48 @@ const taskStatuses = [
   { value: 'completed', label: 'Completed', icon: CheckCircle },
 ];
 
-const documentTypes = [
-  { value: 'pdf', label: 'PDF Document' },
-  { value: 'doc', label: 'Word Document' },
-  { value: 'spreadsheet', label: 'Spreadsheet' },
-  { value: 'presentation', label: 'Presentation' },
-  { value: 'other', label: 'Other' },
+// Document types for AI drafting
+const documentCategories = [
+  {
+    category: 'Business Documents',
+    icon: FileSignature,
+    types: [
+      { id: 'quote', name: 'Quote / Estimate', description: 'Professional quotation template' },
+      { id: 'simple_contract', name: 'Simple Contract', description: 'Basic service agreement' },
+      { id: 'proposal', name: 'Business Proposal', description: 'Proposal for potential clients' },
+      { id: 'invoice_template', name: 'Invoice Template', description: 'Professional invoice layout' },
+    ]
+  },
+  {
+    category: 'Compliance Documents',
+    icon: Shield,
+    types: [
+      { id: 'privacy_policy', name: 'Privacy Policy', description: 'GDPR-compliant privacy notice' },
+      { id: 'cookie_notice', name: 'Cookie Notice', description: 'Website cookie consent' },
+      { id: 'terms_conditions', name: 'Terms & Conditions', description: 'Service terms' },
+      { id: 'refund_policy', name: 'Refund Policy', description: 'Return and refund policy' },
+    ]
+  },
+  {
+    category: 'HR & Internal Policies',
+    icon: Users,
+    types: [
+      { id: 'employee_handbook', name: 'Employee Handbook', description: 'Basic employee guide' },
+      { id: 'remote_work_policy', name: 'Remote Work Policy', description: 'Work from home guidelines' },
+      { id: 'leave_policy', name: 'Leave Policy', description: 'Holiday and sick leave' },
+      { id: 'code_of_conduct', name: 'Code of Conduct', description: 'Expected behavior guidelines' },
+    ]
+  },
+  {
+    category: 'CRM & Sales Documents',
+    icon: MessageSquare,
+    types: [
+      { id: 'welcome_email', name: 'Welcome Email', description: 'New client welcome message' },
+      { id: 'follow_up_email', name: 'Follow-up Email', description: 'Sales follow-up template' },
+      { id: 'thank_you_note', name: 'Thank You Note', description: 'Client appreciation message' },
+      { id: 'meeting_agenda', name: 'Meeting Agenda', description: 'Professional agenda template' },
+    ]
+  }
 ];
 
 export default function BusinessOperations() {
@@ -86,39 +128,42 @@ export default function BusinessOperations() {
     title: '', description: '', priority: 'medium', dueDate: '', assignee: '', tags: ''
   });
 
-  // Email Templates
+  // Email Templates & Agentic Email
   const [emailTemplates, setEmailTemplates] = useState([]);
   const [emailLogs, setEmailLogs] = useState([]);
+  const [pendingEmails, setPendingEmails] = useState([]);
   const [showEmailTemplateDialog, setShowEmailTemplateDialog] = useState(false);
-  const [showSendEmailDialog, setShowSendEmailDialog] = useState(false);
+  const [showAgenticEmailDialog, setShowAgenticEmailDialog] = useState(false);
+  const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [creatingTemplate, setCreatingTemplate] = useState(false);
-  const [sendingEmail, setSendingEmail] = useState(false);
+  const [generatingEmail, setGeneratingEmail] = useState(false);
+  const [approvingEmail, setApprovingEmail] = useState(false);
+  const [selectedPendingEmail, setSelectedPendingEmail] = useState(null);
   const [newTemplate, setNewTemplate] = useState({
     name: '', subject: '', bodyHtml: '', category: 'general'
   });
-  const [emailToSend, setEmailToSend] = useState({
-    to: '', subject: '', bodyHtml: '', templateId: ''
+  const [agenticEmailRequest, setAgenticEmailRequest] = useState({
+    purpose: '',
+    recipientContext: '',
+    tone: 'professional',
+    includeCallToAction: true
   });
+  const [generatedEmail, setGeneratedEmail] = useState(null);
 
-  // Documents
-  const [documents, setDocuments] = useState([]);
-  const [showDocumentDialog, setShowDocumentDialog] = useState(false);
-  const [creatingDocument, setCreatingDocument] = useState(false);
-  const [newDocument, setNewDocument] = useState({
-    name: '', type: 'pdf', description: '', category: 'general', tags: ''
-  });
-
-  // Workflows
-  const [workflows, setWorkflows] = useState([]);
-  const [defaultWorkflows, setDefaultWorkflows] = useState([]);
+  // AI Document Drafting
+  const [showDocumentDraftDialog, setShowDocumentDraftDialog] = useState(false);
+  const [generatingDocument, setGeneratingDocument] = useState(false);
+  const [selectedDocType, setSelectedDocType] = useState(null);
+  const [generatedDocument, setGeneratedDocument] = useState(null);
+  const [companyProfile, setCompanyProfile] = useState(null);
 
   useEffect(() => {
     if (currentWorkspace) {
       loadTasks();
       loadEmailTemplates();
       loadEmailLogs();
-      loadDocuments();
-      loadWorkflows();
+      loadPendingEmails();
+      loadCompanyProfile();
     } else {
       setTasksLoading(false);
     }
@@ -135,6 +180,7 @@ export default function BusinessOperations() {
       setTaskStats(statsRes.data);
     } catch (error) {
       console.error('Failed to load tasks:', error);
+      toast.error('Failed to load tasks');
     } finally {
       setTasksLoading(false);
     }
@@ -142,9 +188,12 @@ export default function BusinessOperations() {
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
+    if (!newTask.title.trim()) {
+      toast.error('Task title is required');
+      return;
+    }
     setCreatingTask(true);
     try {
-      // Build task payload with only non-empty values
       const taskPayload = {
         title: newTask.title.trim(),
         description: newTask.description?.trim() || null,
@@ -152,28 +201,22 @@ export default function BusinessOperations() {
         tags: newTask.tags ? newTask.tags.split(',').map(t => t.trim()).filter(t => t) : []
       };
       
-      // Only add dueDate if it has a value
       if (newTask.dueDate) {
         taskPayload.dueDate = newTask.dueDate;
       }
       
-      // Only add assignee if it has a value
       if (newTask.assignee?.trim()) {
         taskPayload.assignee = newTask.assignee.trim();
       }
       
-      const response = await axios.post(`${API_URL}/operations/tasks`, taskPayload, { headers: getHeaders() });
-      
-      if (response.data) {
-        toast.success('Task created!');
-        setShowTaskDialog(false);
-        setNewTask({ title: '', description: '', priority: 'medium', dueDate: '', assignee: '', tags: '' });
-        loadTasks();
-      }
+      await axios.post(`${API_URL}/operations/tasks`, taskPayload, { headers: getHeaders() });
+      toast.success('Task created!');
+      setShowTaskDialog(false);
+      setNewTask({ title: '', description: '', priority: 'medium', dueDate: '', assignee: '', tags: '' });
+      loadTasks();
     } catch (error) {
       console.error('Task creation error:', error.response?.data || error.message);
-      const errorMessage = error.response?.data?.detail || 'Failed to create task';
-      toast.error(errorMessage);
+      toast.error(error.response?.data?.detail || 'Failed to create task');
     } finally {
       setCreatingTask(false);
     }
@@ -218,6 +261,24 @@ export default function BusinessOperations() {
     }
   };
 
+  const loadPendingEmails = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/operations/pending-emails`, { headers: getHeaders() });
+      setPendingEmails(response.data || []);
+    } catch (error) {
+      console.error('Failed to load pending emails:', error);
+    }
+  };
+
+  const loadCompanyProfile = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/company-profile`, { headers: getHeaders() });
+      setCompanyProfile(response.data);
+    } catch (error) {
+      console.error('Failed to load company profile:', error);
+    }
+  };
+
   const handleCreateTemplate = async (e) => {
     e.preventDefault();
     setCreatingTemplate(true);
@@ -234,110 +295,114 @@ export default function BusinessOperations() {
     }
   };
 
-  const handleSendEmail = async (e) => {
-    e.preventDefault();
-    setSendingEmail(true);
+  const handleDeleteTemplate = async (templateId) => {
     try {
-      const response = await axios.post(`${API_URL}/operations/send-email`, {
-        to: emailToSend.to.split(',').map(e => e.trim()),
-        subject: emailToSend.subject,
-        bodyHtml: emailToSend.bodyHtml,
-        templateId: emailToSend.templateId || null
+      await axios.delete(`${API_URL}/operations/email-templates/${templateId}`, { headers: getHeaders() });
+      toast.success('Template deleted');
+      loadEmailTemplates();
+    } catch (error) {
+      toast.error('Failed to delete template');
+    }
+  };
+
+  // === AGENTIC EMAIL (Human-in-the-loop) ===
+  const handleGenerateAgenticEmail = async (e) => {
+    e.preventDefault();
+    setGeneratingEmail(true);
+    try {
+      const response = await axios.post(`${API_URL}/operations/generate-email`, {
+        ...agenticEmailRequest,
+        companyName: companyProfile?.officialProfile?.companyName || companyProfile?.operatingProfile?.companyName || 'Our Company'
       }, { headers: getHeaders() });
       
-      toast.success(response.data.message);
-      setShowSendEmailDialog(false);
-      setEmailToSend({ to: '', subject: '', bodyHtml: '', templateId: '' });
+      setGeneratedEmail(response.data);
+      toast.success('Email draft generated! Please review before sending.');
+    } catch (error) {
+      toast.error('Failed to generate email');
+    } finally {
+      setGeneratingEmail(false);
+    }
+  };
+
+  const handleApproveAndSend = async () => {
+    if (!generatedEmail) return;
+    setApprovingEmail(true);
+    try {
+      await axios.post(`${API_URL}/operations/send-approved-email`, {
+        to: generatedEmail.to || agenticEmailRequest.recipientContext,
+        subject: generatedEmail.subject,
+        bodyHtml: generatedEmail.body
+      }, { headers: getHeaders() });
+      
+      toast.success('Email approved and sent!');
+      setShowAgenticEmailDialog(false);
+      setGeneratedEmail(null);
+      setAgenticEmailRequest({ purpose: '', recipientContext: '', tone: 'professional', includeCallToAction: true });
       loadEmailLogs();
     } catch (error) {
       toast.error('Failed to send email');
     } finally {
-      setSendingEmail(false);
+      setApprovingEmail(false);
     }
   };
 
-  const handleSelectTemplate = (templateId) => {
-    const template = emailTemplates.find(t => t.id === templateId);
-    if (template) {
-      setEmailToSend(prev => ({
-        ...prev,
-        templateId: templateId,
-        subject: template.subject,
-        bodyHtml: template.bodyHtml
-      }));
-    }
+  const handleRejectEmail = () => {
+    setGeneratedEmail(null);
+    toast.info('Email rejected. Please regenerate or modify the request.');
   };
 
-  // === DOCUMENT FUNCTIONS ===
-  const loadDocuments = async () => {
+  const handleApprovePendingEmail = async (emailId) => {
     try {
-      const response = await axios.get(`${API_URL}/operations/documents`, { headers: getHeaders() });
-      setDocuments(response.data || []);
+      await axios.post(`${API_URL}/operations/approve-email/${emailId}`, {}, { headers: getHeaders() });
+      toast.success('Email approved and sent!');
+      loadPendingEmails();
+      loadEmailLogs();
     } catch (error) {
-      console.error('Failed to load documents:', error);
+      toast.error('Failed to approve email');
     }
   };
 
-  const handleCreateDocument = async (e) => {
-    e.preventDefault();
-    setCreatingDocument(true);
+  const handleRejectPendingEmail = async (emailId) => {
     try {
-      await axios.post(`${API_URL}/operations/documents`, {
-        ...newDocument,
-        tags: newDocument.tags ? newDocument.tags.split(',').map(t => t.trim()) : []
+      await axios.post(`${API_URL}/operations/reject-email/${emailId}`, {}, { headers: getHeaders() });
+      toast.info('Email rejected');
+      loadPendingEmails();
+    } catch (error) {
+      toast.error('Failed to reject email');
+    }
+  };
+
+  // === AI DOCUMENT DRAFTING ===
+  const handleGenerateDocument = async (docType) => {
+    setSelectedDocType(docType);
+    setGeneratingDocument(true);
+    setGeneratedDocument(null);
+    
+    try {
+      const response = await axios.post(`${API_URL}/blueprint/generate-document`, {
+        documentType: docType.id,
+        companyName: companyProfile?.officialProfile?.companyName || companyProfile?.operatingProfile?.companyName || 'Company Name',
+        industry: companyProfile?.operatingProfile?.industry || '',
+        description: companyProfile?.operatingProfile?.description || ''
       }, { headers: getHeaders() });
-      toast.success('Document added!');
-      setShowDocumentDialog(false);
-      setNewDocument({ name: '', type: 'pdf', description: '', category: 'general', tags: '' });
-      loadDocuments();
+      
+      setGeneratedDocument(response.data.content);
+      setShowDocumentDraftDialog(true);
+      toast.success('Document generated!');
     } catch (error) {
-      toast.error('Failed to add document');
+      toast.error('Failed to generate document');
     } finally {
-      setCreatingDocument(false);
+      setGeneratingDocument(false);
     }
   };
 
-  const handleDeleteDocument = async (docId) => {
-    try {
-      await axios.delete(`${API_URL}/operations/documents/${docId}`, { headers: getHeaders() });
-      toast.success('Document deleted');
-      loadDocuments();
-    } catch (error) {
-      toast.error('Failed to delete document');
-    }
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard!');
   };
 
-  // === WORKFLOW FUNCTIONS ===
-  const loadWorkflows = async () => {
-    try {
-      const [workflowsRes, defaultsRes] = await Promise.all([
-        axios.get(`${API_URL}/operations/workflows`, { headers: getHeaders() }),
-        axios.get(`${API_URL}/operations/workflows/defaults`, { headers: getHeaders() })
-      ]);
-      setWorkflows(workflowsRes.data || []);
-      setDefaultWorkflows(defaultsRes.data || []);
-    } catch (error) {
-      console.error('Failed to load workflows:', error);
-    }
-  };
-
-  const handleAddDefaultWorkflow = async (workflow) => {
-    try {
-      await axios.post(`${API_URL}/operations/workflows`, {
-        name: workflow.name,
-        description: workflow.description,
-        category: workflow.category,
-        steps: workflow.steps,
-        trigger: workflow.trigger
-      }, { headers: getHeaders() });
-      toast.success('Workflow added!');
-      loadWorkflows();
-    } catch (error) {
-      toast.error('Failed to add workflow');
-    }
-  };
-
-  const getPriorityColor = (priority) => {
+  // === STATS ===
+  const getPriorityBadge = (priority) => {
     const p = taskPriorities.find(tp => tp.value === priority);
     return p?.color || 'bg-gray-100 text-gray-700';
   };
@@ -360,24 +425,23 @@ export default function BusinessOperations() {
       <PageHeader
         icon={Briefcase}
         title="Business Operations"
-        description="Manage tasks, automate emails, organize documents, and streamline workflows"
+        description="Manage tasks, AI-powered email automation, and document drafting"
       />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard title="Total Tasks" value={taskStats?.total || 0} icon={CheckSquare} gradient="gradient-primary" />
-        <StatsCard title="In Progress" value={taskStats?.byStatus?.in_progress || 0} icon={Clock} gradient="gradient-warning" />
-        <StatsCard title="Completed" value={taskStats?.byStatus?.completed || 0} icon={CheckCircle} gradient="gradient-success" />
-        <StatsCard title="Completion Rate" value={`${taskStats?.completionRate || 0}%`} icon={BarChart3} gradient="gradient-primary" />
+        <StatsCard title="In Progress" value={taskStats?.inProgress || 0} icon={Clock} gradient="gradient-warning" />
+        <StatsCard title="Completed" value={taskStats?.completed || 0} icon={CheckCircle} gradient="gradient-success" />
+        <StatsCard title="Pending Approvals" value={pendingEmails.length} icon={Mail} gradient="gradient-secondary" />
       </div>
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
           <TabsTrigger value="email">Email Automation</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="workflows">Workflows</TabsTrigger>
+          <TabsTrigger value="documents">AI Document Drafting</TabsTrigger>
         </TabsList>
 
         {/* TASKS TAB */}
@@ -386,58 +450,54 @@ export default function BusinessOperations() {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Task Management</CardTitle>
-                <CardDescription>Create and track tasks for your team</CardDescription>
+                <CardDescription>Create and track your tasks</CardDescription>
               </div>
               <Button onClick={() => setShowTaskDialog(true)} className="gradient-primary border-0">
-                <Plus className="mr-2" size={18} /> Add Task
+                <Plus className="mr-2" size={18} /> Create Task
               </Button>
             </CardHeader>
             <CardContent>
               {tasks.length === 0 ? (
-                <div className="text-center py-12">
-                  <CheckSquare className="mx-auto mb-2 text-gray-300" size={48} />
-                  <p className="text-gray-500">No tasks yet. Create your first task!</p>
+                <div className="text-center py-12 text-gray-500">
+                  <CheckSquare className="mx-auto mb-4 text-gray-300" size={48} />
+                  <p>No tasks yet. Create your first task!</p>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {tasks.map((task) => {
+                  {tasks.map(task => {
                     const StatusIcon = getStatusIcon(task.status);
                     return (
-                      <div key={task.id} className={`flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 ${task.status === 'completed' ? 'bg-green-50 border-green-200' : ''}`}>
-                        <div className="flex items-center space-x-4">
-                          <StatusIcon size={20} className={task.status === 'completed' ? 'text-green-500' : 'text-gray-400'} />
+                      <div key={task.id} className="flex items-center justify-between p-4 rounded-lg border hover:border-purple-200 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <StatusIcon className={`${task.status === 'completed' ? 'text-green-500' : 'text-gray-400'}`} size={20} />
                           <div>
-                            <h4 className={`font-medium ${task.status === 'completed' ? 'line-through text-gray-500' : ''}`}>{task.title}</h4>
-                            {task.description && <p className="text-sm text-gray-500 line-clamp-1">{task.description}</p>}
-                            <div className="flex items-center space-x-2 mt-1">
+                            <p className={`font-medium ${task.status === 'completed' ? 'line-through text-gray-400' : ''}`}>
+                              {task.title}
+                            </p>
+                            {task.description && <p className="text-sm text-gray-500">{task.description}</p>}
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`px-2 py-0.5 rounded-full text-xs ${getPriorityBadge(task.priority)}`}>
+                                {task.priority}
+                              </span>
                               {task.dueDate && (
-                                <span className="text-xs text-gray-500 flex items-center">
-                                  <Calendar size={12} className="mr-1" />
-                                  {new Date(task.dueDate).toLocaleDateString()}
-                                </span>
-                              )}
-                              {task.tags?.length > 0 && (
-                                <span className="text-xs text-purple-600">{task.tags.join(', ')}</span>
+                                <span className="text-xs text-gray-500">Due: {new Date(task.dueDate).toLocaleDateString()}</span>
                               )}
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-3">
-                          <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(task.priority)}`}>
-                            {task.priority}
-                          </span>
-                          <Select value={task.status} onValueChange={(v) => handleUpdateTaskStatus(task.id, v)}>
-                            <SelectTrigger className="w-[130px] h-8 text-xs">
+                        <div className="flex items-center gap-2">
+                          <Select value={task.status} onValueChange={(val) => handleUpdateTaskStatus(task.id, val)}>
+                            <SelectTrigger className="w-32">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {taskStatuses.map((s) => (
+                              {taskStatuses.map(s => (
                                 <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                           <Button variant="ghost" size="sm" onClick={() => handleDeleteTask(task.id)}>
-                            <Trash2 size={14} className="text-red-500" />
+                            <Trash2 size={16} />
                           </Button>
                         </div>
                       </div>
@@ -449,82 +509,127 @@ export default function BusinessOperations() {
           </Card>
         </TabsContent>
 
-        {/* EMAIL TAB */}
+        {/* EMAIL AUTOMATION TAB */}
         <TabsContent value="email" className="mt-6 space-y-6">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start space-x-3">
-            <AlertCircle className="text-yellow-600 flex-shrink-0" size={20} />
-            <div>
-              <p className="font-medium text-yellow-800">Email Automation is in Demo Mode</p>
-              <p className="text-sm text-yellow-700">Emails are logged but not actually sent. To enable real sending, configure your SendGrid API key in the backend.</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Templates */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Email Templates</CardTitle>
-                  <CardDescription>Reusable email templates</CardDescription>
-                </div>
-                <Button onClick={() => setShowEmailTemplateDialog(true)} size="sm">
-                  <Plus className="mr-1" size={14} /> Template
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {emailTemplates.length === 0 ? (
-                  <p className="text-center text-gray-500 py-6">No templates yet</p>
-                ) : (
-                  <div className="space-y-2">
-                    {emailTemplates.map((template) => (
-                      <div key={template.id} className="p-3 border rounded-lg hover:bg-gray-50">
-                        <h4 className="font-medium">{template.name}</h4>
-                        <p className="text-sm text-gray-500">{template.subject}</p>
-                        <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{template.category}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Send Email */}
-            <Card>
+          {/* Pending Approvals - Human in the Loop */}
+          {pendingEmails.length > 0 && (
+            <Card className="border-orange-200 bg-orange-50/50">
               <CardHeader>
-                <CardTitle>Send Email</CardTitle>
-                <CardDescription>Compose and send emails</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-orange-700">
+                  <AlertCircle size={20} />
+                  Pending Email Approvals ({pendingEmails.length})
+                </CardTitle>
+                <CardDescription>AI-generated emails awaiting your approval before sending</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button onClick={() => setShowSendEmailDialog(true)} className="w-full gradient-primary border-0">
-                  <Mail className="mr-2" size={18} /> Compose Email
-                </Button>
+                <div className="space-y-3">
+                  {pendingEmails.map(email => (
+                    <div key={email.id} className="p-4 bg-white rounded-lg border">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">{email.subject}</p>
+                          <p className="text-sm text-gray-500">To: {email.to?.join(', ')}</p>
+                          <p className="text-xs text-gray-400 mt-1">Generated: {new Date(email.createdAt).toLocaleString()}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedPendingEmail(email);
+                              setShowApprovalDialog(true);
+                            }}
+                          >
+                            <Eye size={14} className="mr-1" /> Preview
+                          </Button>
+                          <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleApprovePendingEmail(email.id)}>
+                            <ThumbsUp size={14} className="mr-1" /> Approve
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => handleRejectPendingEmail(email.id)}>
+                            <ThumbsDown size={14} className="mr-1" /> Reject
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
-          </div>
+          )}
+
+          {/* Agentic Email Generator */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="text-purple-600" size={20} />
+                AI Email Generator
+              </CardTitle>
+              <CardDescription>
+                Let AI draft your emails. You review and approve before sending (human-in-the-loop).
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => setShowAgenticEmailDialog(true)} className="gradient-primary border-0">
+                <Sparkles className="mr-2" size={18} /> Generate Email with AI
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Email Templates */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Email Templates</CardTitle>
+                <CardDescription>Create reusable email templates</CardDescription>
+              </div>
+              <Button onClick={() => setShowEmailTemplateDialog(true)} className="gradient-primary border-0">
+                <Plus className="mr-2" size={18} /> Create Template
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {emailTemplates.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Mail className="mx-auto mb-4 text-gray-300" size={40} />
+                  <p>No templates yet</p>
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {emailTemplates.map(template => (
+                    <div key={template.id} className="flex items-center justify-between p-3 rounded-lg border">
+                      <div>
+                        <p className="font-medium">{template.name}</p>
+                        <p className="text-sm text-gray-500">{template.subject}</p>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteTemplate(template.id)}>
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Email Logs */}
           <Card>
             <CardHeader>
-              <CardTitle>Email History</CardTitle>
-              <CardDescription>Recent email activity</CardDescription>
+              <CardTitle>Sent Emails</CardTitle>
+              <CardDescription>History of sent emails</CardDescription>
             </CardHeader>
             <CardContent>
               {emailLogs.length === 0 ? (
-                <p className="text-center text-gray-500 py-6">No emails sent yet</p>
+                <p className="text-center py-8 text-gray-500">No emails sent yet</p>
               ) : (
                 <div className="space-y-2">
-                  {emailLogs.map((log) => (
-                    <div key={log.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  {emailLogs.slice(0, 10).map(log => (
+                    <div key={log.id} className="flex items-center justify-between p-3 rounded-lg border">
                       <div>
-                        <h4 className="font-medium">{log.subject}</h4>
-                        <p className="text-sm text-gray-500">To: {log.to?.join(', ')}</p>
+                        <p className="font-medium text-sm">{log.subject}</p>
+                        <p className="text-xs text-gray-500">To: {log.to?.join(', ')}</p>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <span className={`text-xs px-2 py-1 rounded-full ${log.status === 'sent' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {log.mock ? '[MOCK] ' : ''}{log.status}
-                        </span>
-                        <span className="text-xs text-gray-500">{new Date(log.sentAt).toLocaleString()}</span>
-                      </div>
+                      <span className={`px-2 py-1 rounded text-xs ${log.status === 'sent' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                        {log.status}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -533,148 +638,78 @@ export default function BusinessOperations() {
           </Card>
         </TabsContent>
 
-        {/* DOCUMENTS TAB */}
+        {/* AI DOCUMENT DRAFTING TAB */}
         <TabsContent value="documents" className="mt-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Document Management</CardTitle>
-                <CardDescription>Organize and manage your business documents</CardDescription>
-              </div>
-              <Button onClick={() => setShowDocumentDialog(true)} className="gradient-primary border-0">
-                <Plus className="mr-2" size={18} /> Add Document
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {documents.length === 0 ? (
-                <div className="text-center py-12">
-                  <FolderOpen className="mx-auto mb-2 text-gray-300" size={48} />
-                  <p className="text-gray-500">No documents yet. Add your first document!</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {documents.map((doc) => (
-                    <div key={doc.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                            <FileText className="text-purple-600" size={20} />
-                          </div>
-                          <div className="min-w-0">
-                            <h4 className="font-medium truncate">{doc.name}</h4>
-                            <p className="text-xs text-gray-500 uppercase">{doc.type}</p>
-                          </div>
+          <div className="grid gap-6">
+            {documentCategories.map(category => {
+              const IconComponent = category.icon;
+              return (
+                <Card key={category.category}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <IconComponent className="text-purple-600" size={20} />
+                      {category.category}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {category.types.map(docType => (
+                        <div key={docType.id} className="p-4 rounded-lg border hover:border-purple-300 transition-colors">
+                          <h4 className="font-medium mb-1">{docType.name}</h4>
+                          <p className="text-sm text-gray-500 mb-3">{docType.description}</p>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="w-full"
+                            onClick={() => handleGenerateDocument(docType)}
+                            disabled={generatingDocument && selectedDocType?.id === docType.id}
+                          >
+                            {generatingDocument && selectedDocType?.id === docType.id ? (
+                              <><Loader2 className="mr-2 animate-spin" size={14} /> Generating...</>
+                            ) : (
+                              <><Sparkles className="mr-2" size={14} /> Generate</>
+                            )}
+                          </Button>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteDocument(doc.id)}>
-                          <Trash2 size={14} className="text-red-500" />
-                        </Button>
-                      </div>
-                      {doc.description && <p className="text-sm text-gray-500 mt-2 line-clamp-2">{doc.description}</p>}
-                      <div className="flex items-center justify-between mt-3">
-                        <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{doc.category}</span>
-                        <span className="text-xs text-gray-400">{new Date(doc.createdAt).toLocaleDateString()}</span>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* WORKFLOWS TAB */}
-        <TabsContent value="workflows" className="mt-6 space-y-6">
-          {/* Active Workflows */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Active Workflows</CardTitle>
-              <CardDescription>Your configured automation workflows</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {workflows.length === 0 ? (
-                <p className="text-center text-gray-500 py-6">No workflows configured yet. Add one from the templates below.</p>
-              ) : (
-                <div className="space-y-3">
-                  {workflows.map((workflow) => (
-                    <div key={workflow.id} className="p-4 border rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium">{workflow.name}</h4>
-                          <p className="text-sm text-gray-500">{workflow.description}</p>
-                        </div>
-                        <span className={`text-xs px-2 py-1 rounded-full ${workflow.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                          {workflow.isActive ? 'Active' : 'Inactive'}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-2 mt-3">
-                        {workflow.steps?.map((step, i) => (
-                          <React.Fragment key={step.id}>
-                            <div className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">{step.title}</div>
-                            {i < workflow.steps.length - 1 && <span className="text-gray-300">→</span>}
-                          </React.Fragment>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Workflow Templates */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Workflow Templates</CardTitle>
-              <CardDescription>Pre-built workflows you can add to your operations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {defaultWorkflows.map((workflow, i) => (
-                  <div key={i} className="p-4 border rounded-lg hover:border-purple-300 transition-colors">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                        <Workflow className="text-purple-600" size={20} />
-                      </div>
-                      <div>
-                        <h4 className="font-medium">{workflow.name}</h4>
-                        <span className="text-xs text-gray-500 capitalize">{workflow.trigger} trigger</span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-500 mb-3">{workflow.description}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-400">{workflow.steps?.length} steps</span>
-                      <Button size="sm" variant="outline" onClick={() => handleAddDefaultWorkflow(workflow)}>
-                        <Plus size={14} className="mr-1" /> Add
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </TabsContent>
       </Tabs>
 
       {/* CREATE TASK DIALOG */}
       <Dialog open={showTaskDialog} onOpenChange={setShowTaskDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent>
           <DialogHeader><DialogTitle>Create Task</DialogTitle></DialogHeader>
           <form onSubmit={handleCreateTask} className="space-y-4">
             <div>
-              <Label>Title</Label>
-              <Input value={newTask.title} onChange={(e) => setNewTask({ ...newTask, title: e.target.value })} required />
+              <Label>Title *</Label>
+              <Input 
+                value={newTask.title} 
+                onChange={e => setNewTask({...newTask, title: e.target.value})}
+                placeholder="Task title"
+                required
+              />
             </div>
             <div>
               <Label>Description</Label>
-              <Textarea value={newTask.description} onChange={(e) => setNewTask({ ...newTask, description: e.target.value })} rows={2} />
+              <Textarea 
+                value={newTask.description} 
+                onChange={e => setNewTask({...newTask, description: e.target.value})}
+                placeholder="Task description"
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Priority</Label>
-                <Select value={newTask.priority} onValueChange={(v) => setNewTask({ ...newTask, priority: v })}>
+                <Select value={newTask.priority} onValueChange={val => setNewTask({...newTask, priority: val})}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {taskPriorities.map((p) => (
+                    {taskPriorities.map(p => (
                       <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
                     ))}
                   </SelectContent>
@@ -682,143 +717,219 @@ export default function BusinessOperations() {
               </div>
               <div>
                 <Label>Due Date</Label>
-                <Input type="date" value={newTask.dueDate} onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })} />
+                <Input 
+                  type="date" 
+                  value={newTask.dueDate} 
+                  onChange={e => setNewTask({...newTask, dueDate: e.target.value})}
+                />
               </div>
             </div>
             <div>
+              <Label>Assignee</Label>
+              <Input 
+                value={newTask.assignee} 
+                onChange={e => setNewTask({...newTask, assignee: e.target.value})}
+                placeholder="Assignee name"
+              />
+            </div>
+            <div>
               <Label>Tags (comma-separated)</Label>
-              <Input value={newTask.tags} onChange={(e) => setNewTask({ ...newTask, tags: e.target.value })} placeholder="urgent, client-a" />
+              <Input 
+                value={newTask.tags} 
+                onChange={e => setNewTask({...newTask, tags: e.target.value})}
+                placeholder="e.g., urgent, client, marketing"
+              />
             </div>
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setShowTaskDialog(false)}>Cancel</Button>
-              <Button type="submit" disabled={creatingTask} className="gradient-primary border-0">
-                {creatingTask ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Create
-              </Button>
-            </div>
+            <Button type="submit" className="w-full gradient-primary border-0" disabled={creatingTask}>
+              {creatingTask ? <><Loader2 className="mr-2 animate-spin" size={18} /> Creating...</> : 'Create Task'}
+            </Button>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* CREATE EMAIL TEMPLATE DIALOG */}
+      {/* EMAIL TEMPLATE DIALOG */}
       <Dialog open={showEmailTemplateDialog} onOpenChange={setShowEmailTemplateDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent>
           <DialogHeader><DialogTitle>Create Email Template</DialogTitle></DialogHeader>
           <form onSubmit={handleCreateTemplate} className="space-y-4">
             <div>
               <Label>Template Name</Label>
-              <Input value={newTemplate.name} onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })} required />
+              <Input 
+                value={newTemplate.name} 
+                onChange={e => setNewTemplate({...newTemplate, name: e.target.value})}
+                placeholder="e.g., Welcome Email"
+                required
+              />
             </div>
             <div>
-              <Label>Subject</Label>
-              <Input value={newTemplate.subject} onChange={(e) => setNewTemplate({ ...newTemplate, subject: e.target.value })} required />
+              <Label>Subject Line</Label>
+              <Input 
+                value={newTemplate.subject} 
+                onChange={e => setNewTemplate({...newTemplate, subject: e.target.value})}
+                placeholder="Email subject"
+                required
+              />
             </div>
             <div>
-              <Label>Category</Label>
-              <Select value={newTemplate.category} onValueChange={(v) => setNewTemplate({ ...newTemplate, category: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="general">General</SelectItem>
-                  <SelectItem value="marketing">Marketing</SelectItem>
-                  <SelectItem value="transactional">Transactional</SelectItem>
-                  <SelectItem value="notification">Notification</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Email Body (HTML)</Label>
+              <Textarea 
+                value={newTemplate.bodyHtml} 
+                onChange={e => setNewTemplate({...newTemplate, bodyHtml: e.target.value})}
+                placeholder="<p>Your email content...</p>"
+                rows={6}
+                required
+              />
             </div>
-            <div>
-              <Label>Body (HTML)</Label>
-              <Textarea value={newTemplate.bodyHtml} onChange={(e) => setNewTemplate({ ...newTemplate, bodyHtml: e.target.value })} rows={5} required />
-            </div>
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setShowEmailTemplateDialog(false)}>Cancel</Button>
-              <Button type="submit" disabled={creatingTemplate} className="gradient-primary border-0">
-                {creatingTemplate ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Create
-              </Button>
-            </div>
+            <Button type="submit" className="w-full gradient-primary border-0" disabled={creatingTemplate}>
+              {creatingTemplate ? <Loader2 className="mr-2 animate-spin" size={18} /> : null}
+              Create Template
+            </Button>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* SEND EMAIL DIALOG */}
-      <Dialog open={showSendEmailDialog} onOpenChange={setShowSendEmailDialog}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Compose Email</DialogTitle></DialogHeader>
-          <form onSubmit={handleSendEmail} className="space-y-4">
-            {emailTemplates.length > 0 && (
+      {/* AGENTIC EMAIL DIALOG */}
+      <Dialog open={showAgenticEmailDialog} onOpenChange={setShowAgenticEmailDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="text-purple-600" size={20} />
+              AI Email Generator
+            </DialogTitle>
+            <DialogDescription>
+              Describe what you need and AI will draft it. You'll review before sending.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {!generatedEmail ? (
+            <form onSubmit={handleGenerateAgenticEmail} className="space-y-4">
               <div>
-                <Label>Use Template</Label>
-                <Select value={emailToSend.templateId} onValueChange={handleSelectTemplate}>
-                  <SelectTrigger><SelectValue placeholder="Select a template (optional)" /></SelectTrigger>
-                  <SelectContent>
-                    {emailTemplates.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>What is this email for?</Label>
+                <Textarea 
+                  value={agenticEmailRequest.purpose}
+                  onChange={e => setAgenticEmailRequest({...agenticEmailRequest, purpose: e.target.value})}
+                  placeholder="e.g., Follow up with a potential client about our web design services. They showed interest in our portfolio last week."
+                  rows={3}
+                  required
+                />
               </div>
-            )}
-            <div>
-              <Label>To (comma-separated emails)</Label>
-              <Input value={emailToSend.to} onChange={(e) => setEmailToSend({ ...emailToSend, to: e.target.value })} placeholder="user@example.com" required />
-            </div>
-            <div>
-              <Label>Subject</Label>
-              <Input value={emailToSend.subject} onChange={(e) => setEmailToSend({ ...emailToSend, subject: e.target.value })} required />
-            </div>
-            <div>
-              <Label>Body (HTML)</Label>
-              <Textarea value={emailToSend.bodyHtml} onChange={(e) => setEmailToSend({ ...emailToSend, bodyHtml: e.target.value })} rows={6} required />
-            </div>
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setShowSendEmailDialog(false)}>Cancel</Button>
-              <Button type="submit" disabled={sendingEmail} className="gradient-primary border-0">
-                {sendingEmail ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2" size={16} />} Send
+              <div>
+                <Label>Recipient Email / Context</Label>
+                <Input 
+                  value={agenticEmailRequest.recipientContext}
+                  onChange={e => setAgenticEmailRequest({...agenticEmailRequest, recipientContext: e.target.value})}
+                  placeholder="e.g., john@company.com or 'Marketing Manager at TechCorp'"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Tone</Label>
+                  <Select value={agenticEmailRequest.tone} onValueChange={val => setAgenticEmailRequest({...agenticEmailRequest, tone: val})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="professional">Professional</SelectItem>
+                      <SelectItem value="friendly">Friendly</SelectItem>
+                      <SelectItem value="formal">Formal</SelectItem>
+                      <SelectItem value="casual">Casual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end">
+                  <label className="flex items-center gap-2">
+                    <input 
+                      type="checkbox"
+                      checked={agenticEmailRequest.includeCallToAction}
+                      onChange={e => setAgenticEmailRequest({...agenticEmailRequest, includeCallToAction: e.target.checked})}
+                      className="rounded border-gray-300"
+                    />
+                    <span className="text-sm">Include call-to-action</span>
+                  </label>
+                </div>
+              </div>
+              <Button type="submit" className="w-full gradient-primary border-0" disabled={generatingEmail}>
+                {generatingEmail ? (
+                  <><Loader2 className="mr-2 animate-spin" size={18} /> Generating...</>
+                ) : (
+                  <><Sparkles className="mr-2" size={18} /> Generate Email Draft</>
+                )}
               </Button>
+            </form>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm font-medium text-gray-500 mb-1">Subject:</p>
+                <p className="font-medium">{generatedEmail.subject}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg max-h-64 overflow-y-auto">
+                <p className="text-sm font-medium text-gray-500 mb-2">Body:</p>
+                <div className="prose prose-sm" dangerouslySetInnerHTML={{ __html: generatedEmail.body?.replace(/\n/g, '<br/>') }} />
+              </div>
+              <DialogFooter className="flex gap-2">
+                <Button variant="outline" onClick={handleRejectEmail}>
+                  <ThumbsDown className="mr-2" size={16} /> Reject & Redo
+                </Button>
+                <Button className="bg-green-600 hover:bg-green-700" onClick={handleApproveAndSend} disabled={approvingEmail}>
+                  {approvingEmail ? (
+                    <><Loader2 className="mr-2 animate-spin" size={16} /> Sending...</>
+                  ) : (
+                    <><ThumbsUp className="mr-2" size={16} /> Approve & Send</>
+                  )}
+                </Button>
+              </DialogFooter>
             </div>
-          </form>
+          )}
         </DialogContent>
       </Dialog>
 
-      {/* CREATE DOCUMENT DIALOG */}
-      <Dialog open={showDocumentDialog} onOpenChange={setShowDocumentDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Add Document</DialogTitle></DialogHeader>
-          <form onSubmit={handleCreateDocument} className="space-y-4">
-            <div>
-              <Label>Document Name</Label>
-              <Input value={newDocument.name} onChange={(e) => setNewDocument({ ...newDocument, name: e.target.value })} required />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Type</Label>
-                <Select value={newDocument.type} onValueChange={(v) => setNewDocument({ ...newDocument, type: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {documentTypes.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+      {/* APPROVAL PREVIEW DIALOG */}
+      <Dialog open={showApprovalDialog} onOpenChange={setShowApprovalDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Email Preview</DialogTitle>
+          </DialogHeader>
+          {selectedPendingEmail && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm font-medium text-gray-500">To:</p>
+                <p>{selectedPendingEmail.to?.join(', ')}</p>
               </div>
-              <div>
-                <Label>Category</Label>
-                <Input value={newDocument.category} onChange={(e) => setNewDocument({ ...newDocument, category: e.target.value })} placeholder="contracts" />
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm font-medium text-gray-500">Subject:</p>
+                <p className="font-medium">{selectedPendingEmail.subject}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg max-h-64 overflow-y-auto">
+                <p className="text-sm font-medium text-gray-500 mb-2">Body:</p>
+                <div className="prose prose-sm" dangerouslySetInnerHTML={{ __html: selectedPendingEmail.bodyHtml?.replace(/\n/g, '<br/>') }} />
               </div>
             </div>
-            <div>
-              <Label>Description</Label>
-              <Textarea value={newDocument.description} onChange={(e) => setNewDocument({ ...newDocument, description: e.target.value })} rows={2} />
-            </div>
-            <div>
-              <Label>Tags (comma-separated)</Label>
-              <Input value={newDocument.tags} onChange={(e) => setNewDocument({ ...newDocument, tags: e.target.value })} placeholder="important, 2024" />
-            </div>
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setShowDocumentDialog(false)}>Cancel</Button>
-              <Button type="submit" disabled={creatingDocument} className="gradient-primary border-0">
-                {creatingDocument ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Add
-              </Button>
-            </div>
-          </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* DOCUMENT DRAFT DIALOG */}
+      <Dialog open={showDocumentDraftDialog} onOpenChange={setShowDocumentDraftDialog}>
+        <DialogContent className="max-w-3xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="text-purple-600" size={20} />
+              {selectedDocType?.name}
+            </DialogTitle>
+            <DialogDescription>
+              AI-generated document. Review and copy to use.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-gray-50 p-4 rounded-lg overflow-y-auto max-h-[50vh]">
+            <pre className="whitespace-pre-wrap text-sm font-mono">{generatedDocument}</pre>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDocumentDraftDialog(false)}>
+              Close
+            </Button>
+            <Button className="gradient-primary border-0" onClick={() => copyToClipboard(generatedDocument)}>
+              <Copy className="mr-2" size={16} /> Copy to Clipboard
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
