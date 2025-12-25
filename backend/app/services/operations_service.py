@@ -475,3 +475,226 @@ class OperationsService:
                 "trigger": "scheduled"
             }
         ]
+    
+    # === AGENTIC EMAIL (HUMAN-IN-THE-LOOP) ===
+    
+    @staticmethod
+    async def generate_email(workspace_id: str, user_id: str, data: dict) -> dict:
+        """Generate email using AI for human review"""
+        try:
+            from emergentintegrations.llm.chat import LlmChat
+            from emergentintegrations.llm.chat_types import UserMessage
+            
+            llm_key = os.environ.get("EMERGENT_LLM_KEY")
+            if not llm_key:
+                return OperationsService._get_fallback_email(data)
+            
+            llm = LlmChat(api_key=llm_key)
+            
+            prompt = f"""Generate a professional email with the following requirements:
+            
+            Purpose: {data.get('purpose', 'General communication')}
+            Recipient: {data.get('recipientContext', 'Business contact')}
+            Tone: {data.get('tone', 'professional')}
+            Company Name: {data.get('companyName', 'Our Company')}
+            Include Call-to-Action: {data.get('includeCallToAction', True)}
+            
+            Return a JSON object with:
+            {{
+                "subject": "email subject line",
+                "body": "full email body with proper formatting"
+            }}
+            
+            Make the email concise, professional, and actionable.
+            Return ONLY the JSON object."""
+            
+            response = await llm.send_message(
+                model="gpt-4o",
+                messages=[UserMessage(content=prompt)]
+            )
+            
+            import json
+            text = response if isinstance(response, str) else (response.text if hasattr(response, 'text') else str(response))
+            
+            if "```json" in text:
+                text = text.split("```json")[1].split("```")[0]
+            elif "```" in text:
+                text = text.split("```")[1].split("```")[0]
+            
+            result = json.loads(text.strip())
+            
+            return {
+                "subject": result.get("subject", "Follow-up"),
+                "body": result.get("body", ""),
+                "generated": True,
+                "to": data.get('recipientContext', '')
+            }
+            
+        except Exception as e:
+            print(f"Email generation error: {e}")
+            return OperationsService._get_fallback_email(data)
+    
+    @staticmethod
+    def _get_fallback_email(data: dict) -> dict:
+        """Fallback email when AI unavailable"""
+        company = data.get('companyName', 'Our Company')
+        purpose = data.get('purpose', 'following up')
+        
+        return {
+            "subject": f"Following Up - {company}",
+            "body": f"""Dear [Recipient],
+
+I hope this email finds you well. I am reaching out regarding {purpose}.
+
+At {company}, we are committed to providing excellent service and would love to discuss how we can assist you.
+
+Please let me know if you would be available for a brief call at your convenience.
+
+Best regards,
+{company} Team""",
+            "generated": False,
+            "to": data.get('recipientContext', '')
+        }
+    
+    @staticmethod
+    async def get_pending_emails(workspace_id: str) -> List[dict]:
+        """Get emails pending approval"""
+        db = get_db()
+        
+        emails = await db.pending_emails.find(
+            {"workspace_id": workspace_id, "status": "pending"}
+        ).sort("createdAt", -1).to_list(length=50)
+        
+        return [{k: v for k, v in e.items() if k != '_id'} for e in emails]
+    
+    @staticmethod
+    async def approve_email(email_id: str, workspace_id: str, user_id: str) -> dict:
+        """Approve and send a pending email"""
+        db = get_db()
+        
+        pending = await db.pending_emails.find_one({
+            "id": email_id,
+            "workspace_id": workspace_id
+        })
+        
+        if not pending:
+            raise HTTPException(status_code=404, detail="Pending email not found")
+        
+        # Actually send the email via SendGrid
+        result = await OperationsService._send_via_sendgrid(
+            to=pending.get("to", []),
+            subject=pending.get("subject", ""),
+            body_html=pending.get("bodyHtml", ""),
+            workspace_id=workspace_id,
+            user_id=user_id
+        )
+        
+        # Mark as approved and sent
+        await db.pending_emails.update_one(
+            {"id": email_id},
+            {"$set": {"status": "sent", "sentAt": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        return result
+    
+    @staticmethod
+    async def reject_email(email_id: str, workspace_id: str) -> bool:
+        """Reject a pending email"""
+        db = get_db()
+        
+        result = await db.pending_emails.update_one(
+            {"id": email_id, "workspace_id": workspace_id},
+            {"$set": {"status": "rejected"}}
+        )
+        
+        return result.modified_count > 0
+    
+    @staticmethod
+    async def send_approved_email(workspace_id: str, user_id: str, data: dict) -> dict:
+        """Send an approved email directly"""
+        to_list = data.get("to", "").split(",") if isinstance(data.get("to"), str) else data.get("to", [])
+        to_list = [t.strip() for t in to_list if t.strip()]
+        
+        if not to_list:
+            raise HTTPException(status_code=400, detail="No recipients specified")
+        
+        return await OperationsService._send_via_sendgrid(
+            to=to_list,
+            subject=data.get("subject", ""),
+            body_html=data.get("bodyHtml", ""),
+            workspace_id=workspace_id,
+            user_id=user_id
+        )
+    
+    @staticmethod
+    async def _send_via_sendgrid(to: List[str], subject: str, body_html: str, workspace_id: str, user_id: str) -> dict:
+        """Actually send email via SendGrid"""
+        db = get_db()
+        sendgrid_key = os.environ.get("SENDGRID_API_KEY", "")
+        from_email = os.environ.get("SENDGRID_FROM_EMAIL", "noreply@enterprate.com")
+        
+        email_log_id = str(uuid.uuid4())
+        now = datetime.now(timezone.utc).isoformat()
+        
+        # Check if SendGrid is configured
+        if sendgrid_key and not sendgrid_key.startswith("your-"):
+            try:
+                import sendgrid
+                from sendgrid.helpers.mail import Mail, Email, To, Content, HtmlContent
+                
+                sg = sendgrid.SendGridAPIClient(api_key=sendgrid_key)
+                
+                for recipient in to:
+                    message = Mail(
+                        from_email=Email(from_email),
+                        to_emails=To(recipient),
+                        subject=subject,
+                        html_content=HtmlContent(body_html)
+                    )
+                    sg.send(message)
+                
+                # Log success
+                email_log = {
+                    "id": email_log_id,
+                    "workspace_id": workspace_id,
+                    "to": to,
+                    "subject": subject,
+                    "bodyHtml": body_html,
+                    "status": "sent",
+                    "sentAt": now,
+                    "mock": False,
+                    "created_by": user_id
+                }
+                await db.email_logs.insert_one(email_log)
+                
+                return {
+                    "success": True,
+                    "messageId": email_log_id,
+                    "message": f"Email sent to {len(to)} recipient(s)",
+                    "mock": False
+                }
+                
+            except Exception as e:
+                print(f"SendGrid error: {e}")
+                # Fall through to mock mode
+        
+        # Mock mode
+        email_log = {
+            "id": email_log_id,
+            "workspace_id": workspace_id,
+            "to": to,
+            "subject": subject,
+            "bodyHtml": body_html,
+            "status": "sent",
+            "sentAt": now,
+            "mock": True,
+            "created_by": user_id
+        }
+        await db.email_logs.insert_one(email_log)
+        
+        return {
+            "success": True,
+            "messageId": email_log_id,
+            "message": f"[MOCK] Email logged for {len(to)} recipient(s)",
+            "mock": True
+        }
