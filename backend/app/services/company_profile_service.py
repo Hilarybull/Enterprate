@@ -888,7 +888,7 @@ class CompanyProfileService:
             
             try:
                 content = json.loads(text.strip())
-            except:
+            except (json.JSONDecodeError, ValueError):
                 content = {"content": text.strip()}
             
             return {"content": content}
