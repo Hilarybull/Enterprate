@@ -797,7 +797,7 @@ export default function BusinessOperations() {
               AI Email Generator
             </DialogTitle>
             <DialogDescription>
-              Describe what you need and AI will draft it. You'll review before sending.
+              Describe what you need and AI will draft it. You will review before sending.
             </DialogDescription>
           </DialogHeader>
           
