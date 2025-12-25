@@ -238,3 +238,60 @@ async def get_default_workflows(
 ):
     """Get default workflow templates"""
     return await OperationsService.get_default_workflows()
+
+
+# === AGENTIC EMAIL (HUMAN-IN-THE-LOOP) ===
+
+@router.post("/generate-email")
+async def generate_email(
+    data: dict,
+    user: dict = Depends(get_current_user),
+    workspace_id: str = Depends(get_workspace_id)
+):
+    """Generate email draft using AI for human review"""
+    await verify_workspace_access(workspace_id, user)
+    return await OperationsService.generate_email(workspace_id, user["id"], data)
+
+
+@router.get("/pending-emails")
+async def get_pending_emails(
+    user: dict = Depends(get_current_user),
+    workspace_id: str = Depends(get_workspace_id)
+):
+    """Get emails pending approval"""
+    await verify_workspace_access(workspace_id, user)
+    return await OperationsService.get_pending_emails(workspace_id)
+
+
+@router.post("/approve-email/{email_id}")
+async def approve_email(
+    email_id: str,
+    user: dict = Depends(get_current_user),
+    workspace_id: str = Depends(get_workspace_id)
+):
+    """Approve and send a pending email"""
+    await verify_workspace_access(workspace_id, user)
+    return await OperationsService.approve_email(email_id, workspace_id, user["id"])
+
+
+@router.post("/reject-email/{email_id}")
+async def reject_email(
+    email_id: str,
+    user: dict = Depends(get_current_user),
+    workspace_id: str = Depends(get_workspace_id)
+):
+    """Reject a pending email"""
+    await verify_workspace_access(workspace_id, user)
+    rejected = await OperationsService.reject_email(email_id, workspace_id)
+    return {"rejected": rejected}
+
+
+@router.post("/send-approved-email")
+async def send_approved_email(
+    data: dict,
+    user: dict = Depends(get_current_user),
+    workspace_id: str = Depends(get_workspace_id)
+):
+    """Send an approved email directly"""
+    await verify_workspace_access(workspace_id, user)
+    return await OperationsService.send_approved_email(workspace_id, user["id"], data)
