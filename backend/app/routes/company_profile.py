@@ -114,3 +114,25 @@ async def refresh_official_profile(
     """Refresh official profile from Companies House"""
     await verify_workspace_access(workspace_id, user)
     return await CompanyProfileService.refresh_official_profile(workspace_id)
+
+
+@router.post("/generate-branding")
+async def generate_branding(
+    data: dict,
+    user: dict = Depends(get_current_user),
+    workspace_id: str = Depends(get_workspace_id)
+):
+    """Generate branding assets (logos, color suggestions) using AI"""
+    await verify_workspace_access(workspace_id, user)
+    return await CompanyProfileService.generate_branding(data)
+
+
+@router.post("/generate-website-content")
+async def generate_website_content(
+    data: dict,
+    user: dict = Depends(get_current_user),
+    workspace_id: str = Depends(get_workspace_id)
+):
+    """Generate website content for a specific section"""
+    await verify_workspace_access(workspace_id, user)
+    return await CompanyProfileService.generate_website_content(data)
