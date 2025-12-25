@@ -793,7 +793,7 @@ export default function FinanceAutomation() {
                           <p className="text-sm text-gray-500">{item.description}</p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
                         <span className={`text-xs px-2 py-1 rounded-full ${
                           item.priority === 'high' ? 'bg-red-100 text-red-700' :
                           item.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
@@ -805,6 +805,12 @@ export default function FinanceAutomation() {
                         {item.dueDate && (
                           <span className="text-xs text-gray-500">{new Date(item.dueDate).toLocaleDateString()}</span>
                         )}
+                        <Button variant="ghost" size="sm" onClick={() => handleEditCompliance(item)}>
+                          <Edit size={14} />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteCompliance(item.id)} className="text-red-500 hover:text-red-700">
+                          <Trash2 size={14} />
+                        </Button>
                       </div>
                     </div>
                   ))}
