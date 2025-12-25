@@ -347,7 +347,8 @@ export default function BusinessOperations() {
       toast.success('Email approved and sent!');
       setShowAgenticEmailDialog(false);
       setGeneratedEmail(null);
-      setAgenticEmailRequest({ purpose: '', recipientContext: '', tone: 'professional', includeCallToAction: true });
+      setEditableEmail({ subject: '', body: '' });
+      setAgenticEmailRequest({ purpose: '', recipientName: '', recipientEmail: '', recipientTitle: '', tone: 'professional', includeCallToAction: true });
       loadEmailLogs();
     } catch (error) {
       toast.error('Failed to send email');
@@ -358,7 +359,8 @@ export default function BusinessOperations() {
 
   const handleRejectEmail = () => {
     setGeneratedEmail(null);
-    toast.info('Email rejected. Please regenerate or modify the request.');
+    setEditableEmail({ subject: '', body: '' });
+    toast.info('Email rejected. Modify your request and regenerate.');
   };
 
   const handleApprovePendingEmail = async (emailId) => {
