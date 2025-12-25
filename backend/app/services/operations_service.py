@@ -575,7 +575,6 @@ The {company} Team""",
             "generated": False,
             "to": data.get('recipientEmail', '')
         }
-        }
     
     @staticmethod
     async def get_pending_emails(workspace_id: str) -> List[dict]:
