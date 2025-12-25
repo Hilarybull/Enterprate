@@ -534,6 +534,7 @@ Return ONLY a JSON object with this exact format:
             
             import json
             text = response if isinstance(response, str) else (response.text if hasattr(response, 'text') else str(response))
+            print(f"Email generation raw response: {text[:200]}...")
             
             if "```json" in text:
                 text = text.split("```json")[1].split("```")[0]
