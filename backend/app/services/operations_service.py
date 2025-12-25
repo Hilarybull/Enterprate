@@ -488,59 +488,63 @@ class OperationsService:
             if not llm_key:
                 return OperationsService._get_fallback_email(data)
             
-            llm = LlmChat(api_key=llm_key)
-            
             recipient_name = data.get('recipientName', 'there')
             recipient_title = data.get('recipientTitle', '')
             company_name = data.get('companyName', 'Our Company')
             company_industry = data.get('companyIndustry', '')
             company_desc = data.get('companyDescription', '')
             
-            prompt = f"""You are a professional business communications expert. Write a polished, grammatically perfect email.
+            system_prompt = """You are a professional business communications expert specialising in crafting polished, grammatically perfect emails. 
+You always use British English spelling and conventions.
+You create emails that are specific, professional, and actionable.
+You NEVER use generic placeholders like [Recipient] - always use the actual name provided.
+You always respond with ONLY a valid JSON object containing 'subject' and 'body' fields."""
 
-RECIPIENT DETAILS:
+            prompt = f"""Write a professional email with these details:
+
+RECIPIENT:
 - Name: {recipient_name}
-- Title/Role: {recipient_title or 'Not specified'}
+- Title: {recipient_title or 'Not specified'}
 
 SENDER COMPANY:
-- Company Name: {company_name}
-- Industry: {company_industry or 'Not specified'}
-- Description: {company_desc or 'Not specified'}
+- Name: {company_name}
+- Industry: {company_industry or 'Business Services'}
+- About: {company_desc or 'Professional services'}
 
 EMAIL REQUIREMENTS:
-- Purpose: {data.get('purpose', 'General communication')}
+- Purpose: {data.get('purpose', 'General follow-up')}
 - Tone: {data.get('tone', 'professional')}
-- Include Call-to-Action: {data.get('includeCallToAction', True)}
+- Include CTA: {data.get('includeCallToAction', True)}
 
-CRITICAL RULES:
-1. Address the recipient by their actual name (e.g., "Dear {recipient_name}," NOT "Dear [Recipient],")
-2. Write in perfect British English with correct grammar and punctuation
-3. Be specific and reference the context provided - do NOT use generic placeholder text
-4. Keep the email concise yet comprehensive (3-5 paragraphs maximum)
-5. End with a clear, specific call-to-action if requested
-6. Use professional sign-off with the company name
+RULES:
+1. Address as "Dear {recipient_name}," - use the ACTUAL name
+2. Perfect British English grammar
+3. Be specific to the purpose - NO generic text
+4. 3-5 paragraphs max
+5. Clear call-to-action if requested
+6. Sign off with "{company_name}"
 
-Return ONLY a JSON object with this exact format:
-{{
-    "subject": "Clear, specific subject line",
-    "body": "Complete email body with proper paragraphs"
-}}"""
+Return ONLY this JSON format:
+{{"subject": "specific subject line", "body": "complete email body"}}"""
             
-            response = await llm.send_message(
-                model="gpt-4o",
-                messages=[UserMessage(content=prompt)]
-            )
+            chat = LlmChat(
+                api_key=llm_key,
+                session_id=f"email-gen-{workspace_id}",
+                system_message=system_prompt
+            ).with_model("openai", "gpt-4o")
+            
+            response = await chat.send_message(UserMessage(text=prompt))
             
             import json
-            text = response if isinstance(response, str) else (response.text if hasattr(response, 'text') else str(response))
-            print(f"Email generation raw response: {text[:200]}...")
+            text = response.strip() if isinstance(response, str) else (response.text.strip() if hasattr(response, 'text') else str(response).strip())
+            print(f"Email generation response: {text[:300]}...")
             
             if "```json" in text:
-                text = text.split("```json")[1].split("```")[0]
+                text = text.split("```json")[1].split("```")[0].strip()
             elif "```" in text:
-                text = text.split("```")[1].split("```")[0]
+                text = text.split("```")[1].split("```")[0].strip()
             
-            result = json.loads(text.strip())
+            result = json.loads(text)
             
             return {
                 "subject": result.get("subject", "Follow-up"),
