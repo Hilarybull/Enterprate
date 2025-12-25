@@ -315,11 +315,18 @@ export default function BusinessOperations() {
     try {
       const response = await axios.post(`${API_URL}/operations/generate-email`, {
         ...agenticEmailRequest,
-        companyName: companyProfile?.officialProfile?.companyName || companyProfile?.operatingProfile?.companyName || 'Our Company'
+        companyName: companyProfile?.officialProfile?.companyName || companyProfile?.operatingProfile?.companyName || 'Our Company',
+        companyIndustry: companyProfile?.operatingProfile?.industry || '',
+        companyDescription: companyProfile?.operatingProfile?.description || ''
       }, { headers: getHeaders() });
       
       setGeneratedEmail(response.data);
-      toast.success('Email draft generated! Please review before sending.');
+      // Set editable email for user modifications
+      setEditableEmail({
+        subject: response.data.subject || '',
+        body: response.data.body || ''
+      });
+      toast.success('Email draft generated! Review and edit as needed before sending.');
     } catch (error) {
       toast.error('Failed to generate email');
     } finally {
@@ -328,13 +335,13 @@ export default function BusinessOperations() {
   };
 
   const handleApproveAndSend = async () => {
-    if (!generatedEmail) return;
+    if (!editableEmail.subject || !editableEmail.body) return;
     setApprovingEmail(true);
     try {
       await axios.post(`${API_URL}/operations/send-approved-email`, {
-        to: generatedEmail.to || agenticEmailRequest.recipientContext,
-        subject: generatedEmail.subject,
-        bodyHtml: generatedEmail.body
+        to: agenticEmailRequest.recipientEmail,
+        subject: editableEmail.subject,
+        bodyHtml: editableEmail.body
       }, { headers: getHeaders() });
       
       toast.success('Email approved and sent!');
