@@ -926,10 +926,13 @@ Keep it structured and actionable."""
             
             prompt = doc_prompts.get(document_type, base_context + f"Create a professional {document_type} document.")
             
-            response = await llm.send_message(
-                model="gpt-4o",
-                messages=[UserMessage(content=prompt)]
-            )
+            chat = LlmChat(
+                api_key=os.environ.get("EMERGENT_LLM_KEY", ""),
+                session_id=f"doc-gen-{document_type}",
+                system_message="You are a professional document drafting expert. Create comprehensive, legally compliant business documents following UK standards. Use proper British English."
+            ).with_model("openai", "gpt-4o")
+            
+            response = await chat.send_message(UserMessage(text=prompt))
             
             text = response if isinstance(response, str) else (response.text if hasattr(response, 'text') else str(response))
             
