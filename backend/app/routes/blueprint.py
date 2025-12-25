@@ -110,3 +110,14 @@ async def delete_blueprint(
     await verify_workspace_access(workspace_id, user)
     deleted = await BlueprintService.delete_blueprint(blueprint_id, workspace_id)
     return {"deleted": deleted}
+
+
+@router.post("/generate-document")
+async def generate_document(
+    data: dict,
+    user: dict = Depends(get_current_user),
+    workspace_id: str = Depends(get_workspace_id)
+):
+    """Generate business document (quote, contract, policy, etc.) using AI"""
+    await verify_workspace_access(workspace_id, user)
+    return await BlueprintService.generate_document(data)
