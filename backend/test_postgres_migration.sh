@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-API_URL="https://enterprise-fixup.preview.emergentagent.com/api"
+API_URL="https://datahub-os-1.preview.emergentagent.com/api"
 
 echo "========================================"
 echo "PostgreSQL Migration - API Testing"
