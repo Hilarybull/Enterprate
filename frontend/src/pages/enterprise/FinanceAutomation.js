@@ -319,13 +319,24 @@ export default function FinanceAutomation() {
         return;
       }
       
+      // Get existing titles to prevent duplicates
+      const existingTitles = new Set(complianceItems.map(item => item.title.toLowerCase().trim()));
+      
       let successCount = 0;
+      let skippedCount = 0;
       let errorCount = 0;
       
       // Create each default item with proper error handling
       for (const item of defaults) {
+        const itemTitle = (item.title || 'Untitled Item').toLowerCase().trim();
+        
+        // Skip if already exists
+        if (existingTitles.has(itemTitle)) {
+          skippedCount++;
+          continue;
+        }
+        
         try {
-          // Ensure all required fields are present
           const complianceItem = {
             title: item.title || 'Untitled Item',
             description: item.description || 'No description',
@@ -336,6 +347,7 @@ export default function FinanceAutomation() {
           
           await axios.post(`${API_URL}/finance/compliance`, complianceItem, { headers: getHeaders() });
           successCount++;
+          existingTitles.add(itemTitle);
         } catch (itemError) {
           console.error('Failed to create compliance item:', item.title, itemError);
           errorCount++;
@@ -343,16 +355,93 @@ export default function FinanceAutomation() {
       }
       
       if (successCount > 0) {
-        toast.success(`Loaded ${successCount} compliance items!`);
+        toast.success(`Loaded ${successCount} new compliance items!`);
         loadComplianceItems();
+      }
+      if (skippedCount > 0) {
+        toast.info(`${skippedCount} items already exist`);
       }
       if (errorCount > 0) {
         toast.warning(`${errorCount} items failed to load`);
+      }
+      if (successCount === 0 && skippedCount > 0) {
+        toast.info('All default items are already loaded');
       }
     } catch (error) {
       console.error('Failed to load defaults:', error);
       toast.error('Failed to load default checklist');
     }
+  };
+
+  // Edit compliance item
+  const handleEditCompliance = (item) => {
+    setEditingCompliance({
+      id: item.id,
+      title: item.title || '',
+      description: item.description || '',
+      category: item.category || 'tax',
+      dueDate: item.dueDate || '',
+      priority: item.priority || 'medium'
+    });
+    setShowEditComplianceDialog(true);
+  };
+
+  const handleSaveEditCompliance = async (e) => {
+    e.preventDefault();
+    if (!editingCompliance) return;
+    
+    try {
+      await axios.patch(`${API_URL}/finance/compliance/${editingCompliance.id}`, {
+        title: editingCompliance.title,
+        description: editingCompliance.description,
+        category: editingCompliance.category,
+        dueDate: editingCompliance.dueDate || null,
+        priority: editingCompliance.priority
+      }, { headers: getHeaders() });
+      toast.success('Item updated!');
+      setShowEditComplianceDialog(false);
+      setEditingCompliance(null);
+      loadComplianceItems();
+    } catch (error) {
+      toast.error('Failed to update item');
+    }
+  };
+
+  // Delete compliance item
+  const handleDeleteCompliance = async (itemId) => {
+    if (!window.confirm('Are you sure you want to delete this compliance item?')) return;
+    
+    try {
+      await axios.delete(`${API_URL}/finance/compliance/${itemId}`, { headers: getHeaders() });
+      toast.success('Item deleted');
+      loadComplianceItems();
+    } catch (error) {
+      toast.error('Failed to delete item');
+    }
+  };
+
+  // Auto-populate tax from invoices and expenses
+  const handleAutoPopulateTax = () => {
+    const paidInvoices = invoices.filter(i => i.status === 'PAID');
+    const totalRevenue = paidInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0);
+    const totalExpenses = expenseSummary?.totalAmount || expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+    
+    // Determine business type based on revenue
+    let businessType = 'sole_proprietor';
+    if (totalRevenue > 150000) {
+      businessType = 'limited_company';
+    } else if (totalRevenue > 50000) {
+      businessType = 'partnership';
+    }
+    
+    setTaxInput({
+      ...taxInput,
+      annualRevenue: totalRevenue.toFixed(2),
+      annualExpenses: totalExpenses.toFixed(2),
+      businessType: businessType
+    });
+    
+    toast.success('Tax fields populated from your financial data!');
   };
 
   // === STATS ===
