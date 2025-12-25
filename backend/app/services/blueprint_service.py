@@ -621,8 +621,6 @@ Key highlights include:
             return {"content": BlueprintService._get_fallback_document(document_type, company_name)}
         
         try:
-            llm = LlmChat(api_key=os.environ.get("EMERGENT_LLM_KEY", ""))
-            
             # Professional preamble for all documents
             base_context = f"""You are a professional document drafting expert with expertise in UK business law and industry best practices.
 
