@@ -482,8 +482,7 @@ class OperationsService:
     async def generate_email(workspace_id: str, user_id: str, data: dict) -> dict:
         """Generate email using AI for human review"""
         try:
-            from emergentintegrations.llm.chat import LlmChat
-            from emergentintegrations.llm.chat_types import UserMessage
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
             
             llm_key = os.environ.get("EMERGENT_LLM_KEY")
             if not llm_key:
