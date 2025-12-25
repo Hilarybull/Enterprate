@@ -704,3 +704,253 @@ class CompanyProfileService:
             return {k: v for k, v in updated.items() if k != '_id'}
         
         raise HTTPException(status_code=400, detail=result["message"])
+    
+    # === BRANDING & CONTENT GENERATION ===
+    
+    @staticmethod
+    async def generate_branding(data: dict) -> dict:
+        """Generate branding assets using AI"""
+        company_name = data.get("companyName", "Company")
+        tagline = data.get("tagline", "")
+        industry = data.get("industry", "")
+        brand_style = data.get("brandStyle", "modern")
+        primary_color = data.get("primaryColor", "#6366f1")
+        
+        if not LLM_AVAILABLE:
+            # Return fallback branding
+            return CompanyProfileService._get_fallback_branding(company_name, brand_style, primary_color)
+        
+        try:
+            llm = LlmChat(api_key=os.environ.get("EMERGENT_LLM_KEY", ""))
+            
+            prompt = f"""Generate branding concepts for a company with these details:
+            Company Name: {company_name}
+            Industry: {industry}
+            Tagline: {tagline or 'Not specified'}
+            Brand Style: {brand_style}
+            Primary Color: {primary_color}
+            
+            Provide 3 logo concepts as JSON array with this format:
+            [
+                {{"id": 1, "type": "icon", "description": "...", "concept": "..."}},
+                {{"id": 2, "type": "wordmark", "description": "...", "concept": "..."}},
+                {{"id": 3, "type": "combination", "description": "...", "concept": "..."}}
+            ]
+            
+            Each concept should include a brief description and visual concept idea.
+            Return ONLY the JSON array, no additional text."""
+            
+            response = await llm.send_message(
+                model="gpt-4o",
+                messages=[UserMessage(content=prompt)]
+            )
+            
+            import json
+            text = response if isinstance(response, str) else (response.text if hasattr(response, 'text') else str(response))
+            if "```json" in text:
+                text = text.split("```json")[1].split("```")[0]
+            elif "```" in text:
+                text = text.split("```")[1].split("```")[0]
+            
+            logos = json.loads(text.strip())
+            
+            return {
+                "logos": logos,
+                "brandStyle": brand_style,
+                "generatedAt": datetime.now(timezone.utc).isoformat()
+            }
+            
+        except Exception as e:
+            print(f"Branding generation error: {e}")
+            return CompanyProfileService._get_fallback_branding(company_name, brand_style, primary_color)
+    
+    @staticmethod
+    def _get_fallback_branding(company_name: str, brand_style: str, primary_color: str) -> dict:
+        """Fallback branding when AI is unavailable"""
+        initials = "".join([w[0].upper() for w in company_name.split()[:2]]) if company_name else "CO"
+        
+        return {
+            "logos": [
+                {
+                    "id": 1,
+                    "type": "icon",
+                    "description": f"Modern icon-based logo using the initials '{initials}'",
+                    "concept": f"A {brand_style} geometric icon representing the initials in {primary_color}"
+                },
+                {
+                    "id": 2,
+                    "type": "wordmark",
+                    "description": f"Clean wordmark logo for {company_name}",
+                    "concept": f"Professional typography with {brand_style} styling"
+                },
+                {
+                    "id": 3,
+                    "type": "combination",
+                    "description": "Icon + wordmark combination mark",
+                    "concept": f"The '{initials}' icon paired with the company name in a balanced layout"
+                }
+            ],
+            "brandStyle": brand_style,
+            "generatedAt": datetime.now(timezone.utc).isoformat()
+        }
+    
+    @staticmethod
+    async def generate_website_content(data: dict) -> dict:
+        """Generate website content for a specific section"""
+        section = data.get("section", "hero")
+        company_name = data.get("companyName", "Company")
+        industry = data.get("industry", "")
+        description = data.get("description", "")
+        target_audience = data.get("targetAudience", "")
+        tone = data.get("tone", "professional")
+        usps = data.get("uniqueSellingPoints", "")
+        
+        if not LLM_AVAILABLE:
+            return {"content": CompanyProfileService._get_fallback_content(section, company_name, industry)}
+        
+        try:
+            llm = LlmChat(api_key=os.environ.get("EMERGENT_LLM_KEY", ""))
+            
+            section_prompts = {
+                "hero": f"""Create compelling hero section content for {company_name}'s website.
+                    Industry: {industry}
+                    Description: {description}
+                    Target Audience: {target_audience}
+                    Tone: {tone}
+                    USPs: {usps}
+                    
+                    Return JSON with: headline, subheadline, cta_primary, cta_secondary""",
+                
+                "about": f"""Create About Us content for {company_name}.
+                    Industry: {industry}
+                    Description: {description}
+                    Tone: {tone}
+                    
+                    Return JSON with: title, story, mission, vision, values (array)""",
+                
+                "services": f"""Create Services section content for {company_name}.
+                    Industry: {industry}
+                    Description: {description}
+                    Tone: {tone}
+                    
+                    Return JSON with: title, intro, services (array of {{name, description}})""",
+                
+                "team": f"""Create Team section content for {company_name}.
+                    Industry: {industry}
+                    Tone: {tone}
+                    
+                    Return JSON with: title, intro, members (array of {{role, bio}})""",
+                
+                "testimonials": f"""Create Testimonials section for {company_name}.
+                    Industry: {industry}
+                    Tone: {tone}
+                    
+                    Return JSON with: title, testimonials (array of {{quote, author, company}})""",
+                
+                "contact": f"""Create Contact section content for {company_name}.
+                    Industry: {industry}
+                    Tone: {tone}
+                    
+                    Return JSON with: title, intro, form_headline, form_button, placeholder_email, placeholder_phone""",
+                
+                "faq": f"""Create FAQ section for {company_name}.
+                    Industry: {industry}
+                    Description: {description}
+                    
+                    Return JSON with: title, questions (array of {{q, a}})""",
+                
+                "meta_title": f"Create SEO meta title (50-60 chars) for {company_name}. Industry: {industry}. Return just the title text.",
+                "meta_description": f"Create SEO meta description (150-160 chars) for {company_name}. Industry: {industry}. Description: {description}. Return just the description text.",
+                "keywords": f"Create 5-10 target keywords for {company_name}. Industry: {industry}. Return comma-separated keywords.",
+                "og_title": f"Create social media title for {company_name}. Industry: {industry}. Return just the title.",
+                "og_description": f"Create social media description for {company_name}. Industry: {industry}. Return just the description."
+            }
+            
+            prompt = section_prompts.get(section, f"Create {section} content for {company_name}")
+            
+            response = await llm.send_message(
+                model="gpt-4o",
+                messages=[UserMessage(content=prompt)]
+            )
+            
+            import json
+            text = response if isinstance(response, str) else (response.text if hasattr(response, 'text') else str(response))
+            
+            # For simple text sections
+            if section in ["meta_title", "meta_description", "keywords", "og_title", "og_description"]:
+                return {"content": text.strip().strip('"')}
+            
+            # For JSON sections
+            if "```json" in text:
+                text = text.split("```json")[1].split("```")[0]
+            elif "```" in text:
+                text = text.split("```")[1].split("```")[0]
+            
+            try:
+                content = json.loads(text.strip())
+            except:
+                content = {"content": text.strip()}
+            
+            return {"content": content}
+            
+        except Exception as e:
+            print(f"Website content generation error: {e}")
+            return {"content": CompanyProfileService._get_fallback_content(section, company_name, industry)}
+    
+    @staticmethod
+    def _get_fallback_content(section: str, company_name: str, industry: str) -> dict:
+        """Fallback content when AI is unavailable"""
+        fallbacks = {
+            "hero": {
+                "headline": f"Transform Your Business with {company_name}",
+                "subheadline": "Innovative solutions that help businesses grow and succeed.",
+                "cta_primary": "Get Started Today",
+                "cta_secondary": "Learn More"
+            },
+            "about": {
+                "title": f"About {company_name}",
+                "story": f"{company_name} was founded to provide exceptional {industry or 'business'} solutions.",
+                "mission": "To empower businesses with innovative solutions.",
+                "vision": f"To be the leading provider of {industry or 'business'} solutions.",
+                "values": ["Innovation", "Integrity", "Excellence"]
+            },
+            "services": {
+                "title": "Our Services",
+                "intro": f"At {company_name}, we offer comprehensive services designed to meet your needs.",
+                "services": [
+                    {"name": "Service One", "description": "Description of your first service."},
+                    {"name": "Service Two", "description": "Description of your second service."}
+                ]
+            },
+            "team": {
+                "title": "Meet Our Team",
+                "intro": "Our talented team is dedicated to delivering results.",
+                "members": [
+                    {"role": "Founder & CEO", "bio": "Leading vision and strategy."},
+                    {"role": "Operations Director", "bio": "Ensuring smooth operations."}
+                ]
+            },
+            "testimonials": {
+                "title": "What Our Clients Say",
+                "testimonials": [
+                    {"quote": f"Working with {company_name} has been transformative.", "author": "Client Name", "company": "Company"},
+                    {"quote": "Professional, responsive, highly recommended!", "author": "Client Name", "company": "Company"}
+                ]
+            },
+            "contact": {
+                "title": "Get in Touch",
+                "intro": "Ready to take the next step? We'd love to hear from you.",
+                "form_headline": "Send Us a Message",
+                "form_button": "Submit Enquiry",
+                "placeholder_email": "contact@company.com",
+                "placeholder_phone": "+44 (0) 123 456 7890"
+            },
+            "faq": {
+                "title": "Frequently Asked Questions",
+                "questions": [
+                    {"q": "What services do you offer?", "a": "We offer comprehensive services tailored to your needs."},
+                    {"q": "How can I get started?", "a": "Contact us through our form or give us a call."}
+                ]
+            }
+        }
+        return fallbacks.get(section, {"content": f"Content for {section}"})
