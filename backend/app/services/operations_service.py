@@ -491,22 +491,41 @@ class OperationsService:
             
             llm = LlmChat(api_key=llm_key)
             
-            prompt = f"""Generate a professional email with the following requirements:
+            recipient_name = data.get('recipientName', 'there')
+            recipient_title = data.get('recipientTitle', '')
+            company_name = data.get('companyName', 'Our Company')
+            company_industry = data.get('companyIndustry', '')
+            company_desc = data.get('companyDescription', '')
             
-            Purpose: {data.get('purpose', 'General communication')}
-            Recipient: {data.get('recipientContext', 'Business contact')}
-            Tone: {data.get('tone', 'professional')}
-            Company Name: {data.get('companyName', 'Our Company')}
-            Include Call-to-Action: {data.get('includeCallToAction', True)}
-            
-            Return a JSON object with:
-            {{
-                "subject": "email subject line",
-                "body": "full email body with proper formatting"
-            }}
-            
-            Make the email concise, professional, and actionable.
-            Return ONLY the JSON object."""
+            prompt = f"""You are a professional business communications expert. Write a polished, grammatically perfect email.
+
+RECIPIENT DETAILS:
+- Name: {recipient_name}
+- Title/Role: {recipient_title or 'Not specified'}
+
+SENDER COMPANY:
+- Company Name: {company_name}
+- Industry: {company_industry or 'Not specified'}
+- Description: {company_desc or 'Not specified'}
+
+EMAIL REQUIREMENTS:
+- Purpose: {data.get('purpose', 'General communication')}
+- Tone: {data.get('tone', 'professional')}
+- Include Call-to-Action: {data.get('includeCallToAction', True)}
+
+CRITICAL RULES:
+1. Address the recipient by their actual name (e.g., "Dear {recipient_name}," NOT "Dear [Recipient],")
+2. Write in perfect British English with correct grammar and punctuation
+3. Be specific and reference the context provided - do NOT use generic placeholder text
+4. Keep the email concise yet comprehensive (3-5 paragraphs maximum)
+5. End with a clear, specific call-to-action if requested
+6. Use professional sign-off with the company name
+
+Return ONLY a JSON object with this exact format:
+{{
+    "subject": "Clear, specific subject line",
+    "body": "Complete email body with proper paragraphs"
+}}"""
             
             response = await llm.send_message(
                 model="gpt-4o",
@@ -527,7 +546,7 @@ class OperationsService:
                 "subject": result.get("subject", "Follow-up"),
                 "body": result.get("body", ""),
                 "generated": True,
-                "to": data.get('recipientContext', '')
+                "to": data.get('recipientEmail', '')
             }
             
         except Exception as e:
@@ -538,22 +557,24 @@ class OperationsService:
     def _get_fallback_email(data: dict) -> dict:
         """Fallback email when AI unavailable"""
         company = data.get('companyName', 'Our Company')
-        purpose = data.get('purpose', 'following up')
+        recipient_name = data.get('recipientName', 'there')
+        purpose = data.get('purpose', 'our recent conversation')
         
         return {
             "subject": f"Following Up - {company}",
-            "body": f"""Dear [Recipient],
+            "body": f"""Dear {recipient_name},
 
-I hope this email finds you well. I am reaching out regarding {purpose}.
+I hope this message finds you well. I am reaching out regarding {purpose}.
 
-At {company}, we are committed to providing excellent service and would love to discuss how we can assist you.
+At {company}, we are committed to delivering exceptional service and would be delighted to discuss how we can support your needs.
 
-Please let me know if you would be available for a brief call at your convenience.
+Would you be available for a brief call this week? Please let me know a time that works best for you.
 
-Best regards,
-{company} Team""",
+Kind regards,
+The {company} Team""",
             "generated": False,
-            "to": data.get('recipientContext', '')
+            "to": data.get('recipientEmail', '')
+        }
         }
     
     @staticmethod
