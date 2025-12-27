@@ -391,7 +391,7 @@ async def fetch_companies_house_data(company_number: str = None, company_name: s
             elif company_name:
                 # Search by name
                 response = await client.get(
-                    f"https://api.company-information.service.gov.uk/search/companies",
+                    "https://api.company-information.service.gov.uk/search/companies",
                     params={"q": company_name, "items_per_page": 5},
                     headers=headers,
                     timeout=10.0
