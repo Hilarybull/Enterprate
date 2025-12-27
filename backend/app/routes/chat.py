@@ -92,12 +92,13 @@ async def send_chat_message(
             }
         
         # Process message through the assistant
+        company_ctx = session.get("company_context") or {}
         result = await process_assistant_message(
             message=request.message,
             session_id=session_id,
             user_id=user_id,
-            company_number=request.company_number or session.get("company_context", {}).get("company_number"),
-            company_name=request.company_name or session.get("company_context", {}).get("company_name"),
+            company_number=request.company_number or company_ctx.get("company_number"),
+            company_name=request.company_name or company_ctx.get("company_name"),
             workspace_context=request.context
         )
         
