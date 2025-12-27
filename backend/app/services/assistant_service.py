@@ -118,9 +118,21 @@ class EnterprateAssistant:
         """
         message_lower = message.lower()
         
+        # Check for Presentation triggers FIRST (takes priority)
+        for pattern in PRESENTATION_TRIGGERS:
+            if re.search(pattern, message_lower, re.IGNORECASE):
+                return AssistantMode.PRESENTATION
+        
         # Check for Data-Backed triggers
         for pattern in DATA_BACKED_TRIGGERS:
             if re.search(pattern, message_lower, re.IGNORECASE):
+                # Don't trigger data-backed for generic "limited company" mentions
+                # unless there's a specific company reference
+                if 'limited' in message_lower or 'ltd' in message_lower:
+                    # Only go data-backed if there's an actual company number or explicit verification request
+                    if not re.search(r'\b[0-9]{7,8}\b', message) and not has_company_data:
+                        if not re.search(r'(check|verify|confirm|status|filing)', message_lower):
+                            continue
                 return AssistantMode.DATA_BACKED
         
         # Check for company number pattern
@@ -130,11 +142,6 @@ class EnterprateAssistant:
         # Check if company data was explicitly provided
         if has_company_data:
             return AssistantMode.DATA_BACKED
-        
-        # Check for Presentation triggers
-        for pattern in PRESENTATION_TRIGGERS:
-            if re.search(pattern, message_lower, re.IGNORECASE):
-                return AssistantMode.PRESENTATION
         
         # Default to Advisory
         return AssistantMode.ADVISORY
