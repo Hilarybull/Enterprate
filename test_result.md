@@ -792,3 +792,43 @@ Testing encountered session timeouts during extended interactions, which is expe
 - Finance module: receipt scanning, tax estimator, compliance CRUD
 - Business Operations: tasks, email automation, document drafting
 - Growth module: AI post generator
+
+---
+## Test Session: December 27, 2025 - AI Assistant Enhancement
+
+### Enhanced Enterprate OS AI Assistant
+Upgraded to a decision-grade, verified business intelligence companion.
+
+### Operating Modes Implemented:
+1. **Advisory Mode** (Default) - General business guidance
+   - Trigger: General questions, strategy advice
+   - Disclosure: "This is general business guidance..."
+
+2. **Data-Backed Mode** - Verified Companies House data  
+   - Trigger: Company numbers, verification requests
+   - Disclosure: "Using Companies House records as of [timestamp]"
+
+3. **Presentation Mode** - Structured stakeholder output
+   - Trigger: "Summarise", "prepare report", "for board"
+   - Structured headings and bullet points
+
+### Context Locking:
+- All responses map to Genesis/Navigator/Growth domains
+- Non-business questions politely redirected
+
+### Response Structure:
+1. Explain - What the data says
+2. Interpret - What it means
+3. Recommend - What to do
+4. Action - How Enterprate helps
+
+### Backend Tests Passed:
+- Advisory Mode: ✅
+- Data-Backed Mode: ✅
+- Presentation Mode: ✅
+- Context Locking: ✅
+
+### Files Modified:
+- /app/backend/app/services/assistant_service.py (NEW)
+- /app/backend/app/routes/chat.py (Enhanced)
+- /app/frontend/src/components/enterprise/AIChatbot.js (Enhanced)
