@@ -58,3 +58,7 @@ secrets/
 # Uploaded files (if stored locally)
 uploads/
 media/
+-e 
+# Environment files
+*.env
+*.env.*
