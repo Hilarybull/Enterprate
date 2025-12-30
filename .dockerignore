@@ -1,0 +1,42 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Dependencies (will be installed in container)
+node_modules/
+venv/
+__pycache__/
+
+# Environment files
+.env
+.env.*
+
+# IDE
+.idea/
+.vscode/
+
+# Testing
+.coverage
+coverage/
+.pytest_cache/
+tests/
+
+# Build artifacts
+build/
+dist/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+
+# Docker files (avoid recursion)
+Dockerfile*
+docker-compose*
+.dockerignore
