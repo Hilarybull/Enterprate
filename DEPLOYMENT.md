@@ -1,535 +1,450 @@
 # EnterprateAI - Deployment Guide
 
-This guide covers multiple deployment options for EnterprateAI.
+Complete deployment instructions for EnterprateAI on various platforms.
+
+---
 
 ## Table of Contents
 
-1. [Prerequisites](#prerequisites)
-2. [Environment Configuration](#environment-configuration)
-3. [Deployment Options](#deployment-options)
-   - [Docker Compose](#docker-compose-recommended)
-   - [Railway](#railway)
-   - [Vercel + Railway](#vercel-frontend--railway-backend)
-   - [AWS/GCP/Azure](#cloud-providers)
-   - [VPS/Dedicated Server](#vps-deployment)
-4. [Post-Deployment](#post-deployment)
-5. [Troubleshooting](#troubleshooting)
+1. [Pre-Deployment Checklist](#pre-deployment-checklist)
+2. [Railway Deployment](#railway-deployment) ⭐ Recommended
+3. [Vercel + Railway](#vercel-frontend--railway-backend)
+4. [Netlify + Railway](#netlify-frontend--railway-backend)
+5. [Docker Compose](#docker-compose-self-hosted)
+6. [VPS Deployment](#vps-deployment)
+7. [Post-Deployment Steps](#post-deployment-steps)
+8. [Troubleshooting](#troubleshooting)
 
 ---
 
-## Prerequisites
+## Pre-Deployment Checklist
 
-- Domain name (optional but recommended)
-- SSL certificate (provided by most platforms)
-- MongoDB database (Atlas recommended for production)
-- API Keys:
-  - Emergent LLM Key (for AI features)
-  - Companies House API Key (for UK company data)
-  - SendGrid API Key (for email)
-  - Google OAuth credentials (for social login)
+Before deploying, ensure you have:
 
----
+- [ ] **MongoDB Database** (MongoDB Atlas recommended - free tier available)
+- [ ] **Emergent LLM Key** (for AI features)
+- [ ] **Domain name** (optional but recommended)
 
-## Environment Configuration
+### Optional but Recommended:
+- [ ] Companies House API key (UK company verification)
+- [ ] SendGrid API key (email delivery)
+- [ ] Google OAuth credentials (social login)
 
-### Backend Environment Variables
-
-Create a `.env` file in the `backend/` directory:
-
-```env
-# ============================================
-# REQUIRED - Core Configuration
-# ============================================
-MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net/
-DB_NAME=enterprate_prod
-JWT_SECRET=your-super-secure-jwt-secret-min-32-chars
-FRONTEND_URL=https://your-domain.com
-CORS_ORIGINS=https://your-domain.com,https://www.your-domain.com
-
-# ============================================
-# REQUIRED - AI Integration
-# ============================================
-EMERGENT_LLM_KEY=sk-emergent-your-key-here
-
-# ============================================
-# OPTIONAL - Companies House (UK Company Data)
-# ============================================
-# Get from: https://developer.company-information.service.gov.uk/
-COMPANIES_HOUSE_API_KEY=your-companies-house-api-key
-
-# ============================================
-# OPTIONAL - Email (SendGrid)
-# ============================================
-# Get from: https://sendgrid.com/
-SENDGRID_API_KEY=SG.your-sendgrid-api-key
-SENDGRID_FROM_EMAIL=noreply@your-domain.com
-
-# ============================================
-# OPTIONAL - Google OAuth
-# ============================================
-# Get from: https://console.cloud.google.com/
-GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-
-# ============================================
-# OPTIONAL - Social Media Integrations
-# ============================================
-# Twitter/X API
-TWITTER_API_KEY=
-TWITTER_API_SECRET=
-TWITTER_ACCESS_TOKEN=
-TWITTER_ACCESS_TOKEN_SECRET=
-TWITTER_BEARER_TOKEN=
-
-# Facebook/Instagram
-FACEBOOK_APP_ID=
-FACEBOOK_APP_SECRET=
-FACEBOOK_PAGE_ACCESS_TOKEN=
-INSTAGRAM_ACCESS_TOKEN=
-INSTAGRAM_BUSINESS_ACCOUNT_ID=
-
-# LinkedIn
-LINKEDIN_CLIENT_ID=
-LINKEDIN_CLIENT_SECRET=
-LINKEDIN_ACCESS_TOKEN=
-
-# YouTube
-YOUTUBE_API_KEY=
-YOUTUBE_CLIENT_ID=
-YOUTUBE_CLIENT_SECRET=
-YOUTUBE_REFRESH_TOKEN=
-```
-
-### Frontend Environment Variables
-
-Create a `.env` file in the `frontend/` directory:
-
-```env
-# Backend API URL (no trailing slash)
-REACT_APP_BACKEND_URL=https://api.your-domain.com
-
-# Optional: Disable health checks in production
-ENABLE_HEALTH_CHECK=false
-```
+See **[CONFIGURATION.md](./CONFIGURATION.md)** for how to get all API keys.
 
 ---
 
-## Deployment Options
+## Railway Deployment
 
-### Docker Compose (Recommended)
+**Railway** provides the easiest full-stack deployment with automatic SSL.
 
-The easiest way to deploy the full stack.
+### Step 1: Create Railway Account
+1. Go to https://railway.app
+2. Sign up with GitHub
 
-#### 1. Create docker-compose.yml
+### Step 2: Deploy MongoDB
+1. Click "New Project" → "Provision MongoDB"
+2. Or use MongoDB Atlas (recommended for production)
 
-```yaml
-version: '3.8'
+### Step 3: Deploy Backend
 
-services:
-  mongodb:
-    image: mongo:6
-    restart: always
-    volumes:
-      - mongodb_data:/data/db
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
-    networks:
-      - enterprate-network
+1. Click "New" → "GitHub Repo"
+2. Select `enterprate/enterprateai`
+3. Configure:
+   - **Root Directory**: `backend`
+   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    restart: always
-    ports:
-      - "8001:8001"
-    environment:
-      - MONGO_URL=mongodb://admin:${MONGO_PASSWORD}@mongodb:27017/
-      - DB_NAME=enterprate
-      - JWT_SECRET=${JWT_SECRET}
-      - FRONTEND_URL=${FRONTEND_URL}
-      - CORS_ORIGINS=${CORS_ORIGINS}
-      - EMERGENT_LLM_KEY=${EMERGENT_LLM_KEY}
-      - COMPANIES_HOUSE_API_KEY=${COMPANIES_HOUSE_API_KEY}
-      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
-      - SENDGRID_FROM_EMAIL=${SENDGRID_FROM_EMAIL}
-    depends_on:
-      - mongodb
-    networks:
-      - enterprate-network
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}
-    restart: always
-    ports:
-      - "3000:80"
-    depends_on:
-      - backend
-    networks:
-      - enterprate-network
-
-  nginx:
-    image: nginx:alpine
-    restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./ssl:/etc/nginx/ssl
-    depends_on:
-      - frontend
-      - backend
-    networks:
-      - enterprate-network
-
-volumes:
-  mongodb_data:
-
-networks:
-  enterprate-network:
-    driver: bridge
+4. Add Environment Variables (Settings → Variables):
+```
+MONGO_URL=your-mongodb-url
+DB_NAME=enterprateai
+JWT_SECRET=your-32-char-secret-here
+FRONTEND_URL=https://your-frontend.up.railway.app
+CORS_ORIGINS=https://your-frontend.up.railway.app
+EMERGENT_LLM_KEY=sk-emergent-your-key
+COMPANIES_HOUSE_API_KEY=your-ch-key (optional)
+SENDGRID_API_KEY=your-sg-key (optional)
+SENDGRID_FROM_EMAIL=noreply@yourdomain.com (optional)
 ```
 
-#### 2. Create Backend Dockerfile
+5. Click Deploy
+6. Note your backend URL (e.g., `https://enterprateai-backend.up.railway.app`)
 
-```dockerfile
-# backend/Dockerfile
-FROM python:3.11-slim
+### Step 4: Deploy Frontend
 
-WORKDIR /app
+1. In same project, click "New" → "GitHub Repo"
+2. Select same repo
+3. Configure:
+   - **Root Directory**: `frontend`
+   - **Build Command**: `yarn build`
+   - **Start Command**: `npx serve -s build -l $PORT`
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-EXPOSE 8001
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]
+4. Add Environment Variables:
+```
+REACT_APP_BACKEND_URL=https://your-backend.up.railway.app
 ```
 
-#### 3. Create Frontend Dockerfile
+5. Deploy and note your frontend URL
 
-```dockerfile
-# frontend/Dockerfile
-FROM node:18-alpine as build
-
-WORKDIR /app
-
-ARG REACT_APP_BACKEND_URL
-ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
-
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
-
-COPY . .
-RUN yarn build
-
-FROM nginx:alpine
-COPY --from=build /app/build /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+### Step 5: Update CORS
+Go back to backend variables and update:
+```
+FRONTEND_URL=https://your-actual-frontend-url.up.railway.app
+CORS_ORIGINS=https://your-actual-frontend-url.up.railway.app
 ```
 
-#### 4. Deploy
+### Step 6: Add Custom Domain (Optional)
+1. Settings → Domains
+2. Add your domain
+3. Update DNS records as shown
 
+---
+
+## Vercel (Frontend) + Railway (Backend)
+
+Best for separate scaling and Vercel's edge network for frontend.
+
+### Step 1: Deploy Backend on Railway
+Follow Steps 1-3 from [Railway Deployment](#railway-deployment)
+
+### Step 2: Deploy Frontend on Vercel
+
+1. Go to https://vercel.com
+2. Click "Import Project" → Select from GitHub
+3. Select `enterprate/enterprateai`
+4. Configure:
+   - **Framework Preset**: Create React App
+   - **Root Directory**: `frontend`
+   - **Build Command**: `yarn build`
+   - **Output Directory**: `build`
+
+5. Add Environment Variable:
+```
+REACT_APP_BACKEND_URL=https://your-railway-backend.up.railway.app
+```
+
+6. Deploy
+
+### Step 3: Update Backend CORS
+Update Railway backend variables with Vercel URL:
+```
+FRONTEND_URL=https://your-app.vercel.app
+CORS_ORIGINS=https://your-app.vercel.app,https://your-custom-domain.com
+```
+
+### Step 4: Custom Domain on Vercel
+1. Settings → Domains → Add
+2. Follow DNS configuration
+
+---
+
+## Netlify (Frontend) + Railway (Backend)
+
+Alternative to Vercel with similar features.
+
+### Step 1: Deploy Backend on Railway
+Follow Steps 1-3 from [Railway Deployment](#railway-deployment)
+
+### Step 2: Deploy Frontend on Netlify
+
+1. Go to https://netlify.com
+2. Click "Add new site" → "Import an existing project"
+3. Connect GitHub and select repo
+4. Configure:
+   - **Base directory**: `frontend`
+   - **Build command**: `yarn build`
+   - **Publish directory**: `frontend/build`
+
+5. Add Environment Variable (Site settings → Build & deploy → Environment):
+```
+REACT_APP_BACKEND_URL=https://your-railway-backend.up.railway.app
+```
+
+6. Trigger deploy
+
+### Step 3: Add Redirects for React Router
+Create `frontend/public/_redirects`:
+```
+/*    /index.html   200
+```
+
+### Step 4: Update Backend CORS
+Update Railway backend with Netlify URL.
+
+---
+
+## Docker Compose (Self-Hosted)
+
+For full control on your own server.
+
+### Prerequisites
+- Docker & Docker Compose installed
+- Server with 2GB+ RAM
+
+### Step 1: Clone Repository
 ```bash
-# Create .env file with your variables
-cp .env.example .env
-# Edit .env with your production values
+git clone https://github.com/enterprate/enterprateai.git
+cd enterprateai
+```
 
-# Start all services
+### Step 2: Create Environment File
+```bash
+cp .env.docker.example .env
+```
+
+Edit `.env`:
+```env
+MONGO_USERNAME=admin
+MONGO_PASSWORD=secure-password-here
+DB_NAME=enterprateai
+JWT_SECRET=your-32-char-secret-here
+FRONTEND_URL=http://localhost:3000
+CORS_ORIGINS=http://localhost:3000
+EMERGENT_LLM_KEY=sk-emergent-your-key
+REACT_APP_BACKEND_URL=http://localhost:8001
+```
+
+### Step 3: Start Services
+```bash
 docker-compose up -d
+```
+
+### Step 4: Verify
+```bash
+# Check services
+docker-compose ps
 
 # View logs
 docker-compose logs -f
+
+# Test API
+curl http://localhost:8001/api/health
 ```
 
----
+### Step 5: Production with Nginx + SSL
 
-### Railway
-
-Railway provides easy deployment with automatic SSL.
-
-#### Backend Deployment
-
-1. Create a new project on [Railway](https://railway.app)
-2. Add a MongoDB database service
-3. Connect your GitHub repository
-4. Set the root directory to `backend`
-5. Add environment variables (see above)
-6. Railway will auto-detect Python and deploy
-
-#### Frontend Deployment
-
-1. Add another service in the same project
-2. Set root directory to `frontend`
-3. Set build command: `yarn build`
-4. Set start command: `yarn start`
-5. Add `REACT_APP_BACKEND_URL` pointing to your backend URL
+Add nginx service to `docker-compose.yml` and configure SSL.
+See the full docker-compose.yml in the repo.
 
 ---
 
-### Vercel (Frontend) + Railway (Backend)
+## VPS Deployment
 
-Best for separate scaling of frontend and backend.
+For DigitalOcean, Linode, AWS EC2, etc.
 
-#### Backend on Railway
+### Step 1: Provision Server
+- Ubuntu 22.04 LTS
+- Minimum 2GB RAM, 1 vCPU
+- Open ports: 22, 80, 443
 
-1. Deploy backend to Railway (see above)
-2. Note the generated URL (e.g., `https://enterprate-backend.up.railway.app`)
-
-#### Frontend on Vercel
-
-1. Import project from GitHub on [Vercel](https://vercel.com)
-2. Set root directory to `frontend`
-3. Add environment variable:
-   ```
-   REACT_APP_BACKEND_URL=https://enterprate-backend.up.railway.app
-   ```
-4. Deploy
-
----
-
-### Cloud Providers (AWS/GCP/Azure)
-
-#### AWS Elastic Beanstalk
-
+### Step 2: Initial Setup
 ```bash
-# Install EB CLI
-pip install awsebcli
+# SSH into server
+ssh root@your-server-ip
 
-# Initialize
-eb init -p python-3.11 enterprate-backend
-
-# Create environment
-eb create production
-
-# Set environment variables
-eb setenv MONGO_URL=... JWT_SECRET=... EMERGENT_LLM_KEY=...
-
-# Deploy
-eb deploy
-```
-
-#### Google Cloud Run
-
-```bash
-# Build and push container
-gcloud builds submit --tag gcr.io/PROJECT_ID/enterprate-backend
-
-# Deploy
-gcloud run deploy enterprate-backend \
-  --image gcr.io/PROJECT_ID/enterprate-backend \
-  --platform managed \
-  --allow-unauthenticated \
-  --set-env-vars MONGO_URL=...,JWT_SECRET=...
-```
-
----
-
-### VPS Deployment
-
-For deployment on a VPS (DigitalOcean, Linode, etc.):
-
-```bash
-# SSH into your server
-ssh user@your-server-ip
+# Update system
+apt update && apt upgrade -y
 
 # Install dependencies
-sudo apt update
-sudo apt install -y python3.11 python3.11-venv nodejs npm nginx certbot
+apt install -y python3.11 python3.11-venv nodejs npm nginx certbot python3-certbot-nginx
 
-# Clone repository
+# Install yarn
+npm install -g yarn
+```
+
+### Step 3: Clone Repository
+```bash
+cd /opt
 git clone https://github.com/enterprate/enterprateai.git
 cd enterprateai
+```
 
-# Setup backend
+### Step 4: Setup Backend
+```bash
 cd backend
 python3.11 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
-# Edit .env with your values
 
-# Setup systemd service for backend
-sudo cat > /etc/systemd/system/enterprate-backend.service << EOF
+# Create environment file
+cp .env.example .env
+nano .env  # Edit with your values
+```
+
+### Step 5: Create Systemd Service
+```bash
+cat > /etc/systemd/system/enterprateai-backend.service << 'EOF'
 [Unit]
-Description=Enterprate Backend
+Description=EnterprateAI Backend
 After=network.target
 
 [Service]
 User=www-data
-WorkingDirectory=/home/user/enterprateai/backend
-EnvironmentFile=/home/user/enterprateai/backend/.env
-ExecStart=/home/user/enterprateai/backend/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8001
+Group=www-data
+WorkingDirectory=/opt/enterprateai/backend
+Environment="PATH=/opt/enterprateai/backend/venv/bin"
+EnvironmentFile=/opt/enterprateai/backend/.env
+ExecStart=/opt/enterprateai/backend/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8001
 Restart=always
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-sudo systemctl enable enterprate-backend
-sudo systemctl start enterprate-backend
+systemctl daemon-reload
+systemctl enable enterprateai-backend
+systemctl start enterprateai-backend
+```
 
-# Setup frontend
-cd ../frontend
-npm install -g yarn
+### Step 6: Build Frontend
+```bash
+cd /opt/enterprateai/frontend
+cp .env.example .env
+nano .env  # Set REACT_APP_BACKEND_URL=https://api.yourdomain.com
+
 yarn install
 yarn build
+```
 
-# Configure Nginx
-sudo cat > /etc/nginx/sites-available/enterprate << EOF
+### Step 7: Configure Nginx
+```bash
+cat > /etc/nginx/sites-available/enterprateai << 'EOF'
+# Frontend
 server {
     listen 80;
-    server_name your-domain.com;
-    return 301 https://\$server_name\$request_uri;
-}
-
-server {
-    listen 443 ssl;
-    server_name your-domain.com;
-
-    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
-
-    # Frontend
+    server_name yourdomain.com www.yourdomain.com;
+    
+    root /opt/enterprateai/frontend/build;
+    index index.html;
+    
     location / {
-        root /home/user/enterprateai/frontend/build;
-        try_files \$uri \$uri/ /index.html;
+        try_files $uri $uri/ /index.html;
     }
-
-    # Backend API
+    
     location /api {
-        proxy_pass http://localhost:8001;
+        proxy_pass http://127.0.0.1:8001;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_cache_bypass \$http_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_cache_bypass $http_upgrade;
     }
 }
 EOF
 
-sudo ln -s /etc/nginx/sites-available/enterprate /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
+ln -s /etc/nginx/sites-available/enterprateai /etc/nginx/sites-enabled/
+nginx -t
+systemctl reload nginx
+```
 
-# SSL Certificate
-sudo certbot --nginx -d your-domain.com
+### Step 8: SSL Certificate
+```bash
+certbot --nginx -d yourdomain.com -d www.yourdomain.com
 ```
 
 ---
 
-## Post-Deployment
+## Post-Deployment Steps
 
-### 1. Verify Deployment
-
+### 1. Test All Endpoints
 ```bash
-# Check backend health
-curl https://your-domain.com/api/health
+# Health check
+curl https://your-backend-url/api/health
 
-# Check frontend loads
-curl https://your-domain.com
-```
-
-### 2. Create Admin User
-
-Register through the UI or use the API:
-
-```bash
-curl -X POST https://your-domain.com/api/auth/register \
+# Test registration
+curl -X POST https://your-backend-url/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"email": "admin@company.com", "password": "SecurePassword123!", "name": "Admin"}'
+  -d '{"email":"test@example.com","password":"SecurePass123!","name":"Test User"}'
 ```
+
+### 2. Create First User
+Register through the UI or API.
 
 ### 3. Configure Monitoring
-
-Recommended monitoring tools:
-- **Uptime**: UptimeRobot, Pingdom
+- **Uptime**: UptimeRobot (free)
+- **Errors**: Sentry (free tier)
 - **Logs**: Papertrail, Logtail
-- **Errors**: Sentry
-- **Metrics**: Datadog, New Relic
 
 ### 4. Setup Backups
+For MongoDB Atlas: Enable automated backups.
 
-For MongoDB Atlas, enable automated backups. For self-hosted:
-
+For self-hosted:
 ```bash
-# Daily backup script
-mongodump --uri="$MONGO_URL" --out=/backups/$(date +%Y%m%d)
+# Daily backup cron
+0 2 * * * mongodump --uri="$MONGO_URL" --out=/backups/$(date +\%Y\%m\%d)
 ```
 
 ---
 
 ## Troubleshooting
 
-### Common Issues
-
-#### CORS Errors
-
-Ensure `CORS_ORIGINS` includes your frontend URL (with protocol, no trailing slash):
-```env
-CORS_ORIGINS=https://your-domain.com,https://www.your-domain.com
+### Backend won't start
+```bash
+# Check logs
+journalctl -u enterprateai-backend -f
+# or
+docker-compose logs backend
 ```
 
-#### MongoDB Connection Failed
+### CORS Errors
+- Ensure `CORS_ORIGINS` exactly matches frontend URL
+- No trailing slash
+- Include protocol (https://)
 
-- Check MongoDB URL format
-- Ensure IP whitelist includes server IP (for Atlas)
-- Verify credentials
+### Database Connection Failed
+- Check `MONGO_URL` format
+- Verify IP whitelist (MongoDB Atlas)
+- Test with MongoDB Compass first
 
-#### AI Features Not Working
-
-- Verify `EMERGENT_LLM_KEY` is set correctly
+### AI Features Not Working
+- Verify `EMERGENT_LLM_KEY`
 - Check backend logs for errors
 
-#### Frontend Can't Reach Backend
+### Frontend Can't Reach Backend
+- Check `REACT_APP_BACKEND_URL`
+- Verify backend is running
+- Check nginx/proxy configuration
 
-- Verify `REACT_APP_BACKEND_URL` is correct
-- Check if backend is running: `curl https://api.your-domain.com/api/health`
-- Check Nginx/proxy configuration
-
-### Logs
-
-```bash
-# Docker
-docker-compose logs -f backend
-docker-compose logs -f frontend
-
-# Systemd
-journalctl -u enterprate-backend -f
-
-# Railway
-# View in Railway dashboard
-```
+### 502 Bad Gateway
+- Backend crashed - check logs
+- Port mismatch in nginx config
+- Memory issues - increase server RAM
 
 ---
 
-## Security Checklist
+## Environment Variables Reference
 
-- [ ] Use strong, unique `JWT_SECRET`
-- [ ] Enable HTTPS only
-- [ ] Set strict CORS origins
-- [ ] Use environment variables (never commit secrets)
-- [ ] Enable MongoDB authentication
-- [ ] Regular security updates
-- [ ] Rate limiting on API
-- [ ] Input validation
-- [ ] Regular backups
+### Backend (Required)
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `MONGO_URL` | MongoDB connection | `mongodb+srv://...` |
+| `DB_NAME` | Database name | `enterprateai` |
+| `JWT_SECRET` | Auth secret (32+ chars) | `abc123...` |
+| `FRONTEND_URL` | Frontend URL | `https://app.domain.com` |
+| `CORS_ORIGINS` | Allowed origins | `https://app.domain.com` |
+| `EMERGENT_LLM_KEY` | AI key | `sk-emergent-...` |
+
+### Backend (Optional)
+| Variable | Description |
+|----------|-------------|
+| `COMPANIES_HOUSE_API_KEY` | UK company data |
+| `SENDGRID_API_KEY` | Email delivery |
+| `SENDGRID_FROM_EMAIL` | Sender email |
+| `GOOGLE_CLIENT_ID` | OAuth |
+| `GOOGLE_CLIENT_SECRET` | OAuth |
+
+### Frontend
+| Variable | Description |
+|----------|-------------|
+| `REACT_APP_BACKEND_URL` | Backend API URL |
 
 ---
 
-## Support
+## Need Help?
 
-If you encounter issues:
-1. Check the [Troubleshooting](#troubleshooting) section
-2. Search [GitHub Issues](https://github.com/enterprate/enterprateai/issues)
-3. Contact support@enterprate.com
+- Check [CONFIGURATION.md](./CONFIGURATION.md) for API key setup
+- Check [README.md](./README.md) for API reference
+- Open an issue on GitHub
+- Email: support@enterprate.com
