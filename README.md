@@ -12,75 +12,81 @@
   <a href="#features">Features</a> •
   <a href="#quick-start">Quick Start</a> •
   <a href="#deployment">Deployment</a> •
-  <a href="#api-documentation">API Docs</a> •
-  <a href="#license">License</a>
+  <a href="#api-reference">API Reference</a> •
+  <a href="#configuration">Configuration</a>
 </p>
 
 ---
 
-## Overview
+## 🎯 Overview
 
-EnterprateAI is a comprehensive business management platform that helps entrepreneurs and businesses manage every aspect of their operations through AI-powered automation. From company formation to growth marketing, EnterprateAI provides intelligent assistance at every step.
+EnterprateAI is a comprehensive AI-powered business management platform designed for UK businesses. It provides intelligent automation for company formation, operations management, financial tracking, compliance, and growth marketing.
 
-## Features
+## ✨ Features
 
 ### 🚀 Genesis AI (Business Formation)
-- **Idea Validation** - AI-powered business idea analysis
-- **Company Registration** - UK Companies House integration
-- **Business Planning** - Automated business plan generation
-- **Entity Selection** - Smart guidance on company types
+- **Idea Validation** - AI-powered business idea analysis and market research
+- **Company Registration** - UK Companies House integration for company verification
+- **Business Planning** - Automated business plan and blueprint generation
+- **Entity Selection** - Smart guidance on UK company types (Ltd, LLP, PLC, etc.)
 
 ### 🧭 Navigator AI (Operations & Finance)
-- **Invoice Management** - Create and track invoices
-- **Expense Tracking** - Receipt scanning with AI
-- **Tax Estimation** - UK tax calculator
-- **Compliance Checklist** - Stay compliant with regulations
-- **Task Management** - Organize business operations
+- **Invoice Management** - Create, track, and manage invoices
+- **Expense Tracking** - AI receipt scanning with automatic categorization
+- **Tax Estimation** - UK tax calculator with auto-population from financial data
+- **Compliance Checklist** - HMRC, Companies House, and GDPR compliance tracking
+- **Task Management** - Business operations task tracking
 
 ### 📈 Growth AI (Marketing & Sales)
-- **AI Post Generator** - Social media content creation
-- **Lead Management** - Track and nurture leads
-- **Campaign Management** - Marketing campaign tracking
-- **Analytics Dashboard** - Performance insights
+- **AI Content Generator** - Social media posts for LinkedIn, Twitter, Facebook
+- **Lead Management** - Track and nurture business leads
+- **Campaign Management** - Marketing campaign tracking and analytics
+- **Performance Dashboard** - Business growth analytics
 
-### 🤖 AI Assistant
-- **Three Operating Modes:**
-  - Advisory Mode - General business guidance
-  - Data-Backed Mode - Verified Companies House data
-  - Presentation Mode - Structured stakeholder reports
-- **Context-Aware** - Maps responses to business domains
-- **Non-Hallucinating** - Only provides verified information
+### 🤖 AI Assistant (Multi-Mode Intelligence)
+- **Advisory Mode** - General business guidance and best practices
+- **Data-Backed Mode** - Verified Companies House data lookups
+- **Presentation Mode** - Structured reports for stakeholders
+- **Context-Locked** - Only provides business-relevant responses
 
 ### 📄 AI Document Drafting
-- Business Documents (Quotes, Contracts, Proposals)
-- Compliance Documents (Privacy Policy, T&Cs, Cookie Notice)
-- HR Policies (Employee Handbook, Remote Work Policy)
-- CRM Templates (Welcome Emails, Follow-ups)
+- Business Documents (Quotes, Contracts, Proposals, Invoices)
+- Compliance Documents (Privacy Policy, T&Cs, Cookie Notice, Refund Policy)
+- HR Policies (Employee Handbook, Remote Work, Leave, Code of Conduct)
+- CRM Templates (Welcome Emails, Follow-ups, Thank You Notes)
+
+### 🎨 Branding & Website Tools
+- Branding Wizard with AI logo concepts
+- Website Content Generator for all pages
+- SEO content generation
 
 ### 🔐 Authentication
-- Email/Password authentication
-- Google OAuth (Emergent-managed)
-- JWT-based session management
+- Email/Password with JWT
+- Google OAuth integration
+- Workspace-based multi-tenancy
 
-## Tech Stack
+---
+
+## 🛠 Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | React 18, Tailwind CSS, shadcn/ui |
-| Backend | FastAPI (Python 3.11+) |
-| Database | MongoDB |
-| AI | OpenAI GPT-4o (via Emergent LLM Key) |
-| Email | SendGrid |
-| Company Data | Companies House API |
+| **Frontend** | React 18, Tailwind CSS, shadcn/ui, Lucide Icons |
+| **Backend** | FastAPI (Python 3.11+), Pydantic |
+| **Database** | MongoDB (Atlas recommended) |
+| **AI** | OpenAI GPT-4o via Emergent LLM |
+| **Email** | SendGrid |
+| **Company Data** | UK Companies House API |
 
-## Quick Start
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
-
-- Node.js 18+ and Yarn
+- Node.js 18+ & Yarn
 - Python 3.11+
-- MongoDB instance
-- Required API keys (see Environment Variables)
+- MongoDB database
+- Required API keys (see [Configuration](#configuration))
 
 ### Local Development
 
@@ -89,7 +95,7 @@ EnterprateAI is a comprehensive business management platform that helps entrepre
 git clone https://github.com/enterprate/enterprateai.git
 cd enterprateai
 
-# Backend setup
+# Backend Setup
 cd backend
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
@@ -98,7 +104,7 @@ cp .env.example .env
 # Edit .env with your credentials
 uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 
-# Frontend setup (new terminal)
+# Frontend Setup (new terminal)
 cd frontend
 yarn install
 cp .env.example .env
@@ -106,111 +112,176 @@ cp .env.example .env
 yarn start
 ```
 
-## Deployment
+---
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+## 📦 Deployment
+
+See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for complete deployment instructions.
 
 ### Quick Deploy Options
 
-#### Railway
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new)
+| Platform | Best For | Guide |
+|----------|----------|-------|
+| **Railway** | Full-stack, easy setup | [Deploy →](#railway-deployment) |
+| **Vercel + Railway** | Separate scaling | [Deploy →](#vercel--railway) |
+| **Docker Compose** | Self-hosted | [Deploy →](#docker-deployment) |
+| **VPS** | Full control | [Deploy →](#vps-deployment) |
 
-#### Vercel (Frontend) + Railway (Backend)
-1. Deploy backend to Railway with MongoDB addon
-2. Deploy frontend to Vercel with `REACT_APP_BACKEND_URL`
+---
 
-#### Docker
-```bash
-docker-compose up -d
+## 🔌 API Reference
+
+### Authentication
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Register new user |
+| POST | `/api/auth/login` | Login user |
+| GET | `/api/auth/me` | Get current user |
+| POST | `/api/auth/google/init` | Init Google OAuth |
+
+### Workspaces
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/workspaces` | List workspaces |
+| POST | `/api/workspaces` | Create workspace |
+| GET | `/api/workspaces/{id}` | Get workspace |
+
+### Company Profile
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/company-profile` | Get profile |
+| POST | `/api/company-profile` | Update profile |
+| POST | `/api/company-profile/check-name` | Check name availability |
+| POST | `/api/company-profile/confirm-registration` | Confirm with Companies House |
+| POST | `/api/company-profile/generate-branding` | AI branding |
+| POST | `/api/company-profile/generate-website-content` | AI website content |
+
+### Finance
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET/POST | `/api/navigator/invoices` | Invoice management |
+| GET/POST | `/api/finance/expenses` | Expense tracking |
+| POST | `/api/finance/scan-receipt` | AI receipt scanning |
+| POST | `/api/finance/estimate-tax` | Tax calculation |
+| GET/POST | `/api/finance/compliance` | Compliance checklist |
+
+### Operations
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET/POST | `/api/operations/tasks` | Task management |
+| POST | `/api/operations/generate-email` | AI email drafting |
+| GET/POST | `/api/operations/email-templates` | Email templates |
+
+### Marketing
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET/POST | `/api/growth/leads` | Lead management |
+| GET/POST | `/api/marketing/campaigns` | Campaigns |
+| POST | `/api/marketing/social-posts/generate` | AI post generation |
+
+### AI Chat
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/chat` | Send message to AI |
+| GET | `/api/chat/modes` | Get operating modes |
+| GET | `/api/chat/history/{session}` | Chat history |
+
+### Business Blueprint
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET/POST | `/api/blueprint` | Blueprint management |
+| POST | `/api/blueprint/generate-document` | AI document generation |
+
+---
+
+## ⚙️ Configuration
+
+See **[CONFIGURATION.md](./CONFIGURATION.md)** for detailed setup of all API keys and integrations.
+
+### Required Environment Variables
+
+```env
+# Database (Required)
+MONGO_URL=mongodb+srv://...
+DB_NAME=enterprateai
+
+# Security (Required)
+JWT_SECRET=your-32-char-secret
+FRONTEND_URL=https://your-domain.com
+CORS_ORIGINS=https://your-domain.com
+
+# AI (Required)
+EMERGENT_LLM_KEY=sk-emergent-...
 ```
 
-## Environment Variables
+### Optional Integrations
+- Companies House API (UK company verification)
+- SendGrid (Email delivery)
+- Google OAuth (Social login)
+- Social Media APIs (Posting automation)
 
-### Backend (Required)
+---
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `MONGO_URL` | MongoDB connection string | ✅ |
-| `DB_NAME` | Database name | ✅ |
-| `JWT_SECRET` | JWT signing secret | ✅ |
-| `EMERGENT_LLM_KEY` | AI integration key | ✅ |
-| `FRONTEND_URL` | Frontend URL for CORS | ✅ |
-| `CORS_ORIGINS` | Allowed CORS origins | ✅ |
-
-### Backend (Optional)
-
-| Variable | Description |
-|----------|-------------|
-| `COMPANIES_HOUSE_API_KEY` | UK Companies House API |
-| `SENDGRID_API_KEY` | Email delivery |
-| `SENDGRID_FROM_EMAIL` | Sender email address |
-| `GOOGLE_CLIENT_ID` | Google OAuth |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth |
-
-### Frontend
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `REACT_APP_BACKEND_URL` | Backend API URL | ✅ |
-
-## API Documentation
-
-Once the backend is running, access the interactive API documentation:
-
-- **Swagger UI**: `http://localhost:8001/docs`
-- **ReDoc**: `http://localhost:8001/redoc`
-
-### Key API Endpoints
-
-| Endpoint | Description |
-|----------|-------------|
-| `POST /api/auth/register` | User registration |
-| `POST /api/auth/login` | User authentication |
-| `GET /api/company-profile` | Get company profile |
-| `POST /api/chat` | AI Assistant |
-| `POST /api/finance/invoices` | Create invoice |
-| `POST /api/marketing/social-posts/generate` | Generate social post |
-| `POST /api/blueprint/generate-document` | Generate document |
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 enterprateai/
 ├── backend/
 │   ├── app/
-│   │   ├── core/           # Security, database config
+│   │   ├── core/           # Security, database
 │   │   ├── routes/         # API endpoints
 │   │   ├── services/       # Business logic
 │   │   ├── schemas/        # Pydantic models
-│   │   └── main.py         # FastAPI app
-│   └── requirements.txt
+│   │   └── main.py
+│   ├── requirements.txt
+│   └── Dockerfile
 ├── frontend/
 │   ├── src/
 │   │   ├── components/     # React components
 │   │   ├── pages/          # Page components
-│   │   ├── context/        # React context providers
-│   │   └── App.js          # Main app component
-│   └── package.json
+│   │   ├── context/        # State management
+│   │   └── App.js
+│   ├── package.json
+│   └── Dockerfile
 ├── docker-compose.yml
 ├── DEPLOYMENT.md
+├── CONFIGURATION.md
 └── README.md
 ```
 
-## Contributing
+---
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## 🧪 Testing
 
-## License
+```bash
+# Backend tests
+cd backend
+pytest
 
-This project is proprietary software owned by Enterprate Ltd.
+# Frontend tests
+cd frontend
+yarn test
+```
 
-## Support
+---
 
-- **Documentation**: [docs.enterprate.com](https://docs.enterprate.com)
+## 🔄 Development Continuation
+
+This project can be continued:
+1. **On Emergent Platform** - Continue in the same workspace
+2. **In VS Code/Cursor** - Clone from GitHub, install dependencies
+3. **By Any Developer** - Follow setup guide in this README
+
+---
+
+## 📄 License
+
+Proprietary - © Enterprate Ltd
+
+---
+
+## 📞 Support
+
 - **Email**: support@enterprate.com
 - **Issues**: [GitHub Issues](https://github.com/enterprate/enterprateai/issues)
 
