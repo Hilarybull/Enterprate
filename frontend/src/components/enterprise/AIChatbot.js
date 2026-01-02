@@ -351,7 +351,7 @@ export default function AIChatbot() {
                 <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mb-4">
                   <Sparkles className="text-white" size={24} />
                 </div>
-                <h4 className="font-semibold text-gray-900 mb-1">Enterprate OS AI Assistant</h4>
+                <h4 className="font-semibold text-gray-900 mb-1">EnterprateAI AI Assistant</h4>
                 <p className="text-xs text-gray-500 mb-4">
                   Decision-grade business intelligence. I operate in Advisory, Data-Backed, or Presentation mode based on your queries.
                 </p>

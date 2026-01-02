@@ -55,7 +55,7 @@ export default function Login() {
             className="h-14 mx-auto mb-4"
           />
           <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk' }}>
-            Welcome to Enterprate OS
+            Welcome to EnterprateAI
           </h1>
           <p className="text-gray-600">Your AI Operating System for Business</p>
         </div>

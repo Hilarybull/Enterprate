@@ -98,7 +98,7 @@ export default function Layout() {
               <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">E</span>
               </div>
-              <span className="text-xl font-bold" style={{ fontFamily: 'Space Grotesk' }}>Enterprate OS</span>
+              <span className="text-xl font-bold" style={{ fontFamily: 'Space Grotesk' }}>EnterprateAI</span>
             </Link>
           </div>
 

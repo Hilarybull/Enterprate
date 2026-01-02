@@ -1,7 +1,7 @@
-# Enterprate OS
+# EnterprateAI
 
 <p align="center">
-  <img src="https://customer-assets.emergentagent.com/job_saas-dashboard-20/artifacts/aems110l_Enterprate%20Logo.png" alt="Enterprate OS" width="200"/>
+  <img src="https://customer-assets.emergentagent.com/job_saas-dashboard-20/artifacts/aems110l_Enterprate%20Logo.png" alt="EnterprateAI" width="200"/>
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 
 ## Overview
 
-Enterprate OS is a comprehensive business management platform that helps entrepreneurs and businesses manage every aspect of their operations through AI-powered automation. From company formation to growth marketing, Enterprate OS provides intelligent assistance at every step.
+EnterprateAI is a comprehensive business management platform that helps entrepreneurs and businesses manage every aspect of their operations through AI-powered automation. From company formation to growth marketing, EnterprateAI provides intelligent assistance at every step.
 
 ## Features
 

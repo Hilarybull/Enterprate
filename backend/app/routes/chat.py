@@ -1,5 +1,5 @@
 """
-Chat routes for Enterprate OS AI Assistant
+Chat routes for EnterprateAI AI Assistant
 
 A decision-grade, verified, explainable business intelligence companion
 that operates in three distinct modes: Advisory, Data-Backed, and Presentation.
@@ -52,7 +52,7 @@ async def send_chat_message(
     user: dict = Depends(get_current_user)
 ):
     """
-    Send a message to the Enterprate OS AI Assistant.
+    Send a message to the EnterprateAI AI Assistant.
     
     The assistant operates in three modes:
     - ADVISORY: General business guidance (default)

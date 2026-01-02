@@ -1,1 +1,1 @@
-"""Enterprate OS Backend Application"""
+"""EnterprateAI Backend Application"""

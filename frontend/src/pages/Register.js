@@ -43,7 +43,7 @@ export default function Register() {
           <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk' }}>
             Create Your Account
           </h1>
-          <p className="text-gray-600">Start your journey with Enterprate OS</p>
+          <p className="text-gray-600">Start your journey with EnterprateAI</p>
         </div>
 
         <Card className="shadow-lg">

@@ -1,6 +1,6 @@
-# Enterprate OS - Deployment Guide
+# EnterprateAI - Deployment Guide
 
-This guide covers multiple deployment options for Enterprate OS.
+This guide covers multiple deployment options for EnterprateAI.
 
 ## Table of Contents
 

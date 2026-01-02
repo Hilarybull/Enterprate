@@ -1,5 +1,5 @@
 """
-Enterprate OS AI Assistant Service
+EnterprateAI AI Assistant Service
 
 A decision-grade, verified, explainable business intelligence companion
 that operates in three distinct modes: Advisory, Data-Backed, and Presentation.
@@ -95,7 +95,7 @@ GROWTH_PATTERNS = [
 
 class EnterprateAssistant:
     """
-    Enterprate OS AI Assistant — a verified, context-aware business 
+    EnterprateAI AI Assistant — a verified, context-aware business 
     intelligence and guidance system.
     """
     
@@ -233,7 +233,7 @@ class EnterprateAssistant:
         """
         Build the system prompt based on the current operating mode and domain.
         """
-        base_identity = """You are the Enterprate OS AI Assistant — a verified, context-aware business intelligence and guidance system.
+        base_identity = """You are the EnterprateAI AI Assistant — a verified, context-aware business intelligence and guidance system.
 
 You are NOT a general-purpose chatbot. You are a decision-grade, trusted business companion.
 
@@ -338,7 +338,7 @@ VERIFIED COMPANY DATA (Use this data in your response):
         """
         Response for requests outside business context.
         """
-        return """I appreciate your question, but as the Enterprate OS AI Assistant, I'm specifically designed to help with business-related matters.
+        return """I appreciate your question, but as the EnterprateAI AI Assistant, I'm specifically designed to help with business-related matters.
 
 I can assist you with:
 
@@ -440,7 +440,7 @@ async def process_assistant_message(
     workspace_context: dict = None
 ) -> AssistantResponse:
     """
-    Process a message through the Enterprate OS AI Assistant.
+    Process a message through the EnterprateAI AI Assistant.
     """
     from emergentintegrations.llm.chat import LlmChat, UserMessage
     

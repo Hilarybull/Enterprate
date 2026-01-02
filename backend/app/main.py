@@ -18,7 +18,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Create FastAPI app
-app = FastAPI(title="Enterprate OS API", version="1.0.0")
+app = FastAPI(title="EnterprateAI API", version="1.0.0")
 
 # Create main API router
 api_router = APIRouter(prefix="/api")
