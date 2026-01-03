@@ -120,12 +120,21 @@ export default function Growth() {
   // Analytics
   const [analytics, setAnalytics] = useState(null);
 
+  // Proactive Growth Agent
+  const [performanceData, setPerformanceData] = useState(null);
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
+  const [generatingRec, setGeneratingRec] = useState(null);
+  const [processingRec, setProcessingRec] = useState(null);
+
   useEffect(() => {
     if (currentWorkspace) {
       loadLeads();
       loadCampaigns();
       loadSocialPosts();
       loadAnalytics();
+      loadPerformanceAnalysis();
+      loadRecommendations();
     } else {
       setLeadsLoading(false);
     }
