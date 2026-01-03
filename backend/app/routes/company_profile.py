@@ -2,6 +2,7 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from app.services.company_profile_service import CompanyProfileService
+from app.services.fees_config_service import FeesConfigService
 from app.schemas.company_profile import (
     CompanyProfileCreate, CompanyProfileUpdate, CompanyProfileResponse,
     NameSearchRequest, NameSearchResult, RegistrationConfirmRequest
@@ -18,6 +19,33 @@ async def get_entity_types():
         "entityTypes": CompanyProfileService.get_entity_types(),
         "feeNotice": CompanyProfileService.get_fee_notice()
     }
+
+
+@router.get("/fees")
+async def get_registration_fees():
+    """Get dynamic registration fees configuration from official sources"""
+    return await FeesConfigService.get_all_fees()
+
+
+@router.get("/fees/{business_type}")
+async def get_fee_for_type(business_type: str):
+    """Get fee for a specific business type"""
+    fee = await FeesConfigService.get_fee_by_type(business_type)
+    if not fee:
+        return {"error": "Business type not found"}
+    return fee
+
+
+@router.get("/fees/companies-house/all")
+async def get_companies_house_fees():
+    """Get all Companies House registered business type fees"""
+    return await FeesConfigService.get_companies_house_fees()
+
+
+@router.get("/fees/other-authorities/all")
+async def get_other_authority_fees():
+    """Get fees for business types registered with other authorities"""
+    return await FeesConfigService.get_other_authority_fees()
 
 
 @router.post("", response_model=CompanyProfileResponse)
