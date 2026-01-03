@@ -84,7 +84,7 @@ const toneOptions = [
 
 export default function Growth() {
   const { currentWorkspace, getHeaders } = useWorkspace();
-  const [activeTab, setActiveTab] = useState('leads');
+  const [activeTab, setActiveTab] = useState('agent');
   
   // Leads
   const [leads, setLeads] = useState([]);
