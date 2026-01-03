@@ -120,6 +120,7 @@ function AppRouter() {
         <Route path="business-registration" element={<BusinessRegistration />} />
         <Route path="branding" element={<Branding />} />
         <Route path="website-setup" element={<WebsiteSetup />} />
+        <Route path="ai-website-builder" element={<AIWebsiteBuilder />} />
         <Route path="website-builder/:websiteId" element={<WebsiteEditor />} />
         <Route path="business-blueprint" element={<BusinessBlueprint />} />
         <Route path="finance-automation" element={<FinanceAutomation />} />
@@ -133,7 +134,7 @@ function AppRouter() {
         {/* Legacy redirects */}
         <Route path="genesis" element={<Navigate to="/idea-discovery" />} />
         <Route path="navigator" element={<Navigate to="/finance-automation" />} />
-        <Route path="website-builder" element={<Navigate to="/website-setup" />} />
+        <Route path="website-builder" element={<Navigate to="/ai-website-builder" />} />
       </Route>
 
       {/* Catch all - redirect to dashboard */}
