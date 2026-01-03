@@ -511,6 +511,51 @@ export default function BusinessRegistration() {
     understandsOfficialRegistration: false
   });
 
+  // Dynamic fees state
+  const [dynamicFees, setDynamicFees] = useState({});
+  const [feesLoaded, setFeesLoaded] = useState(false);
+
+  // Fetch dynamic fees on component mount
+  useEffect(() => {
+    const fetchFees = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/company-profile/fees`);
+        if (response.data?.fees) {
+          const feesMap = {};
+          response.data.fees.forEach(fee => {
+            feesMap[fee.businessType] = {
+              onlineFee: fee.onlineFee,
+              paperFee: fee.paperFee,
+              sameDayFee: fee.sameDayFee,
+              source: fee.sourceUrl,
+              lastUpdated: fee.lastUpdated
+            };
+          });
+          setDynamicFees(feesMap);
+          setFeesLoaded(true);
+        }
+      } catch (error) {
+        console.error('Failed to fetch dynamic fees:', error);
+        // Continue with hardcoded fees as fallback
+        setFeesLoaded(true);
+      }
+    };
+    fetchFees();
+  }, []);
+
+  // Helper to get fee display for a business type
+  const getFeeDisplay = (businessTypeId) => {
+    if (dynamicFees[businessTypeId]) {
+      const fee = dynamicFees[businessTypeId];
+      if (fee.onlineFee === 'Free') return 'Free';
+      if (fee.paperFee) return `${fee.onlineFee} (online) / ${fee.paperFee} (paper)`;
+      return fee.onlineFee;
+    }
+    // Fallback to hardcoded fee from BUSINESS_TYPES
+    const bt = BUSINESS_TYPES.find(t => t.id === businessTypeId);
+    return bt?.registrationFee || 'Contact authority';
+  };
+
   // Get auth headers
   const getHeaders = () => {
     const token = localStorage.getItem('token');
