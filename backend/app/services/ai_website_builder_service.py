@@ -741,3 +741,448 @@ Generate the refined HTML starting with <!DOCTYPE html>:"""
             "workspace_id": workspace_id
         })
         return result.deleted_count > 0
+    
+    @staticmethod
+    def _get_language_texts(language: str) -> dict:
+        """Get localized UI texts for the generated website"""
+        texts = {
+            "en": {
+                "tagline": "Transforming Your Business",
+                "cta": "Get Started",
+                "learn_more": "Learn More",
+                "features": "Features",
+                "about": "About",
+                "contact": "Contact",
+                "why_choose": "Why Choose Us",
+                "discover_benefits": "Discover the benefits that set us apart from the competition.",
+                "fast_results": "Fast Results",
+                "fast_results_desc": "See measurable improvements quickly with our streamlined processes.",
+                "trusted": "Trusted & Reliable",
+                "trusted_desc": "Join thousands of satisfied clients who trust us with their success.",
+                "support": "24/7 Support",
+                "support_desc": "Our dedicated team is always here when you need assistance.",
+                "happy_clients": "Happy Clients",
+                "satisfaction": "Satisfaction Rate",
+                "experience": "Years Experience",
+                "testimonials": "What Our Clients Say",
+                "testimonial_1": "Working with {company} has been transformative for our business. Highly recommended!",
+                "testimonial_2": "Professional, responsive, and results-driven. The best decision we made.",
+                "hero_title": "Transform Your Business Today",
+                "rights": "All rights reserved.",
+                "contact_us": "Contact Us",
+                "get_in_touch": "Get in Touch",
+                "ready_start": "Ready to get started? We'd love to hear from you.",
+                "name": "Your Name",
+                "email": "Email Address",
+                "phone": "Phone Number",
+                "message": "Your Message",
+                "send_message": "Send Message",
+                "submitting": "Sending...",
+                "thank_you": "Thank You!",
+                "will_contact": "We'll be in touch shortly.",
+                "error_message": "Something went wrong. Please try again."
+            },
+            "es": {
+                "tagline": "Transformando Tu Negocio",
+                "cta": "Comenzar",
+                "learn_more": "Más Información",
+                "features": "Características",
+                "about": "Nosotros",
+                "contact": "Contacto",
+                "why_choose": "¿Por Qué Elegirnos?",
+                "discover_benefits": "Descubre los beneficios que nos diferencian de la competencia.",
+                "fast_results": "Resultados Rápidos",
+                "fast_results_desc": "Ve mejoras medibles rápidamente con nuestros procesos optimizados.",
+                "trusted": "Confiable y Seguro",
+                "trusted_desc": "Únete a miles de clientes satisfechos que confían en nosotros.",
+                "support": "Soporte 24/7",
+                "support_desc": "Nuestro equipo dedicado siempre está aquí cuando necesitas ayuda.",
+                "happy_clients": "Clientes Felices",
+                "satisfaction": "Tasa de Satisfacción",
+                "experience": "Años de Experiencia",
+                "testimonials": "Lo Que Dicen Nuestros Clientes",
+                "testimonial_1": "Trabajar con {company} ha sido transformador para nuestro negocio. ¡Muy recomendado!",
+                "testimonial_2": "Profesional, receptivo y orientado a resultados. La mejor decisión que tomamos.",
+                "hero_title": "Transforma Tu Negocio Hoy",
+                "rights": "Todos los derechos reservados.",
+                "contact_us": "Contáctanos",
+                "get_in_touch": "Ponte en Contacto",
+                "ready_start": "¿Listo para comenzar? Nos encantaría saber de ti.",
+                "name": "Tu Nombre",
+                "email": "Correo Electrónico",
+                "phone": "Teléfono",
+                "message": "Tu Mensaje",
+                "send_message": "Enviar Mensaje",
+                "submitting": "Enviando...",
+                "thank_you": "¡Gracias!",
+                "will_contact": "Nos pondremos en contacto pronto.",
+                "error_message": "Algo salió mal. Por favor intenta de nuevo."
+            },
+            "fr": {
+                "tagline": "Transformer Votre Entreprise",
+                "cta": "Commencer",
+                "learn_more": "En Savoir Plus",
+                "features": "Fonctionnalités",
+                "about": "À Propos",
+                "contact": "Contact",
+                "why_choose": "Pourquoi Nous Choisir",
+                "discover_benefits": "Découvrez les avantages qui nous distinguent de la concurrence.",
+                "fast_results": "Résultats Rapides",
+                "fast_results_desc": "Constatez des améliorations mesurables rapidement grâce à nos processus optimisés.",
+                "trusted": "Fiable et Sûr",
+                "trusted_desc": "Rejoignez des milliers de clients satisfaits qui nous font confiance.",
+                "support": "Support 24/7",
+                "support_desc": "Notre équipe dédiée est toujours là quand vous avez besoin d'aide.",
+                "happy_clients": "Clients Satisfaits",
+                "satisfaction": "Taux de Satisfaction",
+                "experience": "Années d'Expérience",
+                "testimonials": "Ce Que Disent Nos Clients",
+                "testimonial_1": "Travailler avec {company} a été transformateur pour notre entreprise. Fortement recommandé!",
+                "testimonial_2": "Professionnel, réactif et axé sur les résultats. La meilleure décision que nous ayons prise.",
+                "hero_title": "Transformez Votre Entreprise Aujourd'hui",
+                "rights": "Tous droits réservés.",
+                "contact_us": "Contactez-Nous",
+                "get_in_touch": "Entrer en Contact",
+                "ready_start": "Prêt à commencer? Nous serions ravis de vous entendre.",
+                "name": "Votre Nom",
+                "email": "Adresse Email",
+                "phone": "Téléphone",
+                "message": "Votre Message",
+                "send_message": "Envoyer le Message",
+                "submitting": "Envoi...",
+                "thank_you": "Merci!",
+                "will_contact": "Nous vous contacterons bientôt.",
+                "error_message": "Une erreur s'est produite. Veuillez réessayer."
+            },
+            "de": {
+                "tagline": "Transformieren Sie Ihr Unternehmen",
+                "cta": "Loslegen",
+                "learn_more": "Mehr Erfahren",
+                "features": "Funktionen",
+                "about": "Über Uns",
+                "contact": "Kontakt",
+                "why_choose": "Warum Uns Wählen",
+                "discover_benefits": "Entdecken Sie die Vorteile, die uns von der Konkurrenz abheben.",
+                "fast_results": "Schnelle Ergebnisse",
+                "fast_results_desc": "Sehen Sie schnell messbare Verbesserungen mit unseren optimierten Prozessen.",
+                "trusted": "Vertrauenswürdig & Zuverlässig",
+                "trusted_desc": "Schließen Sie sich Tausenden zufriedener Kunden an, die uns vertrauen.",
+                "support": "24/7 Support",
+                "support_desc": "Unser engagiertes Team ist immer für Sie da.",
+                "happy_clients": "Zufriedene Kunden",
+                "satisfaction": "Zufriedenheitsrate",
+                "experience": "Jahre Erfahrung",
+                "testimonials": "Was Unsere Kunden Sagen",
+                "testimonial_1": "Die Zusammenarbeit mit {company} war transformativ für unser Geschäft. Sehr empfehlenswert!",
+                "testimonial_2": "Professionell, reaktionsschnell und ergebnisorientiert. Die beste Entscheidung.",
+                "hero_title": "Transformieren Sie Ihr Unternehmen Heute",
+                "rights": "Alle Rechte vorbehalten.",
+                "contact_us": "Kontaktieren Sie Uns",
+                "get_in_touch": "Kontakt Aufnehmen",
+                "ready_start": "Bereit loszulegen? Wir freuen uns von Ihnen zu hören.",
+                "name": "Ihr Name",
+                "email": "E-Mail-Adresse",
+                "phone": "Telefonnummer",
+                "message": "Ihre Nachricht",
+                "send_message": "Nachricht Senden",
+                "submitting": "Senden...",
+                "thank_you": "Vielen Dank!",
+                "will_contact": "Wir melden uns in Kürze.",
+                "error_message": "Etwas ist schief gelaufen. Bitte versuchen Sie es erneut."
+            }
+        }
+        # Return English as fallback for unsupported languages
+        return texts.get(language, texts["en"])
+    
+    @staticmethod
+    def _generate_lead_form_html(workspace_id: str, company_name: str, colors: dict, texts: dict) -> str:
+        """Generate lead capture form HTML section"""
+        api_base = os.environ.get("FRONTEND_URL", "")
+        
+        return f'''
+    <section id="contact" class="py-20 bg-gray-900">
+        <div class="container mx-auto px-6">
+            <div class="max-w-2xl mx-auto text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">{texts["get_in_touch"]}</h2>
+                <p class="text-gray-400">{texts["ready_start"]}</p>
+            </div>
+            <form id="lead-capture-form" onsubmit="submitLeadForm(event)" class="max-w-lg mx-auto bg-gray-800 p-8 rounded-2xl">
+                <div class="space-y-6">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-300 mb-2">{texts["name"]}</label>
+                        <input type="text" name="name" id="name" required
+                            class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[{colors['primary']}] focus:border-transparent"
+                            placeholder="{texts["name"]}">
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-300 mb-2">{texts["email"]}</label>
+                        <input type="email" name="email" id="email" required
+                            class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[{colors['primary']}] focus:border-transparent"
+                            placeholder="{texts["email"]}">
+                    </div>
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-300 mb-2">{texts["phone"]}</label>
+                        <input type="tel" name="phone" id="phone"
+                            class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[{colors['primary']}] focus:border-transparent"
+                            placeholder="{texts["phone"]}">
+                    </div>
+                    <div>
+                        <label for="message" class="block text-sm font-medium text-gray-300 mb-2">{texts["message"]}</label>
+                        <textarea name="message" id="message" rows="4" required
+                            class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[{colors['primary']}] focus:border-transparent resize-none"
+                            placeholder="{texts["message"]}"></textarea>
+                    </div>
+                    <button type="submit"
+                        class="w-full px-6 py-4 rounded-lg gradient-primary text-white font-semibold hover:opacity-90 transition flex items-center justify-center">
+                        <span>{texts["send_message"]}</span>
+                        <i class="fas fa-paper-plane ml-2"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>'''
+    
+    @staticmethod
+    async def deploy_to_vercel(
+        website_id: str,
+        workspace_id: str,
+        user_id: str,
+        project_name: Optional[str] = None
+    ) -> dict:
+        """Deploy website to Vercel"""
+        db = get_db()
+        
+        website = await db.ai_websites.find_one({
+            "id": website_id,
+            "workspace_id": workspace_id
+        })
+        
+        if not website:
+            raise HTTPException(status_code=404, detail="Website not found")
+        
+        html_content = website.get("htmlContent", "")
+        
+        if not VERCEL_API_KEY or VERCEL_API_KEY.startswith("REPLACE"):
+            # Return mock deployment result
+            mock_url = f"https://{project_name or 'enterprate-site'}-{uuid.uuid4().hex[:8]}.vercel.app"
+            
+            await db.ai_websites.update_one(
+                {"id": website_id},
+                {
+                    "$set": {
+                        "status": "deployed",
+                        "deploymentUrl": mock_url,
+                        "deploymentPlatform": "vercel",
+                        "deployedAt": datetime.now(timezone.utc).isoformat()
+                    }
+                }
+            )
+            
+            return {
+                "success": True,
+                "siteUrl": mock_url,
+                "message": "Website deployed successfully (simulated - configure VERCEL_API_KEY for real deployment)",
+                "downloadUrl": f"/api/websites/{website_id}/download"
+            }
+        
+        try:
+            import base64
+            
+            async with httpx.AsyncClient() as client:
+                # Create deployment using Vercel API v13
+                files = [
+                    {
+                        "file": "index.html",
+                        "data": base64.b64encode(html_content.encode()).decode()
+                    }
+                ]
+                
+                deploy_response = await client.post(
+                    f"{VERCEL_API_BASE}/v13/deployments",
+                    headers={
+                        "Authorization": f"Bearer {VERCEL_API_KEY}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "name": project_name or f"enterprate-site-{uuid.uuid4().hex[:8]}",
+                        "files": files,
+                        "projectSettings": {
+                            "framework": None
+                        }
+                    },
+                    timeout=60.0
+                )
+                
+                if deploy_response.status_code not in [200, 201]:
+                    raise Exception(f"Deployment failed: {deploy_response.text}")
+                
+                deploy_data = deploy_response.json()
+                site_url = f"https://{deploy_data.get('url', '')}"
+                
+                await db.ai_websites.update_one(
+                    {"id": website_id},
+                    {
+                        "$set": {
+                            "status": "deployed",
+                            "deploymentUrl": site_url,
+                            "deploymentPlatform": "vercel",
+                            "vercelDeploymentId": deploy_data.get("id"),
+                            "deployedAt": datetime.now(timezone.utc).isoformat()
+                        }
+                    }
+                )
+                
+                return {
+                    "success": True,
+                    "siteUrl": site_url,
+                    "deploymentId": deploy_data.get("id"),
+                    "message": "Website deployed to Vercel successfully!",
+                    "downloadUrl": f"/api/websites/{website_id}/download"
+                }
+                
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Vercel deployment failed: {str(e)}")
+    
+    @staticmethod
+    async def deploy_to_railway(
+        website_id: str,
+        workspace_id: str,
+        user_id: str,
+        project_name: Optional[str] = None
+    ) -> dict:
+        """Deploy website to Railway"""
+        db = get_db()
+        
+        website = await db.ai_websites.find_one({
+            "id": website_id,
+            "workspace_id": workspace_id
+        })
+        
+        if not website:
+            raise HTTPException(status_code=404, detail="Website not found")
+        
+        if not RAILWAY_API_KEY or RAILWAY_API_KEY.startswith("REPLACE"):
+            # Return mock deployment result
+            mock_url = f"https://{project_name or 'enterprate-site'}-{uuid.uuid4().hex[:8]}.up.railway.app"
+            
+            await db.ai_websites.update_one(
+                {"id": website_id},
+                {
+                    "$set": {
+                        "status": "deployed",
+                        "deploymentUrl": mock_url,
+                        "deploymentPlatform": "railway",
+                        "deployedAt": datetime.now(timezone.utc).isoformat()
+                    }
+                }
+            )
+            
+            return {
+                "success": True,
+                "siteUrl": mock_url,
+                "message": "Website deployed successfully (simulated - configure RAILWAY_API_KEY for real deployment)",
+                "downloadUrl": f"/api/websites/{website_id}/download"
+            }
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                # Railway uses GraphQL API
+                graphql_query = """
+                mutation deployStaticSite($input: DeployInput!) {
+                    deploy(input: $input) {
+                        id
+                        staticUrl
+                    }
+                }
+                """
+                
+                response = await client.post(
+                    RAILWAY_API_BASE,
+                    headers={
+                        "Authorization": f"Bearer {RAILWAY_API_KEY}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "query": graphql_query,
+                        "variables": {
+                            "input": {
+                                "projectName": project_name or f"enterprate-site-{uuid.uuid4().hex[:8]}"
+                            }
+                        }
+                    },
+                    timeout=60.0
+                )
+                
+                if response.status_code not in [200, 201]:
+                    raise Exception(f"Railway API error: {response.text}")
+                
+                data = response.json()
+                deploy_data = data.get("data", {}).get("deploy", {})
+                site_url = deploy_data.get("staticUrl", "")
+                
+                await db.ai_websites.update_one(
+                    {"id": website_id},
+                    {
+                        "$set": {
+                            "status": "deployed",
+                            "deploymentUrl": site_url,
+                            "deploymentPlatform": "railway",
+                            "railwayDeploymentId": deploy_data.get("id"),
+                            "deployedAt": datetime.now(timezone.utc).isoformat()
+                        }
+                    }
+                )
+                
+                return {
+                    "success": True,
+                    "siteUrl": site_url,
+                    "message": "Website deployed to Railway successfully!",
+                    "downloadUrl": f"/api/websites/{website_id}/download"
+                }
+                
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Railway deployment failed: {str(e)}")
+    
+    @staticmethod
+    async def handle_lead_submission(
+        workspace_id: str,
+        name: str,
+        email: str,
+        phone: Optional[str] = None,
+        message: Optional[str] = None,
+        source: str = "website_form"
+    ) -> dict:
+        """Handle lead form submission from generated websites"""
+        db = get_db()
+        
+        # Create lead record
+        lead_id = str(uuid.uuid4())
+        now = datetime.now(timezone.utc).isoformat()
+        
+        lead = {
+            "id": lead_id,
+            "workspace_id": workspace_id,
+            "name": name,
+            "email": email,
+            "phone": phone,
+            "message": message,
+            "source": source,
+            "status": "new",
+            "createdAt": now,
+            "updatedAt": now
+        }
+        
+        await db.leads.insert_one(lead)
+        
+        # Try to send email notification
+        try:
+            from app.services.notification_service import NotificationService
+            await NotificationService.notify_new_lead(workspace_id, lead)
+        except Exception as e:
+            print(f"Failed to send lead notification: {e}")
+        
+        return {
+            "success": True,
+            "leadId": lead_id,
+            "message": "Thank you for your submission!"
+        }
