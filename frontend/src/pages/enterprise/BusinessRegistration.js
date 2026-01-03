@@ -978,7 +978,7 @@ You must complete the actual registration at Companies House.
                           
                           <div className="flex flex-wrap items-center gap-3 mt-2 text-xs">
                             <span className="text-blue-600 font-medium">
-                              Fee: {type.registrationFee}
+                              Fee: {getFeeDisplay(type.id)}
                             </span>
                           </div>
                           
