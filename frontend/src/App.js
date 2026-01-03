@@ -19,6 +19,7 @@ import {
   Dashboard,
   IdeaDiscovery,
   WebsiteSetup,
+  AIWebsiteBuilder,
   BusinessRegistration,
   BusinessBlueprint,
   FinanceAutomation,
