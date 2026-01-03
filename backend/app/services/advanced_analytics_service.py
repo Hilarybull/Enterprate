@@ -358,7 +358,6 @@ class AdvancedAnalyticsService:
     @staticmethod
     async def generate_business_report(workspace_id: str, report_type: str = "monthly") -> dict:
         """Generate a comprehensive business report"""
-        db = get_db()
         now = datetime.now(timezone.utc)
         
         days = 30 if report_type == "monthly" else 7 if report_type == "weekly" else 90
