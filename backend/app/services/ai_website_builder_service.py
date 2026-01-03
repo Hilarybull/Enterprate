@@ -1,7 +1,8 @@
 """
 AI Website Builder Service
 Converts business descriptions into high-converting landing pages using AIDA framework.
-Integrates with Gemini 2.0 Flash for content generation and Netlify for deployment.
+Integrates with Gemini 2.0 Flash for content generation and multiple deployment platforms.
+Supports multi-language generation and lead capture forms.
 """
 import os
 import uuid
@@ -21,13 +22,20 @@ except ImportError:
 # API Keys (from environment)
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", os.environ.get("EMERGENT_LLM_KEY", ""))
 NETLIFY_API_KEY = os.environ.get("NETLIFY_API_KEY", "")
+VERCEL_API_KEY = os.environ.get("VERCEL_API_KEY", "")
+RAILWAY_API_KEY = os.environ.get("RAILWAY_API_KEY", "")
+
+# API Base URLs
 NETLIFY_API_BASE = "https://api.netlify.com/api/v1"
+VERCEL_API_BASE = "https://api.vercel.com"
+RAILWAY_API_BASE = "https://backboard.railway.app/graphql/v2"
 
 
 class AIWebsiteBuilderService:
     """
     Lead AI Architect & Deployment Agent.
     Converts user business descriptions into production-ready, high-converting landing pages.
+    Supports multi-language, lead capture, and multiple deployment platforms.
     """
     
     # AIDA Framework sections
@@ -46,6 +54,32 @@ class AIWebsiteBuilderService:
         "minimal": {"primary": "#18181b", "secondary": "#27272a", "accent": "#3f3f46"},
         "warm": {"primary": "#ea580c", "secondary": "#c2410c", "accent": "#facc15"},
         "nature": {"primary": "#16a34a", "secondary": "#15803d", "accent": "#0d9488"}
+    }
+    
+    # Supported languages
+    SUPPORTED_LANGUAGES = {
+        "en": {"name": "English", "direction": "ltr"},
+        "es": {"name": "Spanish", "direction": "ltr"},
+        "fr": {"name": "French", "direction": "ltr"},
+        "de": {"name": "German", "direction": "ltr"},
+        "it": {"name": "Italian", "direction": "ltr"},
+        "pt": {"name": "Portuguese", "direction": "ltr"},
+        "nl": {"name": "Dutch", "direction": "ltr"},
+        "pl": {"name": "Polish", "direction": "ltr"},
+        "ru": {"name": "Russian", "direction": "ltr"},
+        "zh": {"name": "Chinese (Simplified)", "direction": "ltr"},
+        "ja": {"name": "Japanese", "direction": "ltr"},
+        "ko": {"name": "Korean", "direction": "ltr"},
+        "ar": {"name": "Arabic", "direction": "rtl"},
+        "hi": {"name": "Hindi", "direction": "ltr"},
+        "tr": {"name": "Turkish", "direction": "ltr"}
+    }
+    
+    # Deployment platforms
+    DEPLOYMENT_PLATFORMS = {
+        "netlify": {"name": "Netlify", "key_env": "NETLIFY_API_KEY"},
+        "vercel": {"name": "Vercel", "key_env": "VERCEL_API_KEY"},
+        "railway": {"name": "Railway", "key_env": "RAILWAY_API_KEY"}
     }
     
     @staticmethod
