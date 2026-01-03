@@ -864,6 +864,12 @@ You must complete the actual registration at Companies House.
             <div>
               <h2 className="text-xl font-semibold mb-2">Companies and Entities You Can Register</h2>
               <p className="text-gray-500">Choose the legal structure that best fits your business needs. Different structures have different registration authorities, fees, and requirements.</p>
+              {feesLoaded && Object.keys(dynamicFees).length > 0 && (
+                <p className="text-xs text-green-600 mt-2 flex items-center">
+                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                  Fees updated from official sources
+                </p>
+              )}
             </div>
 
             {/* Companies House Registered Entities */}
