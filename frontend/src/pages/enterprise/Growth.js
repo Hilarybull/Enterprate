@@ -467,12 +467,266 @@ export default function Growth() {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="agent" data-testid="growth-agent-tab">
+            <Brain className="mr-2" size={16} /> Growth Agent
+          </TabsTrigger>
           <TabsTrigger value="leads">Leads</TabsTrigger>
           <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
           <TabsTrigger value="social">Social Media</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
+
+        {/* GROWTH AGENT TAB */}
+        <TabsContent value="agent" className="mt-6 space-y-6">
+          {/* Performance Overview */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center">
+                  <Brain className="mr-2 text-purple-600" size={24} />
+                  Proactive Growth Agent
+                </CardTitle>
+                <CardDescription>AI-powered monitoring and growth recommendations</CardDescription>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={loadPerformanceAnalysis}
+                disabled={loadingAnalysis}
+              >
+                {loadingAnalysis ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2" size={16} />
+                )}
+                Refresh Analysis
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {loadingAnalysis ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                  <span className="ml-3 text-gray-500">Analyzing business performance...</span>
+                </div>
+              ) : performanceData ? (
+                <div className="space-y-6">
+                  {/* Health Score */}
+                  <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50">
+                    <div>
+                      <p className="text-sm text-gray-600">Business Health Score</p>
+                      <div className="flex items-center mt-1">
+                        <span className={`text-4xl font-bold ${getHealthScoreColor(performanceData.healthScore)}`}>
+                          {performanceData.healthScore}
+                        </span>
+                        <span className="text-gray-400 text-lg ml-1">/100</span>
+                        <span className={`ml-4 px-3 py-1 rounded-full text-sm ${getHealthScoreBg(performanceData.healthScore)} ${getHealthScoreColor(performanceData.healthScore)}`}>
+                          {performanceData.status === 'healthy' ? 'Healthy' : performanceData.status === 'warning' ? 'Needs Attention' : 'Critical'}
+                        </span>
+                      </div>
+                    </div>
+                    <Activity className={`${getHealthScoreColor(performanceData.healthScore)}`} size={48} />
+                  </div>
+
+                  {/* Metrics Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Leads Metric */}
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-gray-600">Lead Generation</span>
+                        {performanceData.leads?.trend === 'up' ? (
+                          <TrendingUp className="text-green-500" size={16} />
+                        ) : performanceData.leads?.trend === 'down' ? (
+                          <TrendingDown className="text-red-500" size={16} />
+                        ) : (
+                          <ArrowRight className="text-gray-400" size={16} />
+                        )}
+                      </div>
+                      <p className="text-2xl font-bold">{performanceData.leads?.currentPeriod || 0}</p>
+                      <p className={`text-sm ${performanceData.leads?.percentChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {performanceData.leads?.percentChange >= 0 ? '+' : ''}{performanceData.leads?.percentChange}% vs last month
+                      </p>
+                    </div>
+
+                    {/* Revenue Metric */}
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-gray-600">Revenue</span>
+                        {performanceData.revenue?.trend === 'up' ? (
+                          <TrendingUp className="text-green-500" size={16} />
+                        ) : performanceData.revenue?.trend === 'down' ? (
+                          <TrendingDown className="text-red-500" size={16} />
+                        ) : (
+                          <ArrowRight className="text-gray-400" size={16} />
+                        )}
+                      </div>
+                      <p className="text-2xl font-bold">£{(performanceData.revenue?.currentRevenue || 0).toLocaleString()}</p>
+                      <p className={`text-sm ${performanceData.revenue?.percentChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {performanceData.revenue?.percentChange >= 0 ? '+' : ''}{performanceData.revenue?.percentChange}% vs last month
+                      </p>
+                    </div>
+
+                    {/* Campaigns Metric */}
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-gray-600">Active Campaigns</span>
+                        <Megaphone className="text-purple-500" size={16} />
+                      </div>
+                      <p className="text-2xl font-bold">{performanceData.campaigns?.activeCampaigns || 0}</p>
+                      <p className="text-sm text-gray-500">
+                        {performanceData.campaigns?.totalConversions || 0} total conversions
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Alerts */}
+                  {performanceData.alerts?.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="font-semibold flex items-center">
+                        <AlertTriangle className="mr-2 text-yellow-500" size={18} />
+                        Alerts & Opportunities
+                      </h4>
+                      {performanceData.alerts.map((alert) => (
+                        <div 
+                          key={alert.id} 
+                          className={`p-4 rounded-lg border ${getSeverityColor(alert.severity)}`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-start space-x-3">
+                              {getSeverityIcon(alert.severity)}
+                              <div>
+                                <h5 className="font-medium">{alert.title}</h5>
+                                <p className="text-sm mt-1 opacity-80">{alert.message}</p>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() => handleGenerateRecommendation(alert.suggestedAction, alert.id)}
+                              disabled={generatingRec === alert.id}
+                              className="gradient-primary border-0"
+                            >
+                              {generatingRec === alert.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <Zap className="mr-1" size={14} />
+                                  {alert.actionLabel || 'Get Recommendation'}
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {performanceData.alerts?.length === 0 && (
+                    <div className="text-center py-8 bg-green-50 rounded-lg">
+                      <CheckCircle2 className="mx-auto mb-2 text-green-500" size={48} />
+                      <p className="text-green-700 font-medium">All systems healthy!</p>
+                      <p className="text-sm text-green-600">No immediate actions required</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Brain className="mx-auto mb-2 text-gray-300" size={48} />
+                  <p className="text-gray-500">Click "Refresh Analysis" to analyze your business performance</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Pending Recommendations */}
+          {recommendations.filter(r => r.status === 'pending').length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Pending Recommendations</CardTitle>
+                <CardDescription>Review and approve AI-generated growth actions</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {recommendations.filter(r => r.status === 'pending').map((rec) => (
+                  <div key={rec.id} className="p-4 border rounded-lg bg-purple-50 border-purple-200">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="font-semibold text-purple-800">{rec.recommendation?.title || rec.title}</h4>
+                        <p className="text-sm text-purple-700 mt-1">{rec.recommendation?.description || rec.description}</p>
+                        <div className="flex items-center space-x-4 mt-3 text-xs text-purple-600">
+                          <span>Expected: {rec.recommendation?.expectedOutcome || rec.expectedOutcome}</span>
+                          <span>Duration: {rec.recommendation?.duration || rec.duration}</span>
+                        </div>
+                        {(rec.recommendation?.actions || rec.actions)?.length > 0 && (
+                          <div className="mt-3 p-2 bg-white rounded">
+                            <p className="text-xs font-medium text-gray-600 mb-1">Proposed Actions:</p>
+                            <ul className="text-xs text-gray-500 space-y-1">
+                              {(rec.recommendation?.actions || rec.actions).map((action, i) => (
+                                <li key={i}>• {action.type}: {action.platform || action.target || action.content_type || 'Execute'}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRejectRecommendation(rec.id)}
+                          disabled={processingRec === rec.id}
+                          className="text-red-600 border-red-200 hover:bg-red-50"
+                        >
+                          <XCircle size={14} className="mr-1" />
+                          Reject
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleApproveRecommendation(rec.id)}
+                          disabled={processingRec === rec.id}
+                          className="gradient-primary border-0"
+                        >
+                          {processingRec === rec.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <CheckCircle2 size={14} className="mr-1" />
+                              Approve & Execute
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Recommendation History */}
+          {recommendations.filter(r => r.status !== 'pending').length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Recommendation History</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {recommendations.filter(r => r.status !== 'pending').slice(0, 5).map((rec) => (
+                    <div key={rec.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        {rec.status === 'approved' ? (
+                          <CheckCircle2 className="text-green-500" size={18} />
+                        ) : (
+                          <XCircle className="text-red-500" size={18} />
+                        )}
+                        <span className="text-sm">{rec.recommendation?.title || rec.title || 'Recommendation'}</span>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded ${rec.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        {rec.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
 
         {/* LEADS TAB */}
         <TabsContent value="leads" className="mt-6">
