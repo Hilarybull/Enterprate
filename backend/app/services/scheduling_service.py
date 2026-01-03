@@ -36,6 +36,14 @@ class SchedulingService:
         "instagram": {
             "weekday": ["07:00", "12:00", "19:00", "21:00"],
             "weekend": ["10:00", "14:00", "20:00"]
+        },
+        "tiktok": {
+            "weekday": ["07:00", "12:00", "19:00", "22:00"],
+            "weekend": ["09:00", "12:00", "19:00", "22:00"]
+        },
+        "youtube": {
+            "weekday": ["14:00", "15:00", "16:00"],
+            "weekend": ["09:00", "10:00", "11:00"]
         }
     }
     
@@ -44,7 +52,9 @@ class SchedulingService:
         "linkedin": [1, 2, 3, 4],  # Tue-Fri
         "twitter": [1, 2, 3, 4],   # Tue-Fri
         "facebook": [3, 4, 5],     # Thu-Sat
-        "instagram": [0, 1, 2, 6]  # Mon-Wed, Sun
+        "instagram": [0, 1, 2, 6], # Mon-Wed, Sun
+        "tiktok": [1, 2, 3, 4, 5, 6],  # Tue-Sun
+        "youtube": [3, 4, 5]       # Thu-Sat
     }
     
     @staticmethod
