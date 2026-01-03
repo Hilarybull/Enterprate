@@ -548,15 +548,249 @@ export default function Growth() {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="agent" data-testid="growth-agent-tab">
-            <Brain className="mr-2" size={16} /> Growth Agent
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 gap-1">
+          <TabsTrigger value="agent" data-testid="growth-agent-tab" className="text-xs md:text-sm">
+            <Brain className="mr-1 md:mr-2" size={14} /> Agent
           </TabsTrigger>
-          <TabsTrigger value="leads">Leads</TabsTrigger>
-          <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-          <TabsTrigger value="social">Social Media</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="dashboard" data-testid="dashboard-tab" className="text-xs md:text-sm">
+            <PieChart className="mr-1 md:mr-2" size={14} /> Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="leads" className="text-xs md:text-sm">Leads</TabsTrigger>
+          <TabsTrigger value="campaigns" className="text-xs md:text-sm">Campaigns</TabsTrigger>
+          <TabsTrigger value="social" className="text-xs md:text-sm">Social</TabsTrigger>
+          <TabsTrigger value="analytics" className="text-xs md:text-sm">Reports</TabsTrigger>
         </TabsList>
+
+        {/* ADVANCED DASHBOARD TAB */}
+        <TabsContent value="dashboard" className="mt-4 md:mt-6 space-y-4 md:space-y-6">
+          {loadingDashboard ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+              <span className="ml-3 text-gray-500">Loading dashboard...</span>
+            </div>
+          ) : dashboardData ? (
+            <>
+              {/* Overview Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                <Card className="bg-gradient-to-br from-green-50 to-green-100">
+                  <CardContent className="pt-4 md:pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs md:text-sm text-gray-600">Revenue</p>
+                        <p className="text-lg md:text-2xl font-bold text-green-700">
+                          £{(dashboardData.overview?.totalRevenue || 0).toLocaleString()}
+                        </p>
+                      </div>
+                      <DollarSign className="text-green-500 hidden md:block" size={32} />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-gradient-to-br from-blue-50 to-blue-100">
+                  <CardContent className="pt-4 md:pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs md:text-sm text-gray-600">Profit</p>
+                        <p className="text-lg md:text-2xl font-bold text-blue-700">
+                          £{(dashboardData.overview?.netProfit || 0).toLocaleString()}
+                        </p>
+                        <p className="text-xs text-blue-600">{dashboardData.overview?.profitMargin || 0}% margin</p>
+                      </div>
+                      <TrendingUp className="text-blue-500 hidden md:block" size={32} />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-gradient-to-br from-purple-50 to-purple-100">
+                  <CardContent className="pt-4 md:pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs md:text-sm text-gray-600">Total Leads</p>
+                        <p className="text-lg md:text-2xl font-bold text-purple-700">
+                          {dashboardData.growth?.totalLeads || 0}
+                        </p>
+                        <p className="text-xs text-purple-600">{dashboardData.growth?.conversionRate || 0}% converted</p>
+                      </div>
+                      <Users className="text-purple-500 hidden md:block" size={32} />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-gradient-to-br from-orange-50 to-orange-100">
+                  <CardContent className="pt-4 md:pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs md:text-sm text-gray-600">Campaigns</p>
+                        <p className="text-lg md:text-2xl font-bold text-orange-700">
+                          {dashboardData.growth?.activeCampaigns || 0}
+                        </p>
+                        <p className="text-xs text-orange-600">{dashboardData.growth?.totalConversions || 0} conversions</p>
+                      </div>
+                      <Megaphone className="text-orange-500 hidden md:block" size={32} />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Revenue Trends & Lead Funnel */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                {/* Revenue Trends */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-base md:text-lg">
+                      <LineChart className="mr-2 text-green-600" size={20} />
+                      Revenue Trends (30 Days)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {revenueTrends?.summary && (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-3 gap-2 md:gap-4 text-center">
+                          <div className="p-2 md:p-3 bg-green-50 rounded-lg">
+                            <p className="text-xs text-gray-500">Total Revenue</p>
+                            <p className="text-sm md:text-lg font-bold text-green-700">£{revenueTrends.summary.totalRevenue}</p>
+                          </div>
+                          <div className="p-2 md:p-3 bg-red-50 rounded-lg">
+                            <p className="text-xs text-gray-500">Total Expenses</p>
+                            <p className="text-sm md:text-lg font-bold text-red-700">£{revenueTrends.summary.totalExpenses}</p>
+                          </div>
+                          <div className="p-2 md:p-3 bg-blue-50 rounded-lg">
+                            <p className="text-xs text-gray-500">Net Profit</p>
+                            <p className="text-sm md:text-lg font-bold text-blue-700">£{revenueTrends.summary.totalProfit}</p>
+                          </div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500 mt-2">
+                          <span>Avg Daily: £{revenueTrends.summary.avgDailyRevenue}</span>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Lead Funnel */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-base md:text-lg">
+                      <Target className="mr-2 text-purple-600" size={20} />
+                      Lead Funnel
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {leadFunnel?.funnel && (
+                      <div className="space-y-3">
+                        {Object.entries(leadFunnel.funnel).map(([stage, count], idx) => (
+                          <div key={stage} className="flex items-center">
+                            <div className="w-20 md:w-24 text-xs md:text-sm">{stage}</div>
+                            <div className="flex-1 h-6 md:h-8 bg-gray-100 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-end pr-2"
+                                style={{ width: `${Math.max(10, (count / Math.max(leadFunnel.total, 1)) * 100)}%` }}
+                              >
+                                <span className="text-xs text-white font-medium">{count}</span>
+                              </div>
+                            </div>
+                            <div className="w-12 md:w-16 text-right text-xs text-gray-500">
+                              {leadFunnel.funnelRates[stage]}%
+                            </div>
+                          </div>
+                        ))}
+                        <div className="pt-2 border-t text-center">
+                          <span className="text-sm font-medium">Overall Conversion: </span>
+                          <span className="text-lg font-bold text-green-600">{leadFunnel.overallConversionRate}%</span>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Social & Scheduled Actions */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                {/* Social Platform Breakdown */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-base md:text-lg">
+                      <Share2 className="mr-2 text-blue-600" size={20} />
+                      Social Media Activity
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-3">
+                      {Object.entries(dashboardData.social?.platformBreakdown || {}).map(([platform, count]) => (
+                        <div key={platform} className="p-3 bg-gray-50 rounded-lg flex items-center">
+                          {platform === 'instagram' && <Instagram className="mr-2 text-pink-500" size={20} />}
+                          {platform === 'linkedin' && <Share2 className="mr-2 text-blue-600" size={20} />}
+                          {platform === 'twitter' && <Share2 className="mr-2 text-sky-500" size={20} />}
+                          {platform === 'facebook' && <Share2 className="mr-2 text-blue-700" size={20} />}
+                          <div>
+                            <p className="text-xs text-gray-500 capitalize">{platform}</p>
+                            <p className="font-bold">{count} posts</p>
+                          </div>
+                        </div>
+                      ))}
+                      {Object.keys(dashboardData.social?.platformBreakdown || {}).length === 0 && (
+                        <p className="col-span-2 text-center text-gray-500 py-4">No social posts yet</p>
+                      )}
+                    </div>
+                    <div className="mt-4 pt-4 border-t flex justify-between text-sm">
+                      <span>Total Posts: <strong>{dashboardData.social?.totalPosts || 0}</strong></span>
+                      <span>Scheduled: <strong>{dashboardData.social?.scheduledPosts || 0}</strong></span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Scheduled Actions */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-base md:text-lg">
+                      <Clock className="mr-2 text-orange-600" size={20} />
+                      Scheduled Actions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {scheduledActions.filter(a => a.status === 'scheduled').length > 0 ? (
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {scheduledActions.filter(a => a.status === 'scheduled').slice(0, 5).map((action) => (
+                          <div key={action.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                            <div className="flex items-center">
+                              {action.platform === 'instagram' && <Instagram className="mr-2 text-pink-500" size={16} />}
+                              {action.platform === 'linkedin' && <Share2 className="mr-2 text-blue-600" size={16} />}
+                              {action.platform !== 'instagram' && action.platform !== 'linkedin' && <Share2 className="mr-2 text-gray-500" size={16} />}
+                              <div>
+                                <p className="text-xs font-medium capitalize">{action.platform}</p>
+                                <p className="text-xs text-gray-500">{new Date(action.scheduledFor).toLocaleString()}</p>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-red-500 hover:text-red-700 h-6"
+                              onClick={() => cancelScheduledAction(action.id)}
+                            >
+                              <XCircle size={14} />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6 text-gray-500">
+                        <Clock className="mx-auto mb-2 text-gray-300" size={32} />
+                        <p className="text-sm">No scheduled actions</p>
+                        <p className="text-xs">Approve Growth Agent recommendations to schedule</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <PieChart className="mx-auto mb-2 text-gray-300" size={48} />
+              <p className="text-gray-500">Loading dashboard data...</p>
+              <Button onClick={loadDashboardData} className="mt-4">Refresh</Button>
+            </div>
+          )}
+        </TabsContent>
 
         {/* GROWTH AGENT TAB */}
         <TabsContent value="agent" className="mt-6 space-y-6">
