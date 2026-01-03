@@ -56,6 +56,110 @@ class AIWebsiteBuilderService:
         "nature": {"primary": "#16a34a", "secondary": "#15803d", "accent": "#0d9488"}
     }
     
+    # Quick Templates - Industry-specific pre-built templates
+    QUICK_TEMPLATES = {
+        "saas": {
+            "name": "SaaS / Tech Startup",
+            "icon": "code",
+            "description": "Perfect for software companies and tech startups",
+            "defaultColorScheme": "modern",
+            "heroImage": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1920&q=80",
+            "prompt": "A cutting-edge SaaS platform that helps businesses automate workflows and boost productivity. We offer cloud-based solutions with AI-powered analytics, seamless integrations, and enterprise-grade security. Our platform reduces manual work by 80% and increases team efficiency.",
+            "features": ["Cloud-based platform", "AI-powered analytics", "99.9% uptime guarantee", "24/7 support"],
+            "cta": "Start Free Trial"
+        },
+        "restaurant": {
+            "name": "Restaurant / Cafe",
+            "icon": "utensils",
+            "description": "Ideal for restaurants, cafes, and food businesses",
+            "defaultColorScheme": "warm",
+            "heroImage": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1920&q=80",
+            "prompt": "An award-winning restaurant offering authentic culinary experiences with locally-sourced ingredients. We serve innovative dishes that blend traditional recipes with modern techniques. Our cozy atmosphere and exceptional service make every meal memorable.",
+            "features": ["Farm-to-table ingredients", "Award-winning chef", "Private dining available", "Online reservations"],
+            "cta": "Reserve a Table"
+        },
+        "portfolio": {
+            "name": "Portfolio / Freelancer",
+            "icon": "briefcase",
+            "description": "Showcase your work and attract clients",
+            "defaultColorScheme": "minimal",
+            "heroImage": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&q=80",
+            "prompt": "A creative professional specializing in design and development. With over 5 years of experience working with Fortune 500 companies and innovative startups. I transform ideas into stunning digital experiences that drive results and exceed expectations.",
+            "features": ["5+ years experience", "50+ projects delivered", "Fortune 500 clients", "Fast turnaround"],
+            "cta": "View My Work"
+        },
+        "salon": {
+            "name": "Salon / Spa",
+            "icon": "scissors",
+            "description": "Beauty salons, spas, and wellness centers",
+            "defaultColorScheme": "creative",
+            "heroImage": "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1920&q=80",
+            "prompt": "A luxury salon and spa offering premium beauty and wellness services. Our expert stylists and therapists use top-tier products to deliver transformative experiences. From haircuts to massages, we help you look and feel your absolute best.",
+            "features": ["Expert stylists", "Premium products", "Relaxing atmosphere", "Online booking"],
+            "cta": "Book Appointment"
+        },
+        "beauty": {
+            "name": "Beauty / Cosmetics",
+            "icon": "sparkles",
+            "description": "Beauty brands and cosmetics businesses",
+            "defaultColorScheme": "creative",
+            "heroImage": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=1920&q=80",
+            "prompt": "A premium beauty brand creating innovative, cruelty-free cosmetics that enhance natural beauty. Our products are made with clean ingredients and designed for all skin types. Discover makeup that performs as good as it looks.",
+            "features": ["Cruelty-free", "Clean ingredients", "All skin types", "Free shipping over $50"],
+            "cta": "Shop Collection"
+        },
+        "online_store": {
+            "name": "Online Store / E-commerce",
+            "icon": "shopping-cart",
+            "description": "E-commerce and online retail businesses",
+            "defaultColorScheme": "modern",
+            "heroImage": "https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=1920&q=80",
+            "prompt": "An online store offering curated, high-quality products at competitive prices. We source the best items from around the world and deliver them to your doorstep with fast, reliable shipping. Shop with confidence with our satisfaction guarantee.",
+            "features": ["Free shipping", "30-day returns", "Secure checkout", "24/7 customer support"],
+            "cta": "Shop Now"
+        },
+        "consulting": {
+            "name": "Consulting Services",
+            "icon": "chart-line",
+            "description": "Business consultants and professional services",
+            "defaultColorScheme": "professional",
+            "heroImage": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1920&q=80",
+            "prompt": "A strategic consulting firm helping businesses achieve sustainable growth. Our experienced consultants provide data-driven insights and actionable strategies across marketing, operations, and digital transformation. We partner with you to unlock your full potential.",
+            "features": ["Expert consultants", "Data-driven approach", "Proven methodology", "Measurable results"],
+            "cta": "Schedule Consultation"
+        },
+        "fitness": {
+            "name": "Fitness / Gym",
+            "icon": "dumbbell",
+            "description": "Gyms, fitness centers, and personal trainers",
+            "defaultColorScheme": "nature",
+            "heroImage": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80",
+            "prompt": "A state-of-the-art fitness center dedicated to helping you achieve your health goals. Our certified trainers, modern equipment, and diverse classes cater to all fitness levels. Join our community and transform your body and mind.",
+            "features": ["Certified trainers", "Modern equipment", "Group classes", "Flexible membership"],
+            "cta": "Join Today"
+        },
+        "real_estate": {
+            "name": "Real Estate",
+            "icon": "home",
+            "description": "Real estate agents and property businesses",
+            "defaultColorScheme": "professional",
+            "heroImage": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1920&q=80",
+            "prompt": "A trusted real estate agency helping clients find their dream homes. With deep local market knowledge and a commitment to exceptional service, we guide you through every step of buying, selling, or renting property. Your perfect home awaits.",
+            "features": ["Local expertise", "Personalized service", "Virtual tours", "Market analysis"],
+            "cta": "Find Your Home"
+        },
+        "healthcare": {
+            "name": "Healthcare / Medical",
+            "icon": "heart-pulse",
+            "description": "Medical practices and healthcare providers",
+            "defaultColorScheme": "nature",
+            "heroImage": "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=1920&q=80",
+            "prompt": "A comprehensive healthcare practice providing compassionate, patient-centered care. Our team of experienced physicians and specialists use the latest medical technology to diagnose and treat a wide range of conditions. Your health is our priority.",
+            "features": ["Board-certified doctors", "Modern facilities", "Same-day appointments", "Telehealth available"],
+            "cta": "Book Appointment"
+        }
+    }
+    
     # Supported languages
     SUPPORTED_LANGUAGES = {
         "en": {"name": "English", "direction": "ltr"},
@@ -81,6 +185,11 @@ class AIWebsiteBuilderService:
         "vercel": {"name": "Vercel", "key_env": "VERCEL_API_KEY"},
         "railway": {"name": "Railway", "key_env": "RAILWAY_API_KEY"}
     }
+    
+    @staticmethod
+    def get_template(template_id: str) -> Optional[Dict]:
+        """Get a specific template by ID"""
+        return AIWebsiteBuilderService.QUICK_TEMPLATES.get(template_id)
     
     @staticmethod
     async def generate_website(
