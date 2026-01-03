@@ -398,7 +398,13 @@ class ProactiveGrowthService:
                         "type": "social_post",
                         "platform": "linkedin",
                         "content": None,  # Will be generated
-                        "schedule": "immediate"
+                        "schedule": "optimal"
+                    },
+                    {
+                        "type": "social_post",
+                        "platform": "instagram",
+                        "content": None,
+                        "schedule": "optimal"
                     },
                     {
                         "type": "email_campaign",
@@ -456,10 +462,73 @@ class ProactiveGrowthService:
                     {
                         "type": "social_post",
                         "platform": "all",
-                        "frequency": "3x per week"
+                        "frequency": "3x per week",
+                        "schedule": "optimal"
                     }
                 ],
                 "expectedOutcome": "Establish marketing presence",
+                "estimatedBudget": 0,
+                "duration": "ongoing"
+            },
+            "low_engagement": {
+                "title": "Content Optimization",
+                "type": "content_optimization",
+                "description": "Improve content quality and targeting to boost engagement",
+                "actions": [
+                    {
+                        "type": "content_audit",
+                        "target": "all_channels"
+                    },
+                    {
+                        "type": "social_post",
+                        "platform": "linkedin",
+                        "content": None,
+                        "schedule": "optimal"
+                    }
+                ],
+                "expectedOutcome": "2-3x improvement in engagement rates",
+                "estimatedBudget": 0,
+                "duration": "2 weeks"
+            },
+            "growth_opportunity": {
+                "title": "Scale Your Success",
+                "type": "scale_campaign",
+                "description": "Capitalize on current momentum with increased marketing spend",
+                "actions": [
+                    {
+                        "type": "budget_increase",
+                        "amount": "25%",
+                        "target": "top_performing"
+                    },
+                    {
+                        "type": "social_post",
+                        "platform": "all",
+                        "content": None,
+                        "schedule": "optimal"
+                    }
+                ],
+                "expectedOutcome": "Maintain and accelerate growth trajectory",
+                "estimatedBudget": 0,
+                "duration": "1 month"
+            },
+            "instagram_campaign": {
+                "title": "Instagram Marketing Launch",
+                "type": "instagram_campaign",
+                "description": "Expand your brand presence on Instagram with visual content",
+                "actions": [
+                    {
+                        "type": "social_post",
+                        "platform": "instagram",
+                        "content": None,
+                        "schedule": "optimal",
+                        "frequency": "daily"
+                    },
+                    {
+                        "type": "content_creation",
+                        "content_type": "instagram_carousel"
+                    }
+                ],
+                "expectedOutcome": "Build Instagram following and engagement",
                 "estimatedBudget": 0,
                 "duration": "ongoing"
             }
