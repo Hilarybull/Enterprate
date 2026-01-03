@@ -321,6 +321,106 @@ export default function Growth() {
     }
   };
 
+  // === PROACTIVE GROWTH AGENT ===
+  const loadPerformanceAnalysis = async () => {
+    setLoadingAnalysis(true);
+    try {
+      const response = await axios.get(`${API_URL}/growth/agent/analyze`, { headers: getHeaders() });
+      setPerformanceData(response.data);
+    } catch (error) {
+      console.error('Failed to load performance analysis:', error);
+    } finally {
+      setLoadingAnalysis(false);
+    }
+  };
+
+  const loadRecommendations = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/growth/agent/recommendations`, { headers: getHeaders() });
+      setRecommendations(response.data || []);
+    } catch (error) {
+      console.error('Failed to load recommendations:', error);
+    }
+  };
+
+  const handleGenerateRecommendation = async (alertType, alertId) => {
+    setGeneratingRec(alertId || alertType);
+    try {
+      const response = await axios.post(`${API_URL}/growth/agent/recommend`, 
+        { alertType, alertId },
+        { headers: getHeaders() }
+      );
+      toast.success('Growth recommendation generated!');
+      loadRecommendations();
+      return response.data;
+    } catch (error) {
+      toast.error('Failed to generate recommendation');
+    } finally {
+      setGeneratingRec(null);
+    }
+  };
+
+  const handleApproveRecommendation = async (recommendationId) => {
+    setProcessingRec(recommendationId);
+    try {
+      await axios.post(`${API_URL}/growth/agent/approve`,
+        { recommendationId },
+        { headers: getHeaders() }
+      );
+      toast.success('Recommendation approved and executed!');
+      loadRecommendations();
+      loadSocialPosts(); // Refresh social posts in case new ones were created
+      loadCampaigns();
+    } catch (error) {
+      toast.error('Failed to approve recommendation');
+    } finally {
+      setProcessingRec(null);
+    }
+  };
+
+  const handleRejectRecommendation = async (recommendationId, reason) => {
+    setProcessingRec(recommendationId);
+    try {
+      await axios.post(`${API_URL}/growth/agent/reject`,
+        { recommendationId, reason },
+        { headers: getHeaders() }
+      );
+      toast.success('Recommendation rejected');
+      loadRecommendations();
+    } catch (error) {
+      toast.error('Failed to reject recommendation');
+    } finally {
+      setProcessingRec(null);
+    }
+  };
+
+  const getHealthScoreColor = (score) => {
+    if (score >= 70) return 'text-green-600';
+    if (score >= 40) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const getHealthScoreBg = (score) => {
+    if (score >= 70) return 'bg-green-100';
+    if (score >= 40) return 'bg-yellow-100';
+    return 'bg-red-100';
+  };
+
+  const getSeverityColor = (severity) => {
+    const colors = {
+      critical: 'bg-red-100 text-red-700 border-red-200',
+      warning: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      info: 'bg-blue-100 text-blue-700 border-blue-200'
+    };
+    return colors[severity] || colors.info;
+  };
+
+  const getSeverityIcon = (severity) => {
+    if (severity === 'critical') return <AlertTriangle className="text-red-500" size={18} />;
+    if (severity === 'warning') return <AlertTriangle className="text-yellow-500" size={18} />;
+    return <Activity className="text-blue-500" size={18} />;
+  };
+
   const getStatusColor = (status) => {
     const colors = {
       NEW: 'bg-blue-100 text-blue-700',
