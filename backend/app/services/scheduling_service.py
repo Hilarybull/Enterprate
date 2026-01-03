@@ -157,6 +157,18 @@ class SchedulingService:
                 base_score += 15
             elif hour in [10, 12, 14, 15]:
                 base_score += 10
+        elif platform == "tiktok":
+            # Best times: 7am, 12pm, 7pm, 10pm
+            if hour in [7, 12, 19, 22]:
+                base_score += 15
+            elif hour in [9, 11, 18, 20, 21]:
+                base_score += 10
+        elif platform == "youtube":
+            # Best times: 2pm, 3pm, 4pm (weekdays), morning (weekends)
+            if hour in [14, 15, 16]:
+                base_score += 15
+            elif hour in [12, 13, 17, 18]:
+                base_score += 10
         
         # Weekend penalty for B2B platforms
         if platform == "linkedin" and day_of_week >= 5:
