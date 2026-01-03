@@ -630,7 +630,7 @@ export default function Growth() {
               ) : (
                 <div className="text-center py-12">
                   <Brain className="mx-auto mb-2 text-gray-300" size={48} />
-                  <p className="text-gray-500">Click "Refresh Analysis" to analyze your business performance</p>
+                  <p className="text-gray-500">Click &quot;Refresh Analysis&quot; to analyze your business performance</p>
                 </div>
               )}
             </CardContent>
