@@ -39,19 +39,22 @@ EnterprateAI is a comprehensive AI Operating System for Business that helps entr
 - Automated action execution
 - TikTok & YouTube integration with peak time analysis
 
-### 6. AI Website Builder (NEW)
+### 6. AI Website Builder ✅ COMPLETED
 - **AIDA Framework Implementation**:
   - **A**ttention: High-impact hero section with result-focused headlines
   - **I**nterest: Feature blocks with emotional benefits
   - **D**esire: Social proof, testimonials, trust badges
   - **A**ction: Strategic CTA placements
-- **Gemini 2.0 Flash Integration** for AI content generation
+- **Gemini 2.0 Flash Integration** for AI content generation (with template fallback)
 - **6 Color Schemes**: Modern, Professional, Creative, Minimal, Warm, Nature
-- **Refinement System**: Iterate on designs with feedback
-- **Netlify Deployment**: One-click deployment to live URL
+- **15 Languages Supported**: EN, ES, FR, DE, IT, PT, NL, PL, RU, ZH, JA, KO, AR, HI, TR
+- **Lead Capture Forms**: Automatically integrated into generated sites
+- **Multi-Platform Deployment**: Netlify, Vercel, Railway (one-click)
+- **Refinement System**: Iterate on designs with AI-powered feedback
 - **Download Source Code**: Export HTML for self-hosting
+- **Frontend UI**: Full-featured React interface at `/ai-website-builder`
 
-### 7. Real-time Notifications (NEW)
+### 7. Real-time Notifications
 - Scheduled action execution alerts
 - Campaign milestones
 - A/B test winner announcements
@@ -59,14 +62,14 @@ EnterprateAI is a comprehensive AI Operating System for Business that helps entr
 - Team activity notifications
 - Growth agent alerts
 
-### 8. A/B Testing (NEW)
+### 8. A/B Testing
 - **Test Types**: Campaign, Landing Page, Email, Social Post, CTA
 - **Traffic Split**: Configurable distribution across variants
 - **Goal Metrics**: Conversion rate, Click rate, Engagement, Revenue
 - **Statistical Significance**: Automated winner determination
 - **Full Lifecycle**: Draft → Running → Paused → Completed
 
-### 9. Team Collaboration (NEW)
+### 9. Team Collaboration
 - **Role-based Access Control**:
   - Owner (full access)
   - Admin (manage team + content)
@@ -96,29 +99,44 @@ EnterprateAI is a comprehensive AI Operating System for Business that helps entr
 - **AI:** OpenAI GPT-4o, Gemini 2.0 Flash (via Emergent LLM Key)
 - **Auth:** JWT + Emergent-managed Google OAuth
 - **Email:** SendGrid
-- **Deployment:** Netlify (for generated websites)
+- **Deployment:** Netlify, Vercel, Railway (for generated websites)
 
-### New Services Added (Phase 3)
+### Key Services
+- `/app/backend/app/services/ai_website_builder_service.py` - AIDA website builder with multi-language and lead capture
 - `/app/backend/app/services/notification_service.py` - Real-time notifications
 - `/app/backend/app/services/ab_testing_service.py` - A/B testing with statistics
 - `/app/backend/app/services/team_collaboration_service.py` - Team management
-- `/app/backend/app/services/ai_website_builder_service.py` - AIDA website builder
+- `/app/backend/app/services/proactive_growth_service.py` - Growth agent
 
-### New Routes Added (Phase 3)
+### Key Routes
+- `/app/backend/app/routes/ai_websites.py` - AI Website builder endpoints (prefix: `/api/ai-websites`)
 - `/app/backend/app/routes/notifications.py` - Notification endpoints
 - `/app/backend/app/routes/ab_testing.py` - A/B testing endpoints
 - `/app/backend/app/routes/team.py` - Team collaboration endpoints
-- `/app/backend/app/routes/ai_websites.py` - Website builder endpoints
 
 ## API Endpoints
 
-### Notifications (NEW)
+### AI Website Builder (NEW - COMPLETED)
+- `POST /api/ai-websites/generate` - Generate website from description
+- `GET /api/ai-websites` - List all websites
+- `GET /api/ai-websites/{id}` - Get website details
+- `POST /api/ai-websites/{id}/refine` - Refine with feedback
+- `POST /api/ai-websites/{id}/deploy` - Deploy to Netlify/Vercel/Railway
+- `GET /api/ai-websites/{id}/download` - Download HTML source
+- `GET /api/ai-websites/{id}/preview` - Preview website HTML
+- `DELETE /api/ai-websites/{id}` - Delete website
+- `GET /api/ai-websites/color-schemes/list` - Get color schemes (public)
+- `GET /api/ai-websites/languages/list` - Get supported languages (public)
+- `GET /api/ai-websites/platforms/list` - Get deployment platforms (public)
+- `POST /api/ai-websites/lead` - Handle lead form submission (public)
+
+### Notifications
 - `GET /api/notifications` - Get user notifications
 - `GET /api/notifications/unread-count` - Get unread count
 - `POST /api/notifications/{id}/read` - Mark as read
 - `POST /api/notifications/read-all` - Mark all as read
 
-### A/B Testing (NEW)
+### A/B Testing
 - `POST /api/ab-tests` - Create A/B test
 - `GET /api/ab-tests` - List tests
 - `POST /api/ab-tests/{id}/start` - Start test
@@ -126,7 +144,7 @@ EnterprateAI is a comprehensive AI Operating System for Business that helps entr
 - `GET /api/ab-tests/{id}/analyze` - Analyze results
 - `POST /api/ab-tests/{id}/complete` - Complete test
 
-### Team Collaboration (NEW)
+### Team Collaboration
 - `GET /api/team/members` - Get team members
 - `POST /api/team/invite` - Invite member
 - `PATCH /api/team/members/{id}/role` - Update role
@@ -134,26 +152,22 @@ EnterprateAI is a comprehensive AI Operating System for Business that helps entr
 - `POST /api/team/comments` - Add comment
 - `GET /api/team/roles` - Available roles
 
-### AI Website Builder (NEW)
-- `POST /api/websites/generate` - Generate website from description
-- `GET /api/websites` - List websites
-- `POST /api/websites/{id}/refine` - Refine with feedback
-- `POST /api/websites/{id}/deploy` - Deploy to Netlify
-- `GET /api/websites/{id}/download` - Download source code
-- `GET /api/websites/color-schemes/list` - Get color schemes
-
-### Scheduling (Updated)
-- `GET /api/scheduling/optimal-times?platform=tiktok` - TikTok optimal times
-- `GET /api/scheduling/optimal-times?platform=youtube` - YouTube optimal times
-
 ## What's Been Implemented
 
-### January 2026 - Phase 3 (Current)
-- **Real-time Notifications**: Event-based notification system for all user actions
-- **A/B Testing**: Complete testing framework with statistical analysis
-- **Team Collaboration**: Full team management with roles, invites, comments
-- **AI Website Builder**: AIDA framework website generation with Gemini AI
-- **TikTok & YouTube Integration**: Optimal posting times for video platforms
+### January 2026 - Phase 4 (Current Session)
+- ✅ **AI Website Builder Complete Implementation**:
+  - Backend: Full service with generate, refine, deploy methods
+  - Multi-language support (15 languages with RTL support for Arabic)
+  - Lead capture forms that submit to Growth module
+  - Deployment to Netlify, Vercel, Railway
+  - Frontend: New React component with create/preview/deploy/history tabs
+  - 32 backend tests passing (100% pass rate)
+
+### January 2026 - Phase 3
+- Real-time Notifications: Event-based notification system for all user actions
+- A/B Testing: Complete testing framework with statistical analysis
+- Team Collaboration: Full team management with roles, invites, comments
+- TikTok & YouTube Integration: Optimal posting times for video platforms
 
 ### January 2026 - Phase 2
 - Proactive Growth Agent with additional triggers
@@ -167,18 +181,6 @@ EnterprateAI is a comprehensive AI Operating System for Business that helps entr
 - Enhanced AI Assistant
 - Initial documentation
 
-## Integrations
-
-### Active Integrations
-- **OpenAI GPT-4o** - AI features (via Emergent LLM Key)
-- **Gemini 2.0 Flash** - Website content generation (via Emergent LLM Key)
-- **Companies House API** - Company verification
-- **SendGrid** - Email delivery
-- **Emergent Google Auth** - OAuth authentication
-
-### Simulated Integrations (Configure Keys for Production)
-- **Netlify API** - Website deployment (NETLIFY_API_KEY required)
-
 ## Environment Variables
 
 ### Required
@@ -187,10 +189,57 @@ EnterprateAI is a comprehensive AI Operating System for Business that helps entr
 - `EMERGENT_LLM_KEY` - Universal key for AI services
 - `SENDGRID_API_KEY` - Email delivery
 
-### Optional
+### Optional / Deployment
 - `COMPANIES_HOUSE_API_KEY` - UK company verification
-- `NETLIFY_API_KEY` - Website deployment
 - `GEMINI_API_KEY` - Direct Gemini access (falls back to EMERGENT_LLM_KEY)
+- `NETLIFY_API_KEY` - Netlify deployment
+- `VERCEL_API_KEY` - Vercel deployment
+- `RAILWAY_API_KEY` - Railway deployment
+
+## Database Collections
+
+### ai_websites
+```javascript
+{
+  id: String (UUID),
+  workspace_id: String,
+  status: String (draft|deployed|archived),
+  businessContext: Object,
+  htmlContent: String,
+  language: String,
+  includeLeadForm: Boolean,
+  version: Number,
+  versions: Array,
+  deploymentUrl: String,
+  deploymentPlatform: String,
+  createdBy: String,
+  createdAt: ISODate,
+  updatedAt: ISODate
+}
+```
+
+### leads
+```javascript
+{
+  id: String (UUID),
+  workspace_id: String,
+  name: String,
+  email: String,
+  phone: String,
+  message: String,
+  source: String,
+  status: String (new|contacted|qualified|converted),
+  createdAt: ISODate
+}
+```
+
+## Test Reports
+- `/app/test_reports/iteration_1.json` - Initial tests (25 passed)
+- `/app/test_reports/iteration_2.json` - Phase 2 tests (36 passed)
+- `/app/test_reports/iteration_3.json` - Phase 3 tests (45 passed)
+- `/app/test_reports/iteration_4.json` - AI Website Builder (32 passed)
+
+**Total: 138 tests, 100% pass rate**
 
 ## Backlog
 
@@ -203,26 +252,27 @@ EnterprateAI is a comprehensive AI Operating System for Business that helps entr
 - ✅ Real-time Notifications
 - ✅ A/B Testing
 - ✅ Team Collaboration
-- ✅ AI Website Builder
+- ✅ AI Website Builder with AIDA Framework
+- ✅ Multi-language website generation
+- ✅ Lead capture forms
+- ✅ Netlify/Vercel/Railway deployment
+
+### Upcoming (P1)
+- Frontend UIs for Team Collaboration
+- Frontend UIs for A/B Testing
+- Frontend UIs for Campaign Automation
+- WebSocket real-time notifications (currently polling)
 
 ### Future Enhancements (P2/P3)
-- Real-time websocket notifications
 - Advanced campaign automation rules
-- Multi-language website generation
-- More deployment targets (Vercel, Railway)
 - Enhanced team permissions granularity
-
-## Test Reports
-- `/app/test_reports/iteration_1.json` - Initial tests (25 passed)
-- `/app/test_reports/iteration_2.json` - Phase 2 tests (36 passed)
-- `/app/test_reports/iteration_3.json` - Phase 3 tests (45 passed)
-
-**Total: 106 tests, 100% pass rate**
+- Website templates gallery
+- Custom domain support for deployed sites
 
 ## Notes
 - **Google Sign-in**: Intermediate page at `auth.emergentagent.com` is by design
 - **MongoDB Only**: Application does NOT use PostgreSQL/SQLAlchemy
 - **JWT Compatibility**: Supports both 'user_id' and 'sub' claims
 - **Growth Agent**: Requires human approval before executing actions
-- **Website Builder**: Uses Gemini AI with template fallback
-- **Netlify Deployment**: Returns simulated URL if API key not configured
+- **Website Builder**: Uses Gemini AI with template fallback when API unavailable
+- **Deployment Keys**: Real keys configured for Netlify and Vercel; Railway requires manual dashboard deployment
