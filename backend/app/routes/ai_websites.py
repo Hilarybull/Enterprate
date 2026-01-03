@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from app.services.ai_website_builder_service import AIWebsiteBuilderService
 from app.core.security import get_current_user, verify_workspace_access, get_workspace_id
 
-router = APIRouter(prefix="/websites", tags=["websites"])
+router = APIRouter(prefix="/ai-websites", tags=["ai-websites"])
 
 
 class GenerateWebsiteRequest(BaseModel):
@@ -15,6 +15,8 @@ class GenerateWebsiteRequest(BaseModel):
     logoUrl: Optional[str] = None
     contactMethod: str = "form"  # form, email, phone, link
     contactValue: Optional[str] = None
+    language: str = "en"
+    includeLeadForm: bool = True
 
 
 class RefineWebsiteRequest(BaseModel):
@@ -23,6 +25,16 @@ class RefineWebsiteRequest(BaseModel):
 
 class DeployWebsiteRequest(BaseModel):
     siteName: Optional[str] = None
+    platform: str = "netlify"  # netlify, vercel, railway
+
+
+class LeadSubmissionRequest(BaseModel):
+    name: str
+    email: str
+    phone: Optional[str] = None
+    message: Optional[str] = None
+    workspaceId: str
+    source: str = "website_form"
 
 
 @router.post("/generate")
