@@ -39,18 +39,26 @@ async def get_current_user(
     from app.core.database import get_db
     
     payload = decode_token(credentials.credentials)
-    user_id = payload["user_id"]
+    # Support both 'user_id' (standard login) and 'sub' (Google OAuth) claims
+    user_id = payload.get("user_id") or payload.get("sub")
+    
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
     
     db = get_db()
-    user = await db.users.find_one({"id": user_id})
+    # Try to find user by 'id' or 'user_id' field
+    user = await db.users.find_one(
+        {"$or": [{"id": user_id}, {"user_id": user_id}]},
+        {"_id": 0}
+    )
     
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     
     return {
-        "id": user["id"],
-        "email": user["email"],
-        "name": user["name"]
+        "id": user.get("id") or user.get("user_id"),
+        "email": user.get("email"),
+        "name": user.get("name")
     }
 
 async def get_workspace_id(x_workspace_id: Optional[str] = Header(None)) -> str:
