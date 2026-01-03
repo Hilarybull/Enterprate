@@ -145,7 +145,6 @@ class ProactiveGrowthService:
         prev_revenue = sum(inv.get("totalAmount", 0) for inv in prev_invoices)
         
         current_paid = sum(1 for inv in current_invoices if inv.get("status") == "paid")
-        prev_paid = sum(1 for inv in prev_invoices if inv.get("status") == "paid")
         
         revenue_change = ((current_revenue - prev_revenue) / prev_revenue * 100) if prev_revenue > 0 else 0
         
