@@ -636,8 +636,10 @@ Generate the refined HTML starting with <!DOCTYPE html>:"""
             }
         
         try:
+            import hashlib
+            
             async with httpx.AsyncClient() as client:
-                # Create new site
+                # Create new site if site_name provided, otherwise use existing or create new
                 site_response = await client.post(
                     f"{NETLIFY_API_BASE}/sites",
                     headers={
@@ -654,22 +656,52 @@ Generate the refined HTML starting with <!DOCTYPE html>:"""
                 site_data = site_response.json()
                 site_id = site_data.get("site_id") or site_data.get("id")
                 
-                # Deploy HTML
-                deploy_response = await client.post(
+                # Calculate SHA1 hash of the HTML content for file digest
+                html_bytes = html_content.encode('utf-8')
+                file_hash = hashlib.sha1(html_bytes).hexdigest()
+                
+                # Use Netlify's file digest API for proper deployment
+                # First, create a deploy with file manifest
+                deploy_create_response = await client.post(
                     f"{NETLIFY_API_BASE}/sites/{site_id}/deploys",
                     headers={
                         "Authorization": f"Bearer {NETLIFY_API_KEY}",
-                        "Content-Type": "application/zip"
+                        "Content-Type": "application/json"
                     },
-                    content=AIWebsiteBuilderService._create_deploy_zip(html_content),
-                    timeout=60.0
+                    json={
+                        "files": {
+                            "/index.html": file_hash
+                        }
+                    },
+                    timeout=30.0
                 )
                 
-                if deploy_response.status_code not in [200, 201]:
-                    raise Exception(f"Failed to deploy: {deploy_response.text}")
+                if deploy_create_response.status_code not in [200, 201]:
+                    raise Exception(f"Failed to create deploy: {deploy_create_response.text}")
                 
-                deploy_data = deploy_response.json()
+                deploy_data = deploy_create_response.json()
+                deploy_id = deploy_data.get("id")
+                required_files = deploy_data.get("required", [])
+                
+                # Upload the file if required
+                if file_hash in required_files:
+                    upload_response = await client.put(
+                        f"{NETLIFY_API_BASE}/deploys/{deploy_id}/files/index.html",
+                        headers={
+                            "Authorization": f"Bearer {NETLIFY_API_KEY}",
+                            "Content-Type": "application/octet-stream"
+                        },
+                        content=html_bytes,
+                        timeout=60.0
+                    )
+                    
+                    if upload_response.status_code not in [200, 201]:
+                        raise Exception(f"Failed to upload file: {upload_response.text}")
+                
+                # Get final deploy URL
                 site_url = deploy_data.get("ssl_url") or deploy_data.get("url") or site_data.get("ssl_url")
+                if not site_url:
+                    site_url = f"https://{site_data.get('subdomain', site_name or 'site')}.netlify.app"
                 
                 # Update website record
                 await db.ai_websites.update_one(
@@ -678,28 +710,34 @@ Generate the refined HTML starting with <!DOCTYPE html>:"""
                         "$set": {
                             "status": "deployed",
                             "deploymentUrl": site_url,
+                            "deploymentPlatform": "netlify",
                             "netlifyId": site_id,
+                            "netlifyDeployId": deploy_id,
                             "deployedAt": datetime.now(timezone.utc).isoformat()
                         }
                     }
                 )
                 
                 # Send notification
-                from app.services.notification_service import NotificationService
-                await NotificationService.notify_website_deployed(
-                    workspace_id, user_id, site_url, site_name or "Your Website"
-                )
+                try:
+                    from app.services.notification_service import NotificationService
+                    await NotificationService.notify_website_deployed(
+                        workspace_id, user_id, site_url, site_name or "Your Website"
+                    )
+                except Exception:
+                    pass  # Notification failure shouldn't break deployment
                 
                 return {
                     "success": True,
                     "siteUrl": site_url,
                     "siteId": site_id,
-                    "message": "Website deployed successfully!",
-                    "downloadUrl": f"/api/websites/{website_id}/download"
+                    "deployId": deploy_id,
+                    "message": "Website deployed to Netlify successfully!",
+                    "downloadUrl": f"/api/ai-websites/{website_id}/download"
                 }
                 
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Deployment failed: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Netlify deployment failed: {str(e)}")
     
     @staticmethod
     def _create_deploy_zip(html_content: str) -> bytes:
