@@ -133,6 +133,18 @@ export default function Growth() {
   const [generatingRec, setGeneratingRec] = useState(null);
   const [processingRec, setProcessingRec] = useState(null);
 
+  // Advanced Analytics Dashboard
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loadingDashboard, setLoadingDashboard] = useState(false);
+  const [revenueTrends, setRevenueTrends] = useState(null);
+  const [leadFunnel, setLeadFunnel] = useState(null);
+  const [businessReport, setBusinessReport] = useState(null);
+  const [generatingReport, setGeneratingReport] = useState(false);
+
+  // Scheduling
+  const [scheduledActions, setScheduledActions] = useState([]);
+  const [optimalTimes, setOptimalTimes] = useState([]);
+
   useEffect(() => {
     if (currentWorkspace) {
       loadLeads();
@@ -141,6 +153,8 @@ export default function Growth() {
       loadAnalytics();
       loadPerformanceAnalysis();
       loadRecommendations();
+      loadDashboardData();
+      loadScheduledActions();
     } else {
       setLeadsLoading(false);
     }
