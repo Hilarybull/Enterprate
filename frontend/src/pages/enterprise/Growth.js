@@ -1249,42 +1249,170 @@ export default function Growth() {
         </TabsContent>
 
         {/* ANALYTICS TAB */}
-        <TabsContent value="analytics" className="mt-6 space-y-6">
+        <TabsContent value="analytics" className="mt-4 md:mt-6 space-y-4 md:space-y-6">
+          {/* Report Generation */}
+          <Card>
+            <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <CardTitle className="text-base md:text-lg">Business Reports</CardTitle>
+                <CardDescription>Generate comprehensive business reports</CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => generateBusinessReport('weekly')}
+                  disabled={generatingReport}
+                >
+                  Weekly
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => generateBusinessReport('monthly')}
+                  disabled={generatingReport}
+                >
+                  Monthly
+                </Button>
+                <Button 
+                  className="gradient-primary border-0"
+                  size="sm"
+                  onClick={() => generateBusinessReport('quarterly')}
+                  disabled={generatingReport}
+                >
+                  {generatingReport ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="mr-1" size={14} />}
+                  Quarterly
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {businessReport ? (
+                <div className="space-y-4">
+                  {/* Executive Summary */}
+                  <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
+                    <h4 className="font-semibold mb-3">Executive Summary</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
+                      <div>
+                        <p className="text-xs text-gray-500">Revenue</p>
+                        <p className="font-bold text-green-600">£{businessReport.executiveSummary?.revenue?.toLocaleString() || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Profit</p>
+                        <p className="font-bold text-blue-600">£{businessReport.executiveSummary?.profit?.toLocaleString() || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Leads</p>
+                        <p className="font-bold text-purple-600">{businessReport.executiveSummary?.leads || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Conversion</p>
+                        <p className="font-bold text-orange-600">{businessReport.executiveSummary?.conversionRate || 0}%</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Campaigns</p>
+                        <p className="font-bold text-pink-600">{businessReport.executiveSummary?.activeCampaigns || 0}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Insights */}
+                  {businessReport.insights?.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Key Insights</h4>
+                      <div className="space-y-2">
+                        {businessReport.insights.map((insight, i) => (
+                          <div 
+                            key={i} 
+                            className={`p-3 rounded-lg flex items-start ${
+                              insight.type === 'positive' ? 'bg-green-50' : 
+                              insight.type === 'warning' ? 'bg-yellow-50' : 'bg-blue-50'
+                            }`}
+                          >
+                            {insight.type === 'positive' && <CheckCircle2 className="mr-2 text-green-500 mt-0.5" size={16} />}
+                            {insight.type === 'warning' && <AlertTriangle className="mr-2 text-yellow-500 mt-0.5" size={16} />}
+                            {insight.type === 'action' && <Zap className="mr-2 text-blue-500 mt-0.5" size={16} />}
+                            <div>
+                              <p className="text-sm font-medium">{insight.title}</p>
+                              <p className="text-xs text-gray-600">{insight.message}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recommendations */}
+                  {businessReport.recommendations?.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Recommendations</h4>
+                      <div className="space-y-2">
+                        {businessReport.recommendations.map((rec, i) => (
+                          <div key={i} className="p-3 border rounded-lg">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-sm font-medium">{rec.action}</span>
+                              <span className={`text-xs px-2 py-0.5 rounded ${
+                                rec.priority === 'high' ? 'bg-red-100 text-red-700' :
+                                rec.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-gray-100 text-gray-700'
+                              }`}>
+                                {rec.priority}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500">{rec.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="text-xs text-gray-400 text-right">
+                    Report generated: {new Date(businessReport.generatedAt).toLocaleString()}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <BarChart3 className="mx-auto mb-2 text-gray-300" size={40} />
+                  <p className="text-gray-500 text-sm">Click a report type to generate</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {analytics ? (
             <>
               {/* Lead Analytics */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Lead Analytics</CardTitle>
+                  <CardTitle className="text-base md:text-lg">Lead Analytics</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-blue-50 rounded-lg p-4">
-                      <p className="text-sm text-blue-600">Total Leads</p>
-                      <p className="text-2xl font-bold">{analytics.leads?.totalLeads || 0}</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+                    <div className="bg-blue-50 rounded-lg p-3 md:p-4">
+                      <p className="text-xs md:text-sm text-blue-600">Total Leads</p>
+                      <p className="text-xl md:text-2xl font-bold">{analytics.leads?.totalLeads || 0}</p>
                     </div>
-                    <div className="bg-green-50 rounded-lg p-4">
-                      <p className="text-sm text-green-600">Converted</p>
-                      <p className="text-2xl font-bold">{analytics.leads?.convertedLeads || 0}</p>
+                    <div className="bg-green-50 rounded-lg p-3 md:p-4">
+                      <p className="text-xs md:text-sm text-green-600">Converted</p>
+                      <p className="text-xl md:text-2xl font-bold">{analytics.leads?.convertedLeads || 0}</p>
                     </div>
-                    <div className="bg-purple-50 rounded-lg p-4">
-                      <p className="text-sm text-purple-600">Conversion Rate</p>
-                      <p className="text-2xl font-bold">{analytics.leads?.conversionRate || 0}%</p>
+                    <div className="bg-purple-50 rounded-lg p-3 md:p-4">
+                      <p className="text-xs md:text-sm text-purple-600">Conversion Rate</p>
+                      <p className="text-xl md:text-2xl font-bold">{analytics.leads?.conversionRate || 0}%</p>
                     </div>
-                    <div className="bg-yellow-50 rounded-lg p-4">
-                      <p className="text-sm text-yellow-600">New Leads</p>
-                      <p className="text-2xl font-bold">{analytics.leads?.newLeads || 0}</p>
+                    <div className="bg-yellow-50 rounded-lg p-3 md:p-4">
+                      <p className="text-xs md:text-sm text-yellow-600">New Leads</p>
+                      <p className="text-xl md:text-2xl font-bold">{analytics.leads?.newLeads || 0}</p>
                     </div>
                   </div>
                   
                   {analytics.leads?.leadsBySource && Object.keys(analytics.leads.leadsBySource).length > 0 && (
                     <div>
-                      <h4 className="font-medium mb-2">Leads by Source</h4>
+                      <h4 className="font-medium mb-2 text-sm md:text-base">Leads by Source</h4>
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                         {Object.entries(analytics.leads.leadsBySource).map(([source, count]) => (
-                          <div key={source} className="bg-gray-50 rounded-lg p-3 text-center">
+                          <div key={source} className="bg-gray-50 rounded-lg p-2 md:p-3 text-center">
                             <p className="text-xs text-gray-500">{source}</p>
-                            <p className="text-lg font-semibold">{count}</p>
+                            <p className="text-base md:text-lg font-semibold">{count}</p>
                           </div>
                         ))}
                       </div>
@@ -1296,36 +1424,36 @@ export default function Growth() {
               {/* Campaign Analytics */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Campaign Performance</CardTitle>
+                  <CardTitle className="text-base md:text-lg">Campaign Performance</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-purple-50 rounded-lg p-4">
-                      <p className="text-sm text-purple-600">Total Campaigns</p>
-                      <p className="text-2xl font-bold">{analytics.campaigns?.totalCampaigns || 0}</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+                    <div className="bg-purple-50 rounded-lg p-3 md:p-4">
+                      <p className="text-xs md:text-sm text-purple-600">Total Campaigns</p>
+                      <p className="text-xl md:text-2xl font-bold">{analytics.campaigns?.totalCampaigns || 0}</p>
                     </div>
-                    <div className="bg-green-50 rounded-lg p-4">
-                      <p className="text-sm text-green-600">Active</p>
-                      <p className="text-2xl font-bold">{analytics.campaigns?.activeCampaigns || 0}</p>
+                    <div className="bg-green-50 rounded-lg p-3 md:p-4">
+                      <p className="text-xs md:text-sm text-green-600">Active</p>
+                      <p className="text-xl md:text-2xl font-bold">{analytics.campaigns?.activeCampaigns || 0}</p>
                     </div>
-                    <div className="bg-blue-50 rounded-lg p-4">
-                      <p className="text-sm text-blue-600">Total Budget</p>
-                      <p className="text-2xl font-bold">£{analytics.campaigns?.totalBudget?.toLocaleString() || 0}</p>
+                    <div className="bg-blue-50 rounded-lg p-3 md:p-4">
+                      <p className="text-xs md:text-sm text-blue-600">Total Budget</p>
+                      <p className="text-xl md:text-2xl font-bold">£{analytics.campaigns?.totalBudget?.toLocaleString() || 0}</p>
                     </div>
-                    <div className="bg-yellow-50 rounded-lg p-4">
-                      <p className="text-sm text-yellow-600">Avg ROI</p>
-                      <p className="text-2xl font-bold">{analytics.campaigns?.avgROI || 0}%</p>
+                    <div className="bg-yellow-50 rounded-lg p-3 md:p-4">
+                      <p className="text-xs md:text-sm text-yellow-600">Avg ROI</p>
+                      <p className="text-xl md:text-2xl font-bold">{analytics.campaigns?.avgROI || 0}%</p>
                     </div>
                   </div>
 
                   {analytics.campaigns?.topPerforming?.length > 0 && (
                     <div>
-                      <h4 className="font-medium mb-2">Top Performing Campaigns</h4>
+                      <h4 className="font-medium mb-2 text-sm md:text-base">Top Performing Campaigns</h4>
                       <div className="space-y-2">
                         {analytics.campaigns.topPerforming.map((campaign, i) => (
-                          <div key={campaign.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <span className="font-medium">{campaign.name}</span>
-                            <span className="text-sm text-green-600">{campaign.conversions} conversions</span>
+                          <div key={campaign.id} className="flex items-center justify-between p-2 md:p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium text-sm">{campaign.name}</span>
+                            <span className="text-xs md:text-sm text-green-600">{campaign.conversions} conversions</span>
                           </div>
                         ))}
                       </div>
