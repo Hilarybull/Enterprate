@@ -640,26 +640,55 @@ class ProactiveGrowthService:
     @staticmethod
     async def _execute_action(action: dict, workspace_id: str, user_id: str) -> dict:
         """Execute a specific growth action"""
+        from app.services.scheduling_service import SchedulingService
+        
         db = get_db()
         action_type = action.get("type")
         
         if action_type == "social_post":
-            # Create social post
-            post_id = str(uuid.uuid4())
-            post = {
-                "id": post_id,
-                "workspace_id": workspace_id,
-                "platform": action.get("platform", "linkedin"),
-                "content": action.get("content", "Check out our latest updates!"),
-                "hashtags": ["business", "growth"],
-                "status": "draft",
-                "scheduledFor": None,
-                "createdAt": datetime.now(timezone.utc).isoformat(),
-                "createdBy": user_id,
-                "source": "growth_agent"
-            }
-            await db.social_posts.insert_one(post)
-            return {"type": "social_post", "id": post_id, "status": "created"}
+            platform = action.get("platform", "linkedin")
+            schedule_mode = action.get("schedule", "immediate")
+            
+            # Generate content if not provided
+            content = action.get("content", "Check out our latest updates!")
+            
+            if schedule_mode == "optimal":
+                # Schedule at optimal time
+                scheduled_action = await SchedulingService.schedule_growth_action(
+                    workspace_id,
+                    user_id,
+                    {
+                        "type": "social_post",
+                        "platform": platform,
+                        "content": content,
+                        "hashtags": action.get("hashtags", ["business", "growth"]),
+                        "source": "growth_agent"
+                    }
+                )
+                return {
+                    "type": "social_post",
+                    "id": scheduled_action["id"],
+                    "status": "scheduled",
+                    "scheduledFor": scheduled_action["scheduledFor"],
+                    "platform": platform
+                }
+            else:
+                # Create immediately
+                post_id = str(uuid.uuid4())
+                post = {
+                    "id": post_id,
+                    "workspace_id": workspace_id,
+                    "platform": platform,
+                    "content": content,
+                    "hashtags": action.get("hashtags", ["business", "growth"]),
+                    "status": "draft",
+                    "scheduledFor": None,
+                    "createdAt": datetime.now(timezone.utc).isoformat(),
+                    "createdBy": user_id,
+                    "source": "growth_agent"
+                }
+                await db.social_posts.insert_one(post)
+                return {"type": "social_post", "id": post_id, "status": "created", "platform": platform}
         
         elif action_type == "email_campaign":
             # Log email campaign intent (actual sending requires user setup)
@@ -677,6 +706,31 @@ class ProactiveGrowthService:
                 "status": "suggested",
                 "discount": action.get("discount"),
                 "message": "Promotion strategy suggested - implement via your sales channels"
+            }
+        
+        elif action_type == "content_creation":
+            return {
+                "type": "content_creation",
+                "status": "suggested",
+                "content_type": action.get("content_type"),
+                "message": f"Create {action.get('content_type', 'content')} to support campaign"
+            }
+        
+        elif action_type == "budget_increase":
+            return {
+                "type": "budget_increase",
+                "status": "recommended",
+                "amount": action.get("amount"),
+                "target": action.get("target"),
+                "message": "Consider increasing budget for top-performing campaigns"
+            }
+        
+        elif action_type == "content_audit":
+            return {
+                "type": "content_audit",
+                "status": "suggested",
+                "target": action.get("target"),
+                "message": "Review and optimize existing content for better engagement"
             }
         
         return {"type": action_type, "status": "acknowledged"}
