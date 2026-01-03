@@ -249,16 +249,30 @@ Generate ONLY the complete HTML code. No explanations or markdown - just valid H
         logo_url = context.get("logoUrl", "")
         contact_method = context.get("contactMethod", "form")
         contact_value = context.get("contactValue", "#")
+        language = context.get("language", "en")
+        lang_info = context.get("languageInfo", {"direction": "ltr"})
+        include_lead_form = context.get("includeLeadForm", True)
+        workspace_id = context.get("workspaceId", "")
+        
+        # Language-specific text
+        texts = AIWebsiteBuilderService._get_language_texts(language)
         
         cta_href = f"mailto:{contact_value}" if contact_method == "email" else f"tel:{contact_value}" if contact_method == "phone" else "#contact"
-        cta_text = "Get Started"
+        cta_text = texts["cta"]
+        
+        # Lead capture form HTML
+        lead_form_html = ""
+        if include_lead_form:
+            lead_form_html = AIWebsiteBuilderService._generate_lead_form_html(
+                workspace_id, company_name, colors, texts
+            )
         
         return f'''<!DOCTYPE html>
-<html lang="en">
+<html lang="{language}" dir="{lang_info.get('direction', 'ltr')}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{company_name} - Transform Your Business</title>
+    <title>{company_name} - {texts["tagline"]}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -272,6 +286,7 @@ Generate ONLY the complete HTML code. No explanations or markdown - just valid H
         .bg-primary {{ background-color: var(--primary); }}
         .border-primary {{ border-color: var(--primary); }}
         .hover\\:bg-primary:hover {{ background-color: var(--secondary); }}
+        .form-loading {{ opacity: 0.7; pointer-events: none; }}
     </style>
 </head>
 <body class="font-sans antialiased">
@@ -282,25 +297,25 @@ Generate ONLY the complete HTML code. No explanations or markdown - just valid H
                 {f'<img src="{logo_url}" alt="{company_name}" class="h-10">' if logo_url else f'<span class="text-2xl font-bold text-white">{company_name}</span>'}
             </div>
             <div class="hidden md:flex space-x-8 text-white">
-                <a href="#features" class="hover:text-gray-300 transition">Features</a>
-                <a href="#about" class="hover:text-gray-300 transition">About</a>
-                <a href="#testimonials" class="hover:text-gray-300 transition">Testimonials</a>
+                <a href="#features" class="hover:text-gray-300 transition">{texts["features"]}</a>
+                <a href="#about" class="hover:text-gray-300 transition">{texts["about"]}</a>
+                <a href="#contact" class="hover:text-gray-300 transition">{texts["contact"]}</a>
                 <a href="{cta_href}" class="px-6 py-2 rounded-full gradient-primary hover:opacity-90 transition">{cta_text}</a>
             </div>
         </nav>
         <div class="container mx-auto px-6 text-center">
             <h1 class="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-                Transform Your Business Today
+                {texts["hero_title"]}
             </h1>
             <p class="text-xl md:text-2xl text-gray-200 mb-10 max-w-3xl mx-auto">
                 {description}
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="{cta_href}" class="px-8 py-4 rounded-full gradient-primary text-white text-lg font-semibold hover:opacity-90 transition shadow-lg">
+                <a href="#contact" class="px-8 py-4 rounded-full gradient-primary text-white text-lg font-semibold hover:opacity-90 transition shadow-lg">
                     {cta_text} <i class="fas fa-arrow-right ml-2"></i>
                 </a>
                 <a href="#features" class="px-8 py-4 rounded-full border-2 border-white text-white text-lg font-semibold hover:bg-white hover:text-gray-900 transition">
-                    Learn More
+                    {texts["learn_more"]}
                 </a>
             </div>
         </div>
@@ -309,29 +324,29 @@ Generate ONLY the complete HTML code. No explanations or markdown - just valid H
     <!-- FEATURES SECTION - INTEREST -->
     <section id="features" class="py-20 bg-gray-50">
         <div class="container mx-auto px-6">
-            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">Why Choose Us</h2>
-            <p class="text-gray-600 text-center mb-16 max-w-2xl mx-auto">Discover the benefits that set us apart</p>
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">{texts["why_choose"]}</h2>
+            <p class="text-gray-600 text-center mb-16 max-w-2xl mx-auto">{texts["discover_benefits"]}</p>
             <div class="grid md:grid-cols-3 gap-8">
                 <div class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition">
                     <div class="w-14 h-14 rounded-full gradient-primary flex items-center justify-center mb-6">
                         <i class="fas fa-rocket text-white text-2xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-4">Fast Results</h3>
-                    <p class="text-gray-600">See measurable improvements in your business within weeks, not months.</p>
+                    <h3 class="text-xl font-bold mb-4">{texts["fast_results"]}</h3>
+                    <p class="text-gray-600">{texts["fast_results_desc"]}</p>
                 </div>
                 <div class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition">
                     <div class="w-14 h-14 rounded-full gradient-primary flex items-center justify-center mb-6">
                         <i class="fas fa-shield-alt text-white text-2xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-4">Trusted & Reliable</h3>
-                    <p class="text-gray-600">Join hundreds of satisfied customers who trust us with their success.</p>
+                    <h3 class="text-xl font-bold mb-4">{texts["trusted"]}</h3>
+                    <p class="text-gray-600">{texts["trusted_desc"]}</p>
                 </div>
                 <div class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition">
                     <div class="w-14 h-14 rounded-full gradient-primary flex items-center justify-center mb-6">
                         <i class="fas fa-headset text-white text-2xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-4">24/7 Support</h3>
-                    <p class="text-gray-600">Our dedicated team is always here to help you succeed.</p>
+                    <h3 class="text-xl font-bold mb-4">{texts["support"]}</h3>
+                    <p class="text-gray-600">{texts["support_desc"]}</p>
                 </div>
             </div>
         </div>
@@ -343,19 +358,19 @@ Generate ONLY the complete HTML code. No explanations or markdown - just valid H
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-white">
                 <div>
                     <div class="text-4xl md:text-5xl font-bold mb-2">500+</div>
-                    <div class="text-gray-200">Happy Clients</div>
+                    <div class="text-gray-200">{texts["happy_clients"]}</div>
                 </div>
                 <div>
                     <div class="text-4xl md:text-5xl font-bold mb-2">98%</div>
-                    <div class="text-gray-200">Satisfaction Rate</div>
+                    <div class="text-gray-200">{texts["satisfaction"]}</div>
                 </div>
                 <div>
                     <div class="text-4xl md:text-5xl font-bold mb-2">10+</div>
-                    <div class="text-gray-200">Years Experience</div>
+                    <div class="text-gray-200">{texts["experience"]}</div>
                 </div>
                 <div>
                     <div class="text-4xl md:text-5xl font-bold mb-2">24/7</div>
-                    <div class="text-gray-200">Support</div>
+                    <div class="text-gray-200">{texts["support"]}</div>
                 </div>
             </div>
         </div>
@@ -364,7 +379,7 @@ Generate ONLY the complete HTML code. No explanations or markdown - just valid H
     <!-- TESTIMONIALS SECTION - DESIRE -->
     <section id="testimonials" class="py-20 bg-white">
         <div class="container mx-auto px-6">
-            <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">What Our Clients Say</h2>
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">{texts["testimonials"]}</h2>
             <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                 <div class="bg-gray-50 p-8 rounded-2xl">
                     <div class="flex items-center mb-4">
@@ -374,7 +389,7 @@ Generate ONLY the complete HTML code. No explanations or markdown - just valid H
                             <div class="text-gray-500 text-sm">CEO, TechStart</div>
                         </div>
                     </div>
-                    <p class="text-gray-600 italic">"Working with {company_name} transformed our business. The results exceeded our expectations!"</p>
+                    <p class="text-gray-600 italic">"{texts["testimonial_1"].format(company=company_name)}"</p>
                     <div class="mt-4 text-yellow-400">
                         <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
                     </div>
@@ -387,7 +402,7 @@ Generate ONLY the complete HTML code. No explanations or markdown - just valid H
                             <div class="text-gray-500 text-sm">Founder, GrowthLabs</div>
                         </div>
                     </div>
-                    <p class="text-gray-600 italic">"Professional, efficient, and results-driven. Highly recommend to any serious business."</p>
+                    <p class="text-gray-600 italic">"{texts["testimonial_2"]}"</p>
                     <div class="mt-4 text-yellow-400">
                         <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
                     </div>
@@ -396,23 +411,58 @@ Generate ONLY the complete HTML code. No explanations or markdown - just valid H
         </div>
     </section>
 
-    <!-- CTA SECTION - ACTION -->
-    <section id="contact" class="py-20 bg-gray-900">
-        <div class="container mx-auto px-6 text-center">
-            <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">Ready to Get Started?</h2>
-            <p class="text-gray-300 mb-10 max-w-2xl mx-auto">Join hundreds of businesses that have transformed their success with us.</p>
-            <a href="{cta_href}" class="inline-block px-10 py-4 rounded-full gradient-primary text-white text-lg font-semibold hover:opacity-90 transition shadow-lg">
-                {cta_text} <i class="fas fa-arrow-right ml-2"></i>
-            </a>
-        </div>
-    </section>
+    <!-- CONTACT/LEAD CAPTURE SECTION - ACTION -->
+    {lead_form_html}
 
     <!-- FOOTER -->
     <footer class="py-8 bg-gray-950 text-gray-400">
         <div class="container mx-auto px-6 text-center">
-            <p>&copy; {datetime.now().year} {company_name}. All rights reserved.</p>
+            <p>&copy; {datetime.now().year} {company_name}. {texts["rights"]}</p>
         </div>
     </footer>
+
+    <!-- Lead Form Script -->
+    <script>
+        const LEAD_API_URL = '{os.environ.get("FRONTEND_URL", "")}/api/websites/lead';
+        const WORKSPACE_ID = '{workspace_id}';
+        
+        async function submitLeadForm(event) {{
+            event.preventDefault();
+            const form = event.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            form.classList.add('form-loading');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>{texts["submitting"]}';
+            
+            const formData = {{
+                name: form.querySelector('[name="name"]').value,
+                email: form.querySelector('[name="email"]').value,
+                phone: form.querySelector('[name="phone"]')?.value || '',
+                message: form.querySelector('[name="message"]').value,
+                workspaceId: WORKSPACE_ID,
+                source: 'website_form'
+            }};
+            
+            try {{
+                const response = await fetch(LEAD_API_URL, {{
+                    method: 'POST',
+                    headers: {{ 'Content-Type': 'application/json' }},
+                    body: JSON.stringify(formData)
+                }});
+                
+                if (response.ok) {{
+                    form.innerHTML = '<div class="text-center py-8"><i class="fas fa-check-circle text-green-500 text-5xl mb-4"></i><h3 class="text-2xl font-bold text-white mb-2">{texts["thank_you"]}</h3><p class="text-gray-300">{texts["will_contact"]}</p></div>';
+                }} else {{
+                    throw new Error('Submission failed');
+                }}
+            }} catch (error) {{
+                alert('{texts["error_message"]}');
+                form.classList.remove('form-loading');
+                submitBtn.innerHTML = originalText;
+            }}
+        }}
+    </script>
 </body>
 </html>'''
     
