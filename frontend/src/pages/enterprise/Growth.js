@@ -44,7 +44,16 @@ import {
   Trash2,
   Eye,
   DollarSign,
-  Percent
+  Percent,
+  Brain,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Activity,
+  Zap,
+  TrendingDown,
+  ArrowRight,
+  RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 
