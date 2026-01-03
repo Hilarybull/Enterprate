@@ -53,7 +53,12 @@ import {
   Zap,
   TrendingDown,
   ArrowRight,
-  RefreshCw
+  RefreshCw,
+  Clock,
+  PieChart,
+  LineChart,
+  Download,
+  Instagram
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -65,6 +70,7 @@ const campaignTypes = [
   { value: 'content', label: 'Content Marketing' },
   { value: 'ppc', label: 'PPC/Ads' },
   { value: 'event', label: 'Event' },
+  { value: 'instagram', label: 'Instagram' },
   { value: 'other', label: 'Other' },
 ];
 
