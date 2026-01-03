@@ -1,6 +1,7 @@
 export { default as Dashboard } from './Dashboard';
 export { default as IdeaDiscovery } from './IdeaDiscovery';
 export { default as WebsiteSetup } from './WebsiteSetup';
+export { default as AIWebsiteBuilder } from './AIWebsiteBuilder';
 export { default as BusinessRegistration } from './BusinessRegistration';
 export { default as BusinessBlueprint } from './BusinessBlueprint';
 export { default as FinanceAutomation } from './FinanceAutomation';
