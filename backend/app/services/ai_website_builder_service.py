@@ -90,13 +90,20 @@ class AIWebsiteBuilderService:
         brand_preferences: Optional[Dict] = None,
         logo_url: Optional[str] = None,
         contact_method: str = "form",
-        contact_value: Optional[str] = None
+        contact_value: Optional[str] = None,
+        language: str = "en",
+        include_lead_form: bool = True
     ) -> dict:
         """
         Generate a high-converting landing page from business description.
         Uses AIDA framework and AI content generation.
+        Supports multi-language and lead capture forms.
         """
         db = get_db()
+        
+        # Validate language
+        if language not in AIWebsiteBuilderService.SUPPORTED_LANGUAGES:
+            language = "en"
         
         # Get company profile for context
         profile = await db.company_profiles.find_one({"workspace_id": workspace_id})
@@ -110,7 +117,11 @@ class AIWebsiteBuilderService:
             "brandPreferences": brand_preferences or {},
             "logoUrl": logo_url,
             "contactMethod": contact_method,
-            "contactValue": contact_value
+            "contactValue": contact_value,
+            "language": language,
+            "languageInfo": AIWebsiteBuilderService.SUPPORTED_LANGUAGES[language],
+            "includeLeadForm": include_lead_form,
+            "workspaceId": workspace_id
         }
         
         # Generate HTML using AI
@@ -126,6 +137,8 @@ class AIWebsiteBuilderService:
             "status": "draft",  # draft, deployed, archived
             "businessContext": business_context,
             "htmlContent": html_content,
+            "language": language,
+            "includeLeadForm": include_lead_form,
             "version": 1,
             "versions": [{
                 "version": 1,
@@ -133,7 +146,8 @@ class AIWebsiteBuilderService:
                 "createdAt": now
             }],
             "deploymentUrl": None,
-            "netlifyId": None,
+            "deploymentPlatform": None,
+            "platformSiteId": None,
             "createdBy": user_id,
             "createdAt": now,
             "updatedAt": now
