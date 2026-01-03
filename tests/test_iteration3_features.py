@@ -499,22 +499,22 @@ class TestTeamRolesAPI:
 # ============================================
 
 class TestWebsiteGenerateAPI:
-    """Tests for Website Generate API - POST /api/websites/generate"""
+    """Tests for Website Generate API - POST /api/ai-websites/generate"""
     
     def test_generate_website_without_auth_returns_401(self, api_client):
-        """Test POST /api/websites/generate without auth returns 401/403"""
+        """Test POST /api/ai-websites/generate without auth returns 401/403"""
         headers = {"Content-Type": "application/json"}
         response = requests.post(
-            f"{BASE_URL}/api/websites/generate",
+            f"{BASE_URL}/api/ai-websites/generate",
             headers=headers,
             json={"userDescription": "A tech startup"}
         )
         assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}"
     
     def test_generate_website_with_auth_returns_200(self, authenticated_client):
-        """Test POST /api/websites/generate with auth returns 200"""
+        """Test POST /api/ai-websites/generate with auth returns 200"""
         response = authenticated_client.post(
-            f"{BASE_URL}/api/websites/generate",
+            f"{BASE_URL}/api/ai-websites/generate",
             json={
                 "userDescription": "TEST_A modern tech startup offering AI-powered solutions for small businesses",
                 "brandPreferences": {"colorScheme": "modern"},
@@ -526,7 +526,7 @@ class TestWebsiteGenerateAPI:
     def test_generate_website_returns_proper_structure(self, authenticated_client):
         """Test generate website returns proper structure"""
         response = authenticated_client.post(
-            f"{BASE_URL}/api/websites/generate",
+            f"{BASE_URL}/api/ai-websites/generate",
             json={
                 "userDescription": "TEST_Professional consulting firm specializing in business strategy",
                 "brandPreferences": {"colorScheme": "professional"},
