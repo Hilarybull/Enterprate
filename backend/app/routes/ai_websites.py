@@ -46,6 +46,7 @@ async def generate_website(
     """
     Generate a high-converting landing page from business description.
     Uses AIDA framework and AI content generation.
+    Supports multi-language and lead capture forms.
     """
     await verify_workspace_access(workspace_id, user)
     return await AIWebsiteBuilderService.generate_website(
@@ -55,7 +56,9 @@ async def generate_website(
         brand_preferences=data.brandPreferences,
         logo_url=data.logoUrl,
         contact_method=data.contactMethod,
-        contact_value=data.contactValue
+        contact_value=data.contactValue,
+        language=data.language,
+        include_lead_form=data.includeLeadForm
     )
 
 
