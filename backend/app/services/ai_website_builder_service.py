@@ -613,7 +613,7 @@ Generate the refined HTML starting with <!DOCTYPE html>:"""
         
         html_content = website.get("htmlContent", "")
         
-        if not NETLIFY_API_KEY:
+        if not NETLIFY_API_KEY or NETLIFY_API_KEY.startswith("REPLACE"):
             # Return mock deployment result
             mock_url = f"https://{site_name or 'enterprate-site'}-{uuid.uuid4().hex[:8]}.netlify.app"
             
