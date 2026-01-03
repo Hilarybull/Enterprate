@@ -710,7 +710,7 @@ Testing encountered session timeouts during extended interactions, which is expe
 - **Passed**: 39 endpoints (79.6%)
 - **Failed**: 10 endpoints (20.4%)
 - **Test Credentials**: test-bugfix@example.com / TestPass123!
-- **Base URL**: https://smartbiz-platform-1.preview.emergentagent.com/api
+- **Base URL**: https://enterai-enhance.preview.emergentagent.com/api
 
 #### ✅ SUCCESSFUL MODULES (39 endpoints)
 1. **Authentication Module (3/5 endpoints working)**
