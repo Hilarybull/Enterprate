@@ -41,10 +41,10 @@ const navItems = [
     description: 'Visual identity & assets'
   },
   { 
-    path: '/website-setup', 
+    path: '/ai-website-builder', 
     icon: Globe, 
-    label: 'Website',
-    description: 'Build your online presence'
+    label: 'AI Website Builder',
+    description: 'Generate landing pages with AI'
   },
   { 
     path: '/business-blueprint', 
