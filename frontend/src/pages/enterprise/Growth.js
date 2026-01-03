@@ -414,6 +414,67 @@ export default function Growth() {
     }
   };
 
+  // === ADVANCED ANALYTICS DASHBOARD ===
+  const loadDashboardData = async () => {
+    setLoadingDashboard(true);
+    try {
+      const [dashboard, revenue, funnel] = await Promise.all([
+        axios.get(`${API_URL}/analytics/dashboard`, { headers: getHeaders() }),
+        axios.get(`${API_URL}/analytics/revenue-trends?days=30`, { headers: getHeaders() }),
+        axios.get(`${API_URL}/analytics/lead-funnel`, { headers: getHeaders() })
+      ]);
+      setDashboardData(dashboard.data);
+      setRevenueTrends(revenue.data);
+      setLeadFunnel(funnel.data);
+    } catch (error) {
+      console.error('Failed to load dashboard:', error);
+    } finally {
+      setLoadingDashboard(false);
+    }
+  };
+
+  const generateBusinessReport = async (reportType = 'monthly') => {
+    setGeneratingReport(true);
+    try {
+      const response = await axios.get(`${API_URL}/analytics/report?report_type=${reportType}`, { headers: getHeaders() });
+      setBusinessReport(response.data);
+      toast.success('Business report generated!');
+    } catch (error) {
+      toast.error('Failed to generate report');
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
+  // === SCHEDULING ===
+  const loadScheduledActions = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/scheduling/actions`, { headers: getHeaders() });
+      setScheduledActions(response.data || []);
+    } catch (error) {
+      console.error('Failed to load scheduled actions:', error);
+    }
+  };
+
+  const loadOptimalTimes = async (platform = 'linkedin') => {
+    try {
+      const response = await axios.get(`${API_URL}/scheduling/optimal-times?platform=${platform}&count=5`, { headers: getHeaders() });
+      setOptimalTimes(response.data || []);
+    } catch (error) {
+      console.error('Failed to load optimal times:', error);
+    }
+  };
+
+  const cancelScheduledAction = async (actionId) => {
+    try {
+      await axios.delete(`${API_URL}/scheduling/actions/${actionId}`, { headers: getHeaders() });
+      toast.success('Action cancelled');
+      loadScheduledActions();
+    } catch (error) {
+      toast.error('Failed to cancel action');
+    }
+  };
+
   const getHealthScoreColor = (score) => {
     if (score >= 70) return 'text-green-600';
     if (score >= 40) return 'text-yellow-600';
