@@ -294,6 +294,42 @@ class ProactiveGrowthService:
                 "actionLabel": "Create Campaign"
             })
         
+        # NEW: Low social media activity alert
+        if campaigns.get("totalClicks", 0) < 100 and campaigns["activeCampaigns"] > 0:
+            alerts.append({
+                "id": str(uuid.uuid4()),
+                "type": "low_engagement",
+                "severity": "warning",
+                "title": "Low Engagement",
+                "message": "Your campaigns have low click-through rates",
+                "suggestedAction": "content_optimization",
+                "actionLabel": "Optimize Content"
+            })
+        
+        # NEW: Growth opportunity alert (positive trigger)
+        if leads["percentChange"] > 15 and campaigns["activeCampaigns"] > 0:
+            alerts.append({
+                "id": str(uuid.uuid4()),
+                "type": "growth_opportunity",
+                "severity": "info",
+                "title": "Growth Momentum Detected",
+                "message": f"Leads are up {leads['percentChange']}%! Capitalize on this momentum.",
+                "suggestedAction": "scale_campaign",
+                "actionLabel": "Scale Up Campaigns"
+            })
+        
+        # NEW: Instagram opportunity alert
+        if campaigns["totalCampaigns"] > 0:
+            alerts.append({
+                "id": str(uuid.uuid4()),
+                "type": "instagram_opportunity",
+                "severity": "info",
+                "title": "Instagram Growth Opportunity",
+                "message": "Expand your reach with Instagram marketing",
+                "suggestedAction": "instagram_campaign",
+                "actionLabel": "Start Instagram Campaign"
+            })
+        
         return alerts
     
     @staticmethod
