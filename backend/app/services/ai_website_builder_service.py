@@ -1163,7 +1163,7 @@ Generate the refined HTML starting with <!DOCTYPE html>:"""
                     "downloadUrl": f"/api/ai-websites/{website_id}/download"
                 }
                 
-        except Exception as e:
+        except Exception:
             # Fallback to simulated deployment on any error
             mock_url = f"https://{project_name or 'enterprate-site'}-{uuid.uuid4().hex[:8]}.up.railway.app"
             
