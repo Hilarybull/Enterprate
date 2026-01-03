@@ -898,11 +898,11 @@ You must complete the actual registration at Companies House.
                           
                           <div className="flex flex-wrap items-center gap-3 mt-2 text-xs">
                             <span className="text-purple-600 font-medium">
-                              Registration: {type.registrationFee}
+                              Registration: {getFeeDisplay(type.id)}
                             </span>
-                            {type.sameDayFee && (
+                            {(dynamicFees[type.id]?.sameDayFee || type.sameDayFee) && (
                               <span className="text-blue-600">
-                                Same-day: {type.sameDayFee}
+                                Same-day: {dynamicFees[type.id]?.sameDayFee || type.sameDayFee}
                               </span>
                             )}
                           </div>
