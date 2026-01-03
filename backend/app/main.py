@@ -8,7 +8,7 @@ from app.routes import (
     auth, workspaces, projects, genesis, navigator, growth, websites, 
     intel, chat, password_reset, validation_reports,
     blueprint, finance, operations, marketing, company_profile,
-    scheduling, analytics
+    scheduling, analytics, notifications, ab_testing, team, ai_websites
 )
 
 # Configure logging
@@ -19,7 +19,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Create FastAPI app
-app = FastAPI(title="EnterprateAI API", version="1.0.0")
+app = FastAPI(title="EnterprateAI API", version="2.0.0")
 
 # Create main API router
 api_router = APIRouter(prefix="/api")
@@ -43,6 +43,10 @@ api_router.include_router(marketing.router)
 api_router.include_router(company_profile.router)
 api_router.include_router(scheduling.router)
 api_router.include_router(analytics.router)
+api_router.include_router(notifications.router)
+api_router.include_router(ab_testing.router)
+api_router.include_router(team.router)
+api_router.include_router(ai_websites.router)
 
 # Include API router in main app
 app.include_router(api_router)
