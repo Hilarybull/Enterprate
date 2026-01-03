@@ -186,3 +186,31 @@ async def delete_website(
 async def get_color_schemes():
     """Get available color schemes"""
     return AIWebsiteBuilderService.COLOR_SCHEMES
+
+
+@router.get("/languages/list")
+async def get_supported_languages():
+    """Get supported languages for website generation"""
+    return AIWebsiteBuilderService.SUPPORTED_LANGUAGES
+
+
+@router.get("/platforms/list")
+async def get_deployment_platforms():
+    """Get available deployment platforms"""
+    return AIWebsiteBuilderService.DEPLOYMENT_PLATFORMS
+
+
+@router.post("/lead")
+async def submit_lead(data: LeadSubmissionRequest):
+    """
+    Handle lead form submission from generated websites.
+    This endpoint is called by the lead capture forms on deployed sites.
+    """
+    return await AIWebsiteBuilderService.handle_lead_submission(
+        workspace_id=data.workspaceId,
+        name=data.name,
+        email=data.email,
+        phone=data.phone,
+        message=data.message,
+        source=data.source
+    )
