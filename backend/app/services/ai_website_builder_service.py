@@ -897,7 +897,6 @@ Generate the refined HTML starting with <!DOCTYPE html>:"""
     @staticmethod
     def _generate_lead_form_html(workspace_id: str, company_name: str, colors: dict, texts: dict) -> str:
         """Generate lead capture form HTML section"""
-        api_base = os.environ.get("FRONTEND_URL", "")
         
         return f'''
     <section id="contact" class="py-20 bg-gray-900">

@@ -344,7 +344,7 @@ export default function AIWebsiteBuilder() {
                   Describe Your Business
                 </CardTitle>
                 <CardDescription>
-                  Tell us about your business and we'll create a professional landing page using the AIDA framework
+                  Tell us about your business and we&apos;ll create a professional landing page using the AIDA framework
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
