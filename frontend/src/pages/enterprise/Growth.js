@@ -79,6 +79,8 @@ const socialPlatforms = [
   { value: 'linkedin', label: 'LinkedIn' },
   { value: 'facebook', label: 'Facebook' },
   { value: 'instagram', label: 'Instagram' },
+  { value: 'tiktok', label: 'TikTok' },
+  { value: 'youtube', label: 'YouTube' },
 ];
 
 const toneOptions = [
