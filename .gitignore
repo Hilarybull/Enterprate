@@ -68,3 +68,4 @@ media/
 *.env.*
 frontend/node_modules/.cache/default-development/0.pack
 frontend/node_modules/.cache/default-development/8.pack
+frontend/node_modules/.cache/default-development/9.pack

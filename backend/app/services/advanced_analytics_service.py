@@ -31,7 +31,7 @@ class AdvancedAnalyticsService:
         profit_margin = (net_profit / total_revenue * 100) if total_revenue > 0 else 0
         
         # Lead metrics
-        converted_leads = len([l for l in leads if l.get("status") == "CONVERTED"])
+        converted_leads = len([lead for lead in leads if lead.get("status") == "CONVERTED"])
         conversion_rate = (converted_leads / len(leads) * 100) if leads else 0
         
         # Campaign metrics
