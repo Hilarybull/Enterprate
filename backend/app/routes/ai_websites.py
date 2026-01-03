@@ -107,11 +107,21 @@ async def deploy_website(
     user: dict = Depends(get_current_user),
     workspace_id: str = Depends(get_workspace_id)
 ):
-    """Deploy website to Netlify"""
+    """Deploy website to chosen platform (Netlify, Vercel, or Railway)"""
     await verify_workspace_access(workspace_id, user)
-    return await AIWebsiteBuilderService.deploy_to_netlify(
-        website_id, workspace_id, user["id"], data.siteName
-    )
+    
+    if data.platform == "vercel":
+        return await AIWebsiteBuilderService.deploy_to_vercel(
+            website_id, workspace_id, user["id"], data.siteName
+        )
+    elif data.platform == "railway":
+        return await AIWebsiteBuilderService.deploy_to_railway(
+            website_id, workspace_id, user["id"], data.siteName
+        )
+    else:  # Default to Netlify
+        return await AIWebsiteBuilderService.deploy_to_netlify(
+            website_id, workspace_id, user["id"], data.siteName
+        )
 
 
 @router.get("/{website_id}/download")
