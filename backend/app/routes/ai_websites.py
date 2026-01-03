@@ -200,6 +200,21 @@ async def get_deployment_platforms():
     return AIWebsiteBuilderService.DEPLOYMENT_PLATFORMS
 
 
+@router.get("/templates/list")
+async def get_quick_templates():
+    """Get available quick templates for website generation"""
+    return AIWebsiteBuilderService.QUICK_TEMPLATES
+
+
+@router.get("/templates/{template_id}")
+async def get_template(template_id: str):
+    """Get a specific template by ID"""
+    template = AIWebsiteBuilderService.get_template(template_id)
+    if not template:
+        return {"error": "Template not found"}
+    return {"id": template_id, **template}
+
+
 @router.post("/lead")
 async def submit_lead(data: LeadSubmissionRequest):
     """
