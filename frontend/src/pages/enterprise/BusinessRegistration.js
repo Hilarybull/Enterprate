@@ -1720,7 +1720,7 @@ You must complete the actual registration at Companies House.
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Registration Fee</p>
-                    <p className="font-semibold text-purple-700">{businessType?.registrationFee?.split('/')[0]}</p>
+                    <p className="font-semibold text-purple-700">{getFeeDisplay(formData.businessType)?.split('/')[0]}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Processing Time</p>
