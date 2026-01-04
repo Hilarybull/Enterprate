@@ -44,7 +44,10 @@ import {
   Scale,
   PartyPopper,
   LayoutGrid,
-  HeartHandshake
+  HeartHandshake,
+  Camera,
+  Music,
+  Plane
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -66,7 +69,10 @@ const TEMPLATE_ICONS = {
   'scale': Scale,
   'calendar-heart': PartyPopper,
   'layout-grid': LayoutGrid,
-  'heart-handshake': HeartHandshake
+  'heart-handshake': HeartHandshake,
+  'camera': Camera,
+  'music': Music,
+  'plane': Plane
 };
 
 // Color scheme preview colors
