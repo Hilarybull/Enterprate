@@ -157,6 +157,56 @@ class AIWebsiteBuilderService:
             "prompt": "A comprehensive healthcare practice providing compassionate, patient-centered care. Our team of experienced physicians and specialists use the latest medical technology to diagnose and treat a wide range of conditions. Your health is our priority.",
             "features": ["Board-certified doctors", "Modern facilities", "Same-day appointments", "Telehealth available"],
             "cta": "Book Appointment"
+        },
+        "education": {
+            "name": "Education / Online Courses",
+            "icon": "graduation-cap",
+            "description": "Educational institutions and online learning platforms",
+            "defaultColorScheme": "professional",
+            "heroImage": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1920&q=80",
+            "prompt": "An innovative education platform offering world-class courses taught by industry experts. Whether you're looking to advance your career, learn new skills, or pursue a passion, we provide flexible, affordable, and high-quality learning experiences that fit your schedule.",
+            "features": ["Expert instructors", "Flexible schedule", "Certifications", "Lifetime access"],
+            "cta": "Start Learning"
+        },
+        "legal": {
+            "name": "Legal / Law Firm",
+            "icon": "scale",
+            "description": "Law firms and legal service providers",
+            "defaultColorScheme": "professional",
+            "heroImage": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1920&q=80",
+            "prompt": "A prestigious law firm providing expert legal counsel across all practice areas. Our experienced attorneys are committed to protecting your rights and achieving the best possible outcomes. We combine legal excellence with personal attention to every case.",
+            "features": ["Experienced attorneys", "Multiple practice areas", "Free consultations", "Proven results"],
+            "cta": "Get Legal Help"
+        },
+        "events": {
+            "name": "Events / Wedding Planner",
+            "icon": "calendar-heart",
+            "description": "Event planners and wedding coordinators",
+            "defaultColorScheme": "creative",
+            "heroImage": "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=1920&q=80",
+            "prompt": "A premier event planning company creating unforgettable celebrations and corporate events. From intimate weddings to large-scale conferences, we handle every detail with creativity and precision. Let us bring your vision to life and create memories that last a lifetime.",
+            "features": ["Full-service planning", "Vendor coordination", "Budget management", "Day-of coordination"],
+            "cta": "Plan Your Event"
+        },
+        "agency": {
+            "name": "Digital Agency",
+            "icon": "layout-grid",
+            "description": "Digital marketing and creative agencies",
+            "defaultColorScheme": "creative",
+            "heroImage": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1920&q=80",
+            "prompt": "A full-service digital agency helping brands stand out in the digital landscape. We combine strategic thinking with creative excellence to deliver results-driven solutions in web design, branding, SEO, and digital marketing. Let's build something amazing together.",
+            "features": ["Web design", "Digital marketing", "Brand strategy", "SEO optimization"],
+            "cta": "Start Your Project"
+        },
+        "nonprofit": {
+            "name": "Nonprofit / Charity",
+            "icon": "heart-handshake",
+            "description": "Nonprofit organizations and charitable causes",
+            "defaultColorScheme": "nature",
+            "heroImage": "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1920&q=80",
+            "prompt": "A dedicated nonprofit organization making a real difference in our community. Through compassion, commitment, and your generous support, we're addressing critical needs and creating lasting change. Join us in building a better future for those who need it most.",
+            "features": ["Transparent impact", "Tax-deductible", "Volunteer opportunities", "Community programs"],
+            "cta": "Donate Now"
         }
     }
     
