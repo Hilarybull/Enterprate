@@ -138,6 +138,7 @@ function AppRouter() {
         <Route path="team" element={<TeamCollaboration />} />
         <Route path="ab-testing" element={<ABTesting />} />
         <Route path="automation" element={<CampaignAutomation />} />
+        <Route path="custom-domains" element={<CustomDomains />} />
         <Route path="resources" element={<Resources />} />
         <Route path="intelligence-graph" element={<IntelligenceGraph />} />
         <Route path="settings" element={<Settings />} />
