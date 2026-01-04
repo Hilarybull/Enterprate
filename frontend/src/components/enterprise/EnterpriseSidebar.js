@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Lightbulb,
   Globe,
+  Globe2,
   FileText,
   BookOpen,
   DollarSign,
