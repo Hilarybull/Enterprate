@@ -221,13 +221,15 @@ EnterprateAI is a comprehensive AI Operating System for Business that helps entr
 - ✅ Website Analytics dashboard
 - ✅ Companies House API integration
 - ✅ Fixed Netlify deployment (text/html)
+- ✅ **WebSocket Real-Time Notifications** - Live WebSocket connection with status indicator
+- ✅ **Custom Domain Support** - Generic DNS verification flow for any provider
+- ✅ **Notification Center** - Real-time notification popover in header
 
 ### Future Enhancements (P2/P3)
-- Custom domain support for deployed sites
-- WebSocket real-time notifications (currently polling)
 - More template categories
 - Advanced team permission granularity
 - Multi-variant testing (A/B/C/D/n)
+- Lead integration with Growth/CRM module (partially implemented)
 
 ## Database Collections
 
