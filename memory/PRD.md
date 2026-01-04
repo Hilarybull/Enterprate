@@ -267,6 +267,23 @@ EnterprateAI is a comprehensive AI Operating System for Business that helps entr
 }
 ```
 
+### custom_domains
+```javascript
+{
+  id: String (UUID),
+  websiteId: String,
+  workspace_id: String,
+  domain: String,
+  platform: String,
+  status: String (pending_dns|active|error),
+  sslStatus: String (pending|active|error),
+  dnsRecords: Array,
+  createdBy: String,
+  createdAt: ISODate,
+  lastVerified: ISODate
+}
+```
+
 ## Verified Deployments
 - https://innovatetech-ai.netlify.app - SaaS template (text/html ✅)
 - https://techflow-solutions.netlify.app - Tech startup
