@@ -133,14 +133,6 @@ export default function WebsiteAnalytics() {
   };
 
   if (loading) {
-            <div className="w-16 text-sm font-medium text-right">{item[valueKey].toLocaleString()}</div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  if (loading) {
     return (
       <div className="flex items-center justify-center h-64" data-testid="loading-spinner">
         <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
