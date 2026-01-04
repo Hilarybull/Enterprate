@@ -157,7 +157,7 @@ export default function AIWebsiteBuilder() {
     }
   }, [currentWorkspace, loadWebsites, loadTemplates]);
 
-  const useTemplate = (templateId, template) => {
+  const applyTemplate = (templateId, template) => {
     setSelectedTemplate(templateId);
     setFormData(prev => ({
       ...prev,
@@ -413,7 +413,7 @@ export default function AIWebsiteBuilder() {
                   className={`cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] ${
                     selectedTemplate === id ? 'ring-2 ring-indigo-500' : ''
                   }`}
-                  onClick={() => useTemplate(id, template)}
+                  onClick={() => applyTemplate(id, template)}
                   data-testid={`template-${id}`}
                 >
                   <CardHeader className="pb-3">
