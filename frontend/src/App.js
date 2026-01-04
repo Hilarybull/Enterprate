@@ -126,10 +126,14 @@ function AppRouter() {
         <Route path="website-setup" element={<WebsiteSetup />} />
         <Route path="ai-website-builder" element={<AIWebsiteBuilder />} />
         <Route path="website-builder/:websiteId" element={<WebsiteEditor />} />
+        <Route path="website-analytics" element={<WebsiteAnalytics />} />
         <Route path="business-blueprint" element={<BusinessBlueprint />} />
         <Route path="finance-automation" element={<FinanceAutomation />} />
         <Route path="business-operations" element={<BusinessOperations />} />
         <Route path="growth" element={<Growth />} />
+        <Route path="team" element={<TeamCollaboration />} />
+        <Route path="ab-testing" element={<ABTesting />} />
+        <Route path="automation" element={<CampaignAutomation />} />
         <Route path="resources" element={<Resources />} />
         <Route path="intelligence-graph" element={<IntelligenceGraph />} />
         <Route path="settings" element={<Settings />} />
