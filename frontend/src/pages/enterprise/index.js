@@ -14,3 +14,7 @@ export { default as ValidationHistory } from './ValidationHistory';
 export { default as Branding } from './Branding';
 export { default as Resources } from './Resources';
 export { default as Help } from './Help';
+export { default as TeamCollaboration } from './TeamCollaboration';
+export { default as ABTesting } from './ABTesting';
+export { default as CampaignAutomation } from './CampaignAutomation';
+export { default as WebsiteAnalytics } from './WebsiteAnalytics';
