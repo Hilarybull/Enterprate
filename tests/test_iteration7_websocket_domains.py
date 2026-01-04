@@ -234,7 +234,10 @@ class TestNotificationsAPI:
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         data = response.json()
-        assert "count" in data or isinstance(data, int), "Response should have count"
+        # API returns unreadCount field
+        assert "unreadCount" in data or "count" in data or isinstance(data, int), "Response should have count"
+        if "unreadCount" in data:
+            assert isinstance(data["unreadCount"], int), "unreadCount should be an integer"
 
 
 class TestAIWebsitesForDomains:
