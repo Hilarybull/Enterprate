@@ -207,6 +207,36 @@ class AIWebsiteBuilderService:
             "prompt": "A dedicated nonprofit organization making a real difference in our community. Through compassion, commitment, and your generous support, we're addressing critical needs and creating lasting change. Join us in building a better future for those who need it most.",
             "features": ["Transparent impact", "Tax-deductible", "Volunteer opportunities", "Community programs"],
             "cta": "Donate Now"
+        },
+        "photography": {
+            "name": "Photography Studio",
+            "icon": "camera",
+            "description": "Professional photography services",
+            "defaultColorScheme": "minimal",
+            "heroImage": "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=1920&q=80",
+            "prompt": "A professional photography studio capturing life's most precious moments. From weddings to portraits, commercial to artistic, we bring your vision to life with stunning imagery. Our award-winning photographers combine technical mastery with creative vision to deliver exceptional results.",
+            "features": ["Wedding photography", "Portrait sessions", "Commercial shoots", "Photo editing"],
+            "cta": "Book a Session"
+        },
+        "music": {
+            "name": "Music / Band",
+            "icon": "music",
+            "description": "Musicians, bands, and music studios",
+            "defaultColorScheme": "creative",
+            "heroImage": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1920&q=80",
+            "prompt": "An electrifying musical experience that moves souls and creates unforgettable moments. Whether you're looking for live performances, recording sessions, or music lessons, we bring passion and expertise to every note. Let the music speak to your heart.",
+            "features": ["Live performances", "Studio recording", "Music lessons", "Custom compositions"],
+            "cta": "Listen Now"
+        },
+        "travel": {
+            "name": "Travel Agency",
+            "icon": "plane",
+            "description": "Travel agencies and tour operators",
+            "defaultColorScheme": "nature",
+            "heroImage": "https://images.unsplash.com/photo-1488085061387-422e29b40080?w=1920&q=80",
+            "prompt": "Your gateway to extraordinary adventures around the world. We craft personalized travel experiences that turn dreams into reality. From exotic destinations to hidden gems, our expert travel consultants ensure every journey is seamless, memorable, and uniquely yours.",
+            "features": ["Custom itineraries", "24/7 support", "Best price guarantee", "Expert guides"],
+            "cta": "Plan Your Trip"
         }
     }
     
