@@ -610,9 +610,12 @@ Generate ONLY the complete HTML code. No explanations or markdown - just valid H
         </div>
     </footer>
 
+    <!-- Analytics Tracking Script -->
+    {AIWebsiteBuilderService._generate_tracking_script(workspace_id, context.get("websiteId", ""))}
+
     <!-- Lead Form Script -->
     <script>
-        const LEAD_API_URL = '{os.environ.get("FRONTEND_URL", "")}/api/websites/lead';
+        const LEAD_API_URL = '{os.environ.get("FRONTEND_URL", "")}/api/ai-websites/lead';
         const WORKSPACE_ID = '{workspace_id}';
         
         async function submitLeadForm(event) {{
@@ -641,6 +644,10 @@ Generate ONLY the complete HTML code. No explanations or markdown - just valid H
                 }});
                 
                 if (response.ok) {{
+                    // Track conversion
+                    if (window.EnterprateAnalytics) {{
+                        window.EnterprateAnalytics.trackConversion('form_submit');
+                    }}
                     form.innerHTML = '<div class="text-center py-8"><i class="fas fa-check-circle text-green-500 text-5xl mb-4"></i><h3 class="text-2xl font-bold text-white mb-2">{texts["thank_you"]}</h3><p class="text-gray-300">{texts["will_contact"]}</p></div>';
                 }} else {{
                     throw new Error('Submission failed');
