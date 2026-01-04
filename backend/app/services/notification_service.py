@@ -226,7 +226,7 @@ class NotificationService:
         site_name: str
     ):
         """Send notification when website is deployed"""
-        return await NotificationService.create_notification(
+        notification = await NotificationService.create_notification(
             workspace_id=workspace_id,
             user_id=user_id,
             notification_type="website_deployed",
@@ -236,6 +236,18 @@ class NotificationService:
             priority="high",
             action_url=site_url
         )
+        
+        # Broadcast via WebSocket
+        try:
+            from app.services.websocket_manager import NotificationBroadcaster
+            import asyncio
+            asyncio.create_task(NotificationBroadcaster.notify_website_deployed(
+                workspace_id, user_id, site_url, site_name
+            ))
+        except Exception:
+            pass  # WebSocket failure shouldn't break the notification
+        
+        return notification
     
     @staticmethod
     async def notify_team_invite(
