@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-API_URL="https://enterai-enhance.preview.emergentagent.com/api"
+API_URL="https://enterpriseai-hub.preview.emergentagent.com/api"
 
 echo "========================================"
 echo "PostgreSQL Migration - API Testing"
