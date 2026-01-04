@@ -102,6 +102,7 @@ export default function AIWebsiteBuilder() {
   const [activeTab, setActiveTab] = useState('templates');
   const [websites, setWebsites] = useState([]);
   const [templates, setTemplates] = useState({});
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [selectedWebsite, setSelectedWebsite] = useState(null);
   const [previewHtml, setPreviewHtml] = useState('');
   const [showPreview, setShowPreview] = useState(false);
@@ -124,6 +125,15 @@ export default function AIWebsiteBuilder() {
   const [deployPlatform, setDeployPlatform] = useState('netlify');
   const [deploySiteName, setDeploySiteName] = useState('');
 
+  const loadTemplates = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_URL}/ai-websites/templates/list`);
+      setTemplates(response.data || {});
+    } catch (error) {
+      console.error('Failed to load templates:', error);
+    }
+  }, []);
+
   const loadWebsites = useCallback(async () => {
     if (!currentWorkspace) return;
     try {
@@ -139,12 +149,24 @@ export default function AIWebsiteBuilder() {
   }, [currentWorkspace, getHeaders]);
 
   useEffect(() => {
+    loadTemplates();
     if (currentWorkspace) {
       loadWebsites();
     } else {
       setLoading(false);
     }
-  }, [currentWorkspace, loadWebsites]);
+  }, [currentWorkspace, loadWebsites, loadTemplates]);
+
+  const useTemplate = (templateId, template) => {
+    setSelectedTemplate(templateId);
+    setFormData(prev => ({
+      ...prev,
+      userDescription: template.prompt,
+      colorScheme: template.defaultColorScheme || 'modern'
+    }));
+    setActiveTab('create');
+    toast.success(`${template.name} template loaded!`);
+  };
 
   const generateWebsite = async () => {
     if (!formData.userDescription.trim()) {
