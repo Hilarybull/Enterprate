@@ -218,7 +218,7 @@ export default function CustomDomains() {
               <DialogHeader>
                 <DialogTitle>Add Custom Domain</DialogTitle>
                 <DialogDescription>
-                  Connect your domain to a deployed website. You'll need to configure DNS records with your domain provider.
+                  Connect your domain to a deployed website. You&apos;ll need to configure DNS records with your domain provider.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -423,13 +423,13 @@ export default function CustomDomains() {
             </CardHeader>
             <CardContent>
               <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
-                <li>Click "Add Domain" and enter your domain name (e.g., example.com)</li>
+                <li>Click &quot;Add Domain&quot; and enter your domain name (e.g., example.com)</li>
                 <li>Copy the DNS records shown after adding the domain</li>
                 <li>Log in to your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.)</li>
                 <li>Navigate to DNS settings for your domain</li>
                 <li>Add the DNS records exactly as shown (CNAME or A records)</li>
                 <li>Wait for DNS propagation (can take up to 48 hours, usually faster)</li>
-                <li>Click "Verify DNS" to check if the records are properly configured</li>
+                <li>Click &quot;Verify DNS&quot; to check if the records are properly configured</li>
                 <li>Once verified, SSL will be automatically provisioned</li>
               </ol>
             </CardContent>
