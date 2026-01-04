@@ -360,7 +360,11 @@ export default function AIWebsiteBuilder() {
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="templates" className="flex items-center gap-2">
+            <LayoutTemplate size={16} />
+            Templates
+          </TabsTrigger>
           <TabsTrigger value="create" className="flex items-center gap-2">
             <Wand2 size={16} />
             Create
@@ -379,8 +383,128 @@ export default function AIWebsiteBuilder() {
           </TabsTrigger>
         </TabsList>
 
+        {/* TEMPLATES TAB */}
+        <TabsContent value="templates" className="space-y-6 mt-6">
+          <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-indigo-100 rounded-xl">
+                  <LayoutTemplate className="text-indigo-600" size={24} />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg text-indigo-900">Quick Start Templates</h3>
+                  <p className="text-indigo-700 mt-1">
+                    Choose an industry template to get started quickly. Each template comes with optimized content, 
+                    recommended colors, and a professional structure ready for customization.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {Object.entries(templates).map(([id, template]) => {
+              const IconComponent = TEMPLATE_ICONS[template.icon] || Briefcase;
+              const colors = COLOR_PREVIEWS[template.defaultColorScheme] || COLOR_PREVIEWS.modern;
+              
+              return (
+                <Card 
+                  key={id}
+                  className={`cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] ${
+                    selectedTemplate === id ? 'ring-2 ring-indigo-500' : ''
+                  }`}
+                  onClick={() => useTemplate(id, template)}
+                  data-testid={`template-${id}`}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div 
+                        className="p-2.5 rounded-lg" 
+                        style={{ backgroundColor: `${colors.primary}20` }}
+                      >
+                        <IconComponent 
+                          size={22} 
+                          style={{ color: colors.primary }}
+                        />
+                      </div>
+                      <div className="flex gap-1">
+                        {Object.values(COLOR_PREVIEWS[template.defaultColorScheme] || {}).slice(0, 3).map((color, i) => (
+                          <div 
+                            key={i}
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <CardTitle className="text-base mt-3">{template.name}</CardTitle>
+                    <CardDescription className="text-xs line-clamp-2">
+                      {template.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {template.features?.slice(0, 3).map((feature, i) => (
+                        <Badge key={i} variant="outline" className="text-xs py-0">
+                          {feature}
+                        </Badge>
+                      ))}
+                    </div>
+                    <Button 
+                      size="sm" 
+                      className="w-full"
+                      style={{ 
+                        background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` 
+                      }}
+                    >
+                      Use Template
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {Object.keys(templates).length === 0 && (
+            <Card className="p-12 text-center">
+              <Loader2 className="mx-auto animate-spin text-gray-400 mb-4" size={32} />
+              <p className="text-gray-500">Loading templates...</p>
+            </Card>
+          )}
+        </TabsContent>
+
         {/* CREATE TAB */}
         <TabsContent value="create" className="space-y-6 mt-6">
+          {selectedTemplate && templates[selectedTemplate] && (
+            <Card className="bg-green-50 border-green-200">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="text-green-600" size={20} />
+                    <div>
+                      <p className="font-medium text-green-800">
+                        Using {templates[selectedTemplate].name} template
+                      </p>
+                      <p className="text-sm text-green-700">
+                        Customize the description below or generate as-is
+                      </p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => {
+                      setSelectedTemplate(null);
+                      setFormData(prev => ({ ...prev, userDescription: '' }));
+                    }}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Form */}
             <Card className="lg:col-span-2">
