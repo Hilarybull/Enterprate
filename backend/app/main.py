@@ -8,7 +8,8 @@ from app.routes import (
     auth, workspaces, projects, genesis, navigator, growth, websites, 
     intel, chat, password_reset, validation_reports,
     blueprint, finance, operations, marketing, company_profile,
-    scheduling, analytics, notifications, ab_testing, team, ai_websites
+    scheduling, analytics, notifications, ab_testing, team, ai_websites,
+    automation, website_analytics
 )
 
 # Configure logging
@@ -47,6 +48,8 @@ api_router.include_router(notifications.router)
 api_router.include_router(ab_testing.router)
 api_router.include_router(team.router)
 api_router.include_router(ai_websites.router)
+api_router.include_router(automation.router)
+api_router.include_router(website_analytics.router)
 
 # Include API router in main app
 app.include_router(api_router)
