@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, ChevronDown, Plus, LogOut, Bell, Search } from 'lucide-react';
+import { Menu, ChevronDown, Plus, LogOut, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useWorkspace } from '@/context/WorkspaceContext';
+import NotificationCenter from './NotificationCenter';
 
 export default function EnterpriseHeader({ 
   user, 
