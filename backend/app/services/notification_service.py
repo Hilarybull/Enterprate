@@ -207,7 +207,7 @@ class NotificationService:
         winner: dict
     ):
         """Send notification when A/B test winner is determined"""
-        return await NotificationService.create_notification(
+        notification = await NotificationService.create_notification(
             workspace_id=workspace_id,
             user_id=user_id,
             notification_type="ab_test_winner",
@@ -217,6 +217,18 @@ class NotificationService:
             priority="normal",
             action_url="/growth?tab=campaigns"
         )
+        
+        # Broadcast via WebSocket
+        try:
+            from app.services.websocket_manager import NotificationBroadcaster
+            import asyncio
+            asyncio.create_task(NotificationBroadcaster.notify_ab_test_winner(
+                workspace_id, test.get("name", "Test"), winner.get("name", "Winner")
+            ))
+        except Exception:
+            pass
+        
+        return notification
     
     @staticmethod
     async def notify_website_deployed(
