@@ -39,7 +39,12 @@ import {
   LineChart,
   Dumbbell,
   Home,
-  HeartPulse
+  HeartPulse,
+  GraduationCap,
+  Scale,
+  PartyPopper,
+  LayoutGrid,
+  HeartHandshake
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -56,7 +61,12 @@ const TEMPLATE_ICONS = {
   'chart-line': LineChart,
   'dumbbell': Dumbbell,
   'home': Home,
-  'heart-pulse': HeartPulse
+  'heart-pulse': HeartPulse,
+  'graduation-cap': GraduationCap,
+  'scale': Scale,
+  'calendar-heart': PartyPopper,
+  'layout-grid': LayoutGrid,
+  'heart-handshake': HeartHandshake
 };
 
 // Color scheme preview colors
