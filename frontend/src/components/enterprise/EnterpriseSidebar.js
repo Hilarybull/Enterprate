@@ -12,7 +12,11 @@ import {
   Palette,
   FolderOpen,
   Settings,
-  HelpCircle
+  HelpCircle,
+  Users,
+  FlaskConical,
+  Zap,
+  BarChart3
 } from 'lucide-react';
 
 const navItems = [
@@ -47,6 +51,12 @@ const navItems = [
     description: 'Generate landing pages with AI'
   },
   { 
+    path: '/website-analytics', 
+    icon: BarChart3, 
+    label: 'Website Analytics',
+    description: 'Track visits & conversions'
+  },
+  { 
     path: '/business-blueprint', 
     icon: BookOpen, 
     label: 'Business Blueprint Generator',
@@ -69,6 +79,24 @@ const navItems = [
     icon: TrendingUp, 
     label: 'Growth',
     description: 'Marketing & sales'
+  },
+  { 
+    path: '/team', 
+    icon: Users, 
+    label: 'Team',
+    description: 'Collaboration & roles'
+  },
+  { 
+    path: '/ab-testing', 
+    icon: FlaskConical, 
+    label: 'A/B Testing',
+    description: 'Optimize campaigns'
+  },
+  { 
+    path: '/automation', 
+    icon: Zap, 
+    label: 'Automation',
+    description: 'Campaign automation rules'
   },
   { 
     path: '/resources', 
