@@ -195,12 +195,12 @@ class WebsiteAnalyticsService:
             "countries": [{"country": c[0], "count": c[1]} for c in top_countries],
             "recentLeads": [
                 {
-                    "id": l.get("id"),
-                    "name": l.get("name"),
-                    "email": l.get("email"),
-                    "createdAt": l.get("createdAt")
+                    "id": lead.get("id"),
+                    "name": lead.get("name"),
+                    "email": lead.get("email"),
+                    "createdAt": lead.get("createdAt")
                 }
-                for l in sorted(leads, key=lambda x: x.get("createdAt", ""), reverse=True)[:10]
+                for lead in sorted(leads, key=lambda x: x.get("createdAt", ""), reverse=True)[:10]
             ]
         }
     
@@ -242,7 +242,7 @@ class WebsiteAnalyticsService:
         website_stats = []
         for website in websites:
             website_events = [e for e in events if e.get("websiteId") == website.get("id")]
-            website_leads = [l for l in leads if l.get("websiteId") == website.get("id")]
+            website_leads = [lead_item for lead_item in leads if lead_item.get("websiteId") == website.get("id")]
             
             views = len([e for e in website_events if e.get("eventType") == "page_view"])
             convs = len([e for e in website_events if e.get("eventType") == "conversion"])
