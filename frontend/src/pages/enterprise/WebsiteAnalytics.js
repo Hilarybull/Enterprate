@@ -25,7 +25,6 @@ import {
   Mail,
   MapPin
 } from 'lucide-react';
-import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
@@ -33,6 +32,50 @@ const DEVICE_ICONS = {
   desktop: Monitor,
   mobile: Smartphone,
   tablet: Tablet
+};
+
+// Moved outside of component to avoid re-creation on each render
+const StatCard = ({ title, value, icon: Icon, trend, subtitle }) => (
+  <Card>
+    <CardContent className="pt-6">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm text-gray-500">{title}</p>
+          <p className="text-2xl font-bold mt-1">{value}</p>
+          {subtitle && <p className="text-xs text-gray-400 mt-1">{subtitle}</p>}
+        </div>
+        <div className={`p-2 rounded-lg ${trend > 0 ? 'bg-green-100' : trend < 0 ? 'bg-red-100' : 'bg-gray-100'}`}>
+          <Icon className={trend > 0 ? 'text-green-600' : trend < 0 ? 'text-red-600' : 'text-gray-600'} size={20} />
+        </div>
+      </div>
+      {trend !== undefined && (
+        <div className={`flex items-center gap-1 mt-2 text-sm ${trend > 0 ? 'text-green-600' : trend < 0 ? 'text-red-600' : 'text-gray-500'}`}>
+          {trend > 0 ? <ArrowUpRight size={14} /> : trend < 0 ? <ArrowDownRight size={14} /> : null}
+          <span>{Math.abs(trend)}% vs previous period</span>
+        </div>
+      )}
+    </CardContent>
+  </Card>
+);
+
+const SimpleBarChart = ({ data, valueKey, labelKey, maxValue }) => {
+  const max = maxValue || Math.max(...data.map(d => d[valueKey]), 1);
+  return (
+    <div className="space-y-2">
+      {data.map((item, index) => (
+        <div key={index} className="flex items-center gap-3">
+          <div className="w-24 text-sm text-gray-600 truncate">{item[labelKey]}</div>
+          <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all"
+              style={{ width: `${(item[valueKey] / max) * 100}%` }}
+            />
+          </div>
+          <div className="w-16 text-sm font-medium text-right">{item[valueKey].toLocaleString()}</div>
+        </div>
+      ))}
+    </div>
+  );
 };
 
 export default function WebsiteAnalytics() {
