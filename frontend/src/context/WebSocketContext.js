@@ -103,18 +103,18 @@ export const WebSocketProvider = ({ children }) => {
 
   // Effect to manage WebSocket connection
   useEffect(() => {
+    // Early exit - cleanup happens in return statement
     if (!isAuthenticated || !wsUrl) {
-      // Cleanup if not authenticated
-      if (wsRef.current) {
-        wsRef.current.close(1000, 'User disconnect');
-        wsRef.current = null;
-      }
-      if (pingIntervalRef.current) {
-        clearInterval(pingIntervalRef.current);
-        pingIntervalRef.current = null;
-      }
-      setIsConnected(false);
-      return;
+      return () => {
+        if (wsRef.current) {
+          wsRef.current.close(1000, 'User disconnect');
+          wsRef.current = null;
+        }
+        if (pingIntervalRef.current) {
+          clearInterval(pingIntervalRef.current);
+          pingIntervalRef.current = null;
+        }
+      };
     }
 
     // Prevent multiple connection attempts
