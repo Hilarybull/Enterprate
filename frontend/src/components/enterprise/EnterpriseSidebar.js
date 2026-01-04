@@ -58,6 +58,12 @@ const navItems = [
     description: 'Track visits & conversions'
   },
   { 
+    path: '/custom-domains', 
+    icon: Globe2, 
+    label: 'Custom Domains',
+    description: 'Connect your domains'
+  },
+  { 
     path: '/business-blueprint', 
     icon: BookOpen, 
     label: 'Business Blueprint Generator',
