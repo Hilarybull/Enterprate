@@ -274,5 +274,40 @@ EnterprateAI is a comprehensive AI Operating System for Business that helps entr
 ## Notes
 - **Google Sign-in**: Intermediate page at `auth.emergentagent.com` is by design
 - **MongoDB Only**: Application does NOT use PostgreSQL/SQLAlchemy
-- **All APIs Working**: Team, A/B Testing, Automation, Analytics verified
-- **All Frontend UIs**: Team, A/B Testing, Automation, Analytics pages complete
+- **All APIs Working**: Team, A/B Testing, Automation, Analytics, WebSocket, Custom Domains verified
+- **All Frontend UIs**: Team, A/B Testing, Automation, Analytics, Custom Domains pages complete
+- **Real-Time Notifications**: WebSocket connection established on login, shows "Live" status
+
+## New Features (Iteration 7)
+
+### 12. WebSocket Real-Time Notifications ✅
+- **Connection Management**: Auto-connect on login, reconnect on disconnect
+- **Notification Categories**: lead, website, ab_test, automation, team, scheduling
+- **Toast Notifications**: Automatic toast display based on notification category
+- **Status Indicator**: "Live" status in header when WebSocket connected
+
+### 13. Custom Domain Management ✅
+- **Generic DNS Verification**: Works with any DNS provider
+- **CNAME/A Record Support**: Provides instructions for both record types
+- **Verification Flow**: Check DNS propagation with single click
+- **SSL Status Tracking**: Automatic SSL provisioning after verification
+- **Per-Website Domains**: Each deployed website can have custom domains
+
+### 14. Notification Center UI ✅
+- **Header Integration**: Bell icon in enterprise header
+- **Connection Status**: Shows "Live" or "Offline" indicator
+- **Notification List**: Scrollable list of recent notifications
+- **Category Icons**: Visual icons for different notification types
+- **Mark as Read**: Individual or bulk mark as read
+- **Clear All**: Remove all notifications
+
+## Test Reports
+- `/app/test_reports/iteration_1.json` - Initial tests (25 passed)
+- `/app/test_reports/iteration_2.json` - Phase 2 tests (36 passed)
+- `/app/test_reports/iteration_3.json` - Phase 3 tests (45 passed)
+- `/app/test_reports/iteration_4.json` - AI Website Builder (32 passed)
+- `/app/test_reports/iteration_5.json` - Quick Templates + Fixes (23 passed)
+- `/app/test_reports/iteration_6.json` - Enterprise Features (39 passed)
+- `/app/test_reports/iteration_7.json` - WebSocket & Custom Domains (27 passed)
+
+**Total: 227 tests, 100% pass rate**
