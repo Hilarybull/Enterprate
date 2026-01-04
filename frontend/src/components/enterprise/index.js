@@ -6,3 +6,4 @@ export { default as AIChatbot } from './AIChatbot';
 export { default as FeatureCard } from './FeatureCard';
 export { default as PageHeader } from './PageHeader';
 export { default as StatsCard } from './StatsCard';
+export { default as NotificationCenter } from './NotificationCenter';

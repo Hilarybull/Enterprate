@@ -18,3 +18,4 @@ export { default as TeamCollaboration } from './TeamCollaboration';
 export { default as ABTesting } from './ABTesting';
 export { default as CampaignAutomation } from './CampaignAutomation';
 export { default as WebsiteAnalytics } from './WebsiteAnalytics';
+export { default as CustomDomains } from './CustomDomains';
