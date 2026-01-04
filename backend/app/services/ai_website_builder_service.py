@@ -685,6 +685,90 @@ Generate ONLY the complete HTML code. No explanations or markdown - just valid H
             return "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&q=80"
     
     @staticmethod
+    def _generate_tracking_script(workspace_id: str, website_id: str) -> str:
+        """Generate embedded analytics tracking script"""
+        api_base = os.environ.get("REACT_APP_BACKEND_URL", os.environ.get("FRONTEND_URL", ""))
+        
+        return f'''<script>
+    /* EnterprateAI Analytics Tracking v1.0 */
+    (function() {{
+        const ANALYTICS_API = '{api_base}/api/website-analytics/track';
+        const WEBSITE_ID = '{website_id}';
+        const WORKSPACE_ID = '{workspace_id}';
+        
+        // Generate or retrieve visitor ID
+        function getVisitorId() {{
+            let visitorId = localStorage.getItem('ea_visitor_id');
+            if (!visitorId) {{
+                visitorId = 'v_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+                localStorage.setItem('ea_visitor_id', visitorId);
+            }}
+            return visitorId;
+        }}
+        
+        // Detect device type
+        function getDeviceType() {{
+            const ua = navigator.userAgent;
+            if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) return 'tablet';
+            if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) return 'mobile';
+            return 'desktop';
+        }}
+        
+        // Track page view
+        async function trackPageView() {{
+            try {{
+                await fetch(ANALYTICS_API + '/pageview', {{
+                    method: 'POST',
+                    headers: {{ 'Content-Type': 'application/json' }},
+                    body: JSON.stringify({{
+                        websiteId: WEBSITE_ID,
+                        visitorId: getVisitorId(),
+                        pagePath: window.location.pathname,
+                        referrer: document.referrer || null,
+                        userAgent: navigator.userAgent,
+                        deviceType: getDeviceType()
+                    }})
+                }});
+            }} catch (e) {{
+                console.debug('Analytics: tracking unavailable');
+            }}
+        }}
+        
+        // Track conversion
+        async function trackConversion(conversionType, leadId) {{
+            try {{
+                await fetch(ANALYTICS_API + '/conversion', {{
+                    method: 'POST',
+                    headers: {{ 'Content-Type': 'application/json' }},
+                    body: JSON.stringify({{
+                        websiteId: WEBSITE_ID,
+                        visitorId: getVisitorId(),
+                        leadId: leadId || 'unknown',
+                        conversionType: conversionType || 'form_submit'
+                    }})
+                }});
+            }} catch (e) {{
+                console.debug('Analytics: conversion tracking unavailable');
+            }}
+        }}
+        
+        // Initialize tracking
+        if (document.readyState === 'complete') {{
+            trackPageView();
+        }} else {{
+            window.addEventListener('load', trackPageView);
+        }}
+        
+        // Expose tracking functions globally
+        window.EnterprateAnalytics = {{
+            trackPageView: trackPageView,
+            trackConversion: trackConversion,
+            getVisitorId: getVisitorId
+        }};
+    }})();
+    </script>'''
+    
+    @staticmethod
     async def refine_website(
         website_id: str,
         workspace_id: str,
