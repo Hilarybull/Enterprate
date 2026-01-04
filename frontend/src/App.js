@@ -31,7 +31,11 @@ import {
   ValidationHistory,
   Branding,
   Resources,
-  Help
+  Help,
+  TeamCollaboration,
+  ABTesting,
+  CampaignAutomation,
+  WebsiteAnalytics
 } from '@/pages/enterprise';
 
 // Legacy imports for website editor
