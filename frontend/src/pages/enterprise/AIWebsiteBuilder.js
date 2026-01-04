@@ -30,11 +30,34 @@ import {
   Layout,
   CheckCircle2,
   Clock,
-  Settings2
+  Settings2,
+  LayoutTemplate,
+  Utensils,
+  Briefcase,
+  Scissors,
+  ShoppingCart,
+  LineChart,
+  Dumbbell,
+  Home,
+  HeartPulse
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
+
+// Template icons mapping
+const TEMPLATE_ICONS = {
+  'code': Code,
+  'utensils': Utensils,
+  'briefcase': Briefcase,
+  'scissors': Scissors,
+  'sparkles': Sparkles,
+  'shopping-cart': ShoppingCart,
+  'chart-line': LineChart,
+  'dumbbell': Dumbbell,
+  'home': Home,
+  'heart-pulse': HeartPulse
+};
 
 // Color scheme preview colors
 const COLOR_PREVIEWS = {
@@ -76,8 +99,9 @@ export default function AIWebsiteBuilder() {
   const [generating, setGenerating] = useState(false);
   const [deploying, setDeploying] = useState(false);
   const [refining, setRefining] = useState(false);
-  const [activeTab, setActiveTab] = useState('create');
+  const [activeTab, setActiveTab] = useState('templates');
   const [websites, setWebsites] = useState([]);
+  const [templates, setTemplates] = useState({});
   const [selectedWebsite, setSelectedWebsite] = useState(null);
   const [previewHtml, setPreviewHtml] = useState('');
   const [showPreview, setShowPreview] = useState(false);
