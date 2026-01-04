@@ -9,7 +9,7 @@ from app.routes import (
     intel, chat, password_reset, validation_reports,
     blueprint, finance, operations, marketing, company_profile,
     scheduling, analytics, notifications, ab_testing, team, ai_websites,
-    automation, website_analytics
+    automation, website_analytics, websocket, domains
 )
 
 # Configure logging
@@ -50,6 +50,8 @@ api_router.include_router(team.router)
 api_router.include_router(ai_websites.router)
 api_router.include_router(automation.router)
 api_router.include_router(website_analytics.router)
+api_router.include_router(websocket.router)
+api_router.include_router(domains.router)
 
 # Include API router in main app
 app.include_router(api_router)
