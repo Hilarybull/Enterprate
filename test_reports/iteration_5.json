@@ -1,0 +1,106 @@
+{
+  "iteration": 5,
+  "date": "2026-01-04",
+  "summary": "Tested AI Website Builder enhancements: Quick Templates feature (10 industry templates), Netlify deployment fix (text/html content-type), and Companies House API verification. All 23 backend tests passed. Frontend UI verified working correctly.",
+  "features_tested": [
+    "GET /api/ai-websites/templates/list - Returns 10 industry templates",
+    "GET /api/ai-websites/templates/{id} - Returns specific template details",
+    "POST /api/ai-websites/generate - Generate website with template content",
+    "POST /api/ai-websites/{id}/deploy with platform=netlify - Verified HTML content-type",
+    "POST /api/company-profile/check-name - Companies House API working with real key",
+    "Full workflow: Select template -> Generate -> Deploy to Netlify -> Verify site serves HTML"
+  ],
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "total_tests": 23,
+    "passed": 23,
+    "failed": 0,
+    "skipped": 0,
+    "pass_rate": "100%"
+  },
+  "test_categories": {
+    "templates_list_api": {
+      "tests": 5,
+      "description": "GET /api/ai-websites/templates/list - Returns all 10 industry templates with required fields"
+    },
+    "template_by_id_api": {
+      "tests": 4,
+      "description": "GET /api/ai-websites/templates/{id} - Returns specific template with id field"
+    },
+    "netlify_deployment_fix": {
+      "tests": 4,
+      "description": "Verified Netlify deployment returns text/html content-type (FIX VERIFIED)"
+    },
+    "companies_house_api": {
+      "tests": 5,
+      "description": "POST /api/company-profile/check-name - Working with real API key"
+    },
+    "template_based_generation": {
+      "tests": 3,
+      "description": "Generate websites using template prompts"
+    },
+    "full_workflow": {
+      "tests": 1,
+      "description": "Complete workflow: Template -> Generate -> Deploy -> Verify HTML"
+    },
+    "cleanup": {
+      "tests": 1,
+      "description": "Test data cleanup"
+    }
+  },
+  "verified_fixes": {
+    "netlify_deployment": {
+      "issue": "Netlify deployment was returning text/plain instead of text/html",
+      "fix": "Changed from ZIP upload to file digest API with SHA1 hash",
+      "verification": "Deployed site https://test-iter5-saas.netlify.app returns Content-Type: text/html; charset=UTF-8",
+      "status": "FIXED"
+    }
+  },
+  "verified_features": {
+    "quick_templates": {
+      "description": "10 industry-specific templates added",
+      "templates": ["saas", "restaurant", "portfolio", "salon", "beauty", "online_store", "consulting", "fitness", "real_estate", "healthcare"],
+      "status": "WORKING"
+    },
+    "companies_house_api": {
+      "description": "Companies House API integration with real key",
+      "status": "WORKING"
+    }
+  },
+  "frontend_verification": {
+    "ai_website_builder_page": "Loads correctly with all 10 templates displayed",
+    "template_selection": "Clicking template populates description and color scheme",
+    "generate_button": "Enabled when description is populated",
+    "tabs": "Templates, Create, Preview, Deploy, History tabs all visible"
+  },
+  "test_report_links": [
+    "/app/tests/test_ai_website_builder_iter5.py",
+    "/app/test_reports/pytest/pytest_results_iteration5.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/tests/test_ai_website_builder_iter5.py"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "email": "webbuilder_test2@example.com",
+    "password": "Test123!",
+    "workspace_id": "592c480e-7da2-4500-a987-567c1c450ba7"
+  },
+  "seed_data_creation": "Test user and workspace created in MongoDB for iteration 5 testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All Quick Templates feature tests passing. Netlify deployment fix verified - sites now serve text/html correctly. Companies House API working with real key. Previous iteration (4) had 32 tests, this iteration adds 23 new tests specifically for the new features."
+}
