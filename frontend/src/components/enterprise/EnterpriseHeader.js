@@ -112,9 +112,7 @@ export default function EnterpriseHeader({
           )}
 
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-500 hover:text-gray-700">
-            <Bell size={18} />
-          </Button>
+          <NotificationCenter />
 
           {/* User Menu */}
           <DropdownMenu>
