@@ -255,3 +255,42 @@ class NotificationService:
             priority="high",
             action_url="/settings/team"
         )
+    
+    @staticmethod
+    async def notify_new_lead(workspace_id: str, lead: dict):
+        """Send notification when a new lead is captured"""
+        # Get workspace owner/admins to notify
+        db = get_db()
+        team_members = await db.team_members.find({
+            "workspace_id": workspace_id,
+            "role": {"$in": ["owner", "admin"]}
+        }).to_list(length=10)
+        
+        lead_name = lead.get("name", "Unknown")
+        lead_email = lead.get("email", "")
+        
+        # Create notifications for each admin/owner
+        for member in team_members:
+            await NotificationService.create_notification(
+                workspace_id=workspace_id,
+                user_id=member.get("user_id"),
+                notification_type="lead_converted",
+                title="New Lead Captured!",
+                message=f"New lead: {lead_name} ({lead_email})",
+                data={
+                    "leadId": lead.get("id"),
+                    "leadName": lead_name,
+                    "leadEmail": lead_email,
+                    "source": lead.get("source", "website_form")
+                },
+                priority="high",
+                action_url="/growth?tab=leads"
+            )
+        
+        # Broadcast via WebSocket
+        try:
+            from app.services.websocket_manager import NotificationBroadcaster
+            import asyncio
+            asyncio.create_task(NotificationBroadcaster.notify_new_lead(workspace_id, lead))
+        except Exception:
+            pass  # WebSocket failure shouldn't break the lead capture
