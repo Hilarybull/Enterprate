@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { Toaster } from '@/components/ui/sonner';
 import AuthProvider, { useAuth } from '@/context/AuthContext';
 import WorkspaceProvider from '@/context/WorkspaceContext';
+import WebSocketProvider from '@/context/WebSocketContext';
 
 // Auth Pages
 import Login from '@/pages/Login';
@@ -35,7 +36,8 @@ import {
   TeamCollaboration,
   ABTesting,
   CampaignAutomation,
-  WebsiteAnalytics
+  WebsiteAnalytics,
+  CustomDomains
 } from '@/pages/enterprise';
 
 // Legacy imports for website editor
