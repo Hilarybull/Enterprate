@@ -113,7 +113,9 @@ function AppRouter() {
       <Route path="/" element={
         <PrivateRoute>
           <WorkspaceProvider>
-            <EnterpriseLayout />
+            <WebSocketProvider>
+              <EnterpriseLayout />
+            </WebSocketProvider>
           </WorkspaceProvider>
         </PrivateRoute>
       }>
