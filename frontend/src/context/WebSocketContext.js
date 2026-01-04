@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import { useWorkspace } from './WorkspaceContext';
 import { toast } from 'sonner';
@@ -24,17 +24,19 @@ export const WebSocketProvider = ({ children }) => {
   const maxReconnectAttempts = 5;
   const reconnectDelay = 3000;
   const pingIntervalRef = useRef(null);
-  const connectRef = useRef(null);
+  const isConnectingRef = useRef(false);
 
-  const getWebSocketUrl = useCallback(() => {
-    if (!token || !currentWorkspace?.id) return null;
+  const workspaceId = currentWorkspace?.id;
+
+  const wsUrl = useMemo(() => {
+    if (!token || !workspaceId) return null;
     
     const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
     const wsProtocol = baseUrl.startsWith('https') ? 'wss' : 'ws';
     const wsHost = baseUrl.replace(/^https?:\/\//, '');
     
-    return `${wsProtocol}://${wsHost}/api/ws/notifications?token=${token}&workspace_id=${currentWorkspace.id}`;
-  }, [token, currentWorkspace?.id]);
+    return `${wsProtocol}://${wsHost}/api/ws/notifications?token=${token}&workspace_id=${workspaceId}`;
+  }, [token, workspaceId]);
 
   const handleMessage = useCallback((event) => {
     try {
@@ -99,12 +101,29 @@ export const WebSocketProvider = ({ children }) => {
     }
   }, []);
 
-  // Store connect function in ref to avoid circular dependency
+  // Effect to manage WebSocket connection
   useEffect(() => {
-    connectRef.current = () => {
-      const wsUrl = getWebSocketUrl();
-      if (!wsUrl) return;
-      
+    if (!isAuthenticated || !wsUrl) {
+      // Cleanup if not authenticated
+      if (wsRef.current) {
+        wsRef.current.close(1000, 'User disconnect');
+        wsRef.current = null;
+      }
+      if (pingIntervalRef.current) {
+        clearInterval(pingIntervalRef.current);
+        pingIntervalRef.current = null;
+      }
+      setIsConnected(false);
+      return;
+    }
+
+    // Prevent multiple connection attempts
+    if (isConnectingRef.current) return;
+    
+    const connect = () => {
+      if (isConnectingRef.current) return;
+      isConnectingRef.current = true;
+
       // Close existing connection
       if (wsRef.current) {
         wsRef.current.close();
@@ -115,6 +134,7 @@ export const WebSocketProvider = ({ children }) => {
         
         ws.onopen = () => {
           console.log('WebSocket connection established');
+          isConnectingRef.current = false;
           setIsConnected(true);
           reconnectAttemptsRef.current = 0;
           
@@ -130,10 +150,12 @@ export const WebSocketProvider = ({ children }) => {
         
         ws.onerror = (error) => {
           console.error('WebSocket error:', error);
+          isConnectingRef.current = false;
         };
         
         ws.onclose = (event) => {
           console.log('WebSocket closed:', event.code, event.reason);
+          isConnectingRef.current = false;
           setIsConnected(false);
           
           // Clear ping interval
@@ -146,32 +168,32 @@ export const WebSocketProvider = ({ children }) => {
           if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
             reconnectAttemptsRef.current += 1;
             console.log(`Reconnecting... Attempt ${reconnectAttemptsRef.current}`);
-            setTimeout(() => {
-              if (connectRef.current) connectRef.current();
-            }, reconnectDelay * reconnectAttemptsRef.current);
+            setTimeout(connect, reconnectDelay * reconnectAttemptsRef.current);
           }
         };
         
         wsRef.current = ws;
       } catch (error) {
         console.error('Failed to create WebSocket:', error);
+        isConnectingRef.current = false;
       }
     };
-  }, [getWebSocketUrl, handleMessage]);
 
-  const disconnect = useCallback(() => {
-    if (pingIntervalRef.current) {
-      clearInterval(pingIntervalRef.current);
-      pingIntervalRef.current = null;
-    }
-    
-    if (wsRef.current) {
-      wsRef.current.close(1000, 'User disconnect');
-      wsRef.current = null;
-    }
-    
-    setIsConnected(false);
-  }, []);
+    connect();
+
+    // Cleanup function
+    return () => {
+      if (pingIntervalRef.current) {
+        clearInterval(pingIntervalRef.current);
+        pingIntervalRef.current = null;
+      }
+      if (wsRef.current) {
+        wsRef.current.close(1000, 'Component unmount');
+        wsRef.current = null;
+      }
+      isConnectingRef.current = false;
+    };
+  }, [isAuthenticated, wsUrl, handleMessage]);
 
   const markAsRead = useCallback((notificationId) => {
     setNotifications(prev => 
@@ -199,28 +221,13 @@ export const WebSocketProvider = ({ children }) => {
   }, []);
 
   const reconnect = useCallback(() => {
-    if (connectRef.current) {
-      connectRef.current();
+    // Trigger reconnection by closing existing socket
+    if (wsRef.current) {
+      wsRef.current.close(1000, 'Manual reconnect');
     }
   }, []);
 
-  // Connect when authenticated and workspace is available
-  useEffect(() => {
-    if (isAuthenticated && currentWorkspace?.id && token) {
-      // Small delay to ensure connectRef is set
-      const timer = setTimeout(() => {
-        if (connectRef.current) connectRef.current();
-      }, 100);
-      return () => {
-        clearTimeout(timer);
-        disconnect();
-      };
-    } else {
-      disconnect();
-    }
-  }, [isAuthenticated, currentWorkspace?.id, token, disconnect]);
-
-  const value = {
+  const value = useMemo(() => ({
     isConnected,
     notifications,
     unreadCount,
@@ -228,7 +235,7 @@ export const WebSocketProvider = ({ children }) => {
     markAllAsRead,
     clearNotifications,
     reconnect
-  };
+  }), [isConnected, notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications, reconnect]);
 
   return (
     <WebSocketContext.Provider value={value}>
