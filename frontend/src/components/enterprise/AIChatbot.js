@@ -360,10 +360,11 @@ export default function AIChatbot() {
                 <div className="w-full space-y-2">
                   <p className="text-xs text-gray-400 font-medium">Try asking:</p>
                   {[
-                    { text: 'What compliance steps do I need as a UK limited company?', domain: 'navigator' },
+                    { text: 'What features does EnterprateAI offer?', domain: 'navigator' },
+                    { text: 'How do I create a website with the AI Website Builder?', domain: 'growth' },
                     { text: 'Check company status for 00445790', domain: 'navigator' },
                     { text: 'How do I validate my business idea?', domain: 'genesis' },
-                    { text: 'What marketing strategies work for B2B?', domain: 'growth' },
+                    { text: 'What marketing tools are available?', domain: 'growth' },
                   ].map((suggestion, i) => (
                     <button
                       key={i}
