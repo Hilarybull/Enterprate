@@ -185,7 +185,22 @@ class EnterprateAssistant:
     def is_valid_business_context(self, message: str) -> bool:
         """
         Check if the request falls within valid Enterprate business context.
+        Platform questions about EnterprateAI are always valid.
         """
+        message_lower = message.lower()
+        
+        # Platform-specific questions are always valid
+        platform_patterns = [
+            r'\b(enterprate|enterprateai|this platform|this app|this tool)',
+            r'\b(how (do|can|does)|what (is|are|does)|where (is|can|do))',
+            r'\b(feature|module|dashboard|workspace|setting)',
+            r'\b(genesis|navigator|growth)\s*(ai)?',
+        ]
+        
+        for pattern in platform_patterns:
+            if re.search(pattern, message_lower, re.IGNORECASE):
+                return True
+        
         # Patterns that are clearly outside business context
         non_business_patterns = [
             r'\b(recipe|cook|food|weather|sports|game|movie|music)',
@@ -193,7 +208,6 @@ class EnterprateAssistant:
             r'\b(personal|relationship|dating|health\s*advice)',
         ]
         
-        message_lower = message.lower()
         for pattern in non_business_patterns:
             if re.search(pattern, message_lower, re.IGNORECASE):
                 return False
