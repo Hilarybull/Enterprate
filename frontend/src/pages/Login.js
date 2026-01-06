@@ -8,6 +8,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
 
+// Logo pattern component for background
+const LogoPattern = () => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div className="absolute inset-0 opacity-[0.03]" style={{
+      backgroundImage: `url("https://customer-assets.emergentagent.com/job_saas-dashboard-20/artifacts/aems110l_Enterprate%20Logo.png")`,
+      backgroundSize: '60px 60px',
+      backgroundRepeat: 'repeat',
+      transform: 'rotate(-15deg) scale(1.5)',
+    }} />
+    {/* Gradient overlay for depth */}
+    <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/80 via-white/90 to-purple-50/80" />
+  </div>
+);
+
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,21 +60,31 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center relative p-4">
+      {/* Background Pattern */}
+      <LogoPattern />
+      
+      {/* Decorative Elements */}
+      <div className="absolute top-10 left-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" />
+      <div className="absolute bottom-10 right-10 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '1s' }} />
+      <div className="absolute top-1/2 left-1/4 w-48 h-48 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }} />
+
+      <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
-          <img 
-            src="https://customer-assets.emergentagent.com/job_saas-dashboard-20/artifacts/aems110l_Enterprate%20Logo.png" 
-            alt="Enterprate" 
-            className="h-14 mx-auto mb-4"
-          />
-          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk' }}>
+          <div className="inline-flex items-center justify-center p-3 bg-white rounded-2xl shadow-lg mb-4">
+            <img 
+              src="https://customer-assets.emergentagent.com/job_saas-dashboard-20/artifacts/aems110l_Enterprate%20Logo.png" 
+              alt="EnterprateAI" 
+              className="h-12"
+            />
+          </div>
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent" style={{ fontFamily: 'Space Grotesk' }}>
             Welcome to EnterprateAI
           </h1>
           <p className="text-gray-600">Your AI Operating System for Business</p>
         </div>
 
-        <Card className="shadow-lg">
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
           <CardHeader>
             <CardTitle>Sign In</CardTitle>
             <CardDescription>Choose your preferred login method</CardDescription>
@@ -78,7 +102,7 @@ export default function Login() {
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 bg-white"
                     required
                   />
                 </div>
@@ -103,7 +127,7 @@ export default function Login() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 bg-white"
                     required
                   />
                 </div>
@@ -111,7 +135,7 @@ export default function Login() {
 
               <Button
                 type="submit"
-                className="w-full gradient-primary border-0"
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 border-0"
                 disabled={loading}
                 data-testid="login-btn"
               >
@@ -122,7 +146,7 @@ export default function Login() {
 
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+                <div className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white text-gray-500">Or continue with</span>
@@ -131,7 +155,7 @@ export default function Login() {
 
             <Button
               variant="outline"
-              className="w-full"
+              className="w-full bg-white hover:bg-gray-50"
               onClick={handleGoogleLogin}
               data-testid="google-login-btn"
             >
@@ -145,13 +169,18 @@ export default function Login() {
             </Button>
 
             <div className="text-center mt-6">
-              <span className="text-gray-600">Don't have an account? </span>
+              <span className="text-gray-600">Don&apos;t have an account? </span>
               <Link to="/auth/register" className="text-purple-600 hover:underline font-medium" data-testid="register-link">
                 Sign up
               </Link>
             </div>
           </CardContent>
         </Card>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-gray-400 mt-6">
+          &copy; {new Date().getFullYear()} Enterprate. All rights reserved.
+        </p>
       </div>
     </div>
   );
