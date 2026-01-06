@@ -50,6 +50,18 @@ export default function EnterpriseHeader({
 
         {/* Right Section */}
         <div className="flex items-center space-x-3">
+          {/* Create Workspace Button - Show prominently when no workspace */}
+          {!currentWorkspace && (
+            <Button
+              onClick={onCreateWorkspace}
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 border-0 text-white"
+              data-testid="create-first-workspace-btn"
+            >
+              <Plus size={18} className="mr-2" />
+              Create Your Workspace
+            </Button>
+          )}
+
           {/* Workspace Selector */}
           {currentWorkspace && (
             <DropdownMenu>
