@@ -294,6 +294,23 @@ EnterprateAI is a comprehensive AI Operating System for Business that helps entr
 - **All APIs Working**: Team, A/B Testing, Automation, Analytics, WebSocket, Custom Domains verified
 - **All Frontend UIs**: Team, A/B Testing, Automation, Analytics, Custom Domains pages complete
 - **Real-Time Notifications**: WebSocket connection established on login, shows "Live" status
+- **Branding**: Product name is "EnterprateAI" (brand: Enterprate)
+- **Workspace Creation**: Auto-prompt modal for new users, prominent button in header
+
+## UI/UX Enhancements (Latest)
+
+### 15. Login/Register Page Redesign ✅
+- Beautiful background with subtle logo pattern
+- Blurred decorative elements for depth
+- Logo in white card container
+- Gradient text for headings
+- "© 2026 Enterprate. All rights reserved." footer
+- Removed "Made with Emergent" watermark
+
+### 16. Workspace Creation Visibility ✅
+- Auto-appearing modal for new users (no workspaces)
+- Prominent "Create Your Workspace" button in header when no workspace exists
+- Clear messaging in modal explaining workspace purpose
 
 ## New Features (Iteration 7)
 
