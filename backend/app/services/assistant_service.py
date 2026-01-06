@@ -409,7 +409,9 @@ I can assist you with:
 
 **Genesis AI** — Business idea validation, company formation, planning
 **Navigator AI** — Finance, operations, compliance, tax
-**Growth AI** — Marketing, sales, lead generation, expansion
+**Growth AI** — Marketing, sales, lead generation, website building, expansion
+
+I can also answer questions about the **EnterprateAI platform** itself — features, how to use specific modules, and best practices.
 
 How can I help you with your business today?"""
 
