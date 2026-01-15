@@ -81,7 +81,7 @@ export default function Register() {
             <CardDescription>Create your account to get started</CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Google Sign Up First - More prominent */}
+            {/* Google Sign Up temporarily disabled
             <Button
               variant="outline"
               className="w-full bg-white hover:bg-gray-50 mb-4 h-11"
@@ -105,6 +105,7 @@ export default function Register() {
                 <span className="px-2 bg-white text-gray-500">Or with email</span>
               </div>
             </div>
+            */}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>

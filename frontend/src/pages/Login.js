@@ -144,6 +144,7 @@ export default function Login() {
               </Button>
             </form>
 
+            {/* Google Sign-In temporarily disabled
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200" />
@@ -167,6 +168,7 @@ export default function Login() {
               </svg>
               Sign in with Google
             </Button>
+            */}
 
             <div className="text-center mt-6">
               <span className="text-gray-600">Don&apos;t have an account? </span>
