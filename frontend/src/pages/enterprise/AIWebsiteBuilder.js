@@ -1114,6 +1114,16 @@ export default function AIWebsiteBuilder() {
             </Card>
           )}
         </TabsContent>
+
+        {/* ANALYTICS TAB */}
+        <TabsContent value="analytics" className="space-y-6 mt-6">
+          <WebsiteAnalyticsSection websites={websites} getHeaders={getHeaders} />
+        </TabsContent>
+
+        {/* DOMAINS TAB */}
+        <TabsContent value="domains" className="space-y-6 mt-6">
+          <CustomDomainsSection websites={websites} getHeaders={getHeaders} />
+        </TabsContent>
       </Tabs>
     </div>
   );
