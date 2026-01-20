@@ -209,7 +209,7 @@ Make it comprehensive but clear. Balanced obligations."""
                 )
                 
                 content = response.content
-            except Exception as e:
+            except Exception:
                 # Fallback to basic template
                 content = DocumentService._generate_basic_document(data.documentType, data.inputs)
         else:
