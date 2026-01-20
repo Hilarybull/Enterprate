@@ -316,6 +316,123 @@ class FinanceService:
     # === TAX ESTIMATION ===
     
     @staticmethod
+    async def get_tax_autofill_data(workspace_id: str, tax_year: Optional[str] = None) -> dict:
+        """Get auto-fill data for tax estimation from invoices and expenses"""
+        db = get_db()
+        
+        # Determine tax year dates
+        # UK tax year runs April 6 - April 5
+        if tax_year:
+            try:
+                year = int(tax_year.split('-')[0])
+                start_date = f"{year}-04-06T00:00:00"
+                end_date = f"{year + 1}-04-05T23:59:59"
+            except (ValueError, IndexError):
+                # Default to current tax year
+                now = datetime.now()
+                if now.month >= 4 and now.day >= 6:
+                    year = now.year
+                else:
+                    year = now.year - 1
+                start_date = f"{year}-04-06T00:00:00"
+                end_date = f"{year + 1}-04-05T23:59:59"
+        else:
+            # Current tax year
+            now = datetime.now()
+            if now.month >= 4 and now.day >= 6:
+                year = now.year
+            else:
+                year = now.year - 1
+            start_date = f"{year}-04-06T00:00:00"
+            end_date = f"{year + 1}-04-05T23:59:59"
+        
+        # Calculate Annual Revenue from invoices
+        # Include 'sent', 'paid', 'overdue' status invoices (not draft or void)
+        invoice_pipeline = [
+            {
+                "$match": {
+                    "workspace_id": workspace_id,
+                    "status": {"$in": ["sent", "paid", "overdue"]},
+                    "$or": [
+                        {"invoiceDate": {"$gte": start_date, "$lte": end_date}},
+                        {"createdAt": {"$gte": start_date, "$lte": end_date}}
+                    ]
+                }
+            },
+            {
+                "$group": {
+                    "_id": None,
+                    "totalRevenue": {"$sum": "$total"},
+                    "invoiceCount": {"$sum": 1}
+                }
+            }
+        ]
+        
+        invoice_result = await db.invoices.aggregate(invoice_pipeline).to_list(length=1)
+        total_revenue = invoice_result[0]["totalRevenue"] if invoice_result else 0
+        invoice_count = invoice_result[0]["invoiceCount"] if invoice_result else 0
+        
+        # Calculate Annual Expenses
+        # Exclude void/deleted expenses
+        expense_pipeline = [
+            {
+                "$match": {
+                    "workspace_id": workspace_id,
+                    "status": {"$ne": "void"},
+                    "$or": [
+                        {"date": {"$gte": start_date, "$lte": end_date}},
+                        {"createdAt": {"$gte": start_date, "$lte": end_date}}
+                    ]
+                }
+            },
+            {
+                "$group": {
+                    "_id": None,
+                    "totalExpenses": {"$sum": "$amount"},
+                    "expenseCount": {"$sum": 1}
+                }
+            }
+        ]
+        
+        expense_result = await db.expenses.aggregate(expense_pipeline).to_list(length=1)
+        total_expenses = expense_result[0]["totalExpenses"] if expense_result else 0
+        expense_count = expense_result[0]["expenseCount"] if expense_result else 0
+        
+        # Log auto-fill event
+        await db.intelligence_events.insert_one({
+            "id": str(uuid.uuid4()),
+            "workspace_id": workspace_id,
+            "type": "tax_autofill_used",
+            "data": {
+                "taxYear": f"{year}-{year + 1}",
+                "revenue": total_revenue,
+                "expenses": total_expenses,
+                "invoiceCount": invoice_count,
+                "expenseCount": expense_count
+            },
+            "occurredAt": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return {
+            "annualRevenue": round(total_revenue, 2),
+            "annualExpenses": round(total_expenses, 2),
+            "taxYear": f"{year}-{year + 1}",
+            "taxYearStart": start_date[:10],
+            "taxYearEnd": end_date[:10],
+            "sources": {
+                "revenue": {
+                    "description": f"Calculated from {invoice_count} invoice(s) (sent/paid/overdue)",
+                    "count": invoice_count,
+                    "statuses": ["sent", "paid", "overdue"]
+                },
+                "expenses": {
+                    "description": f"Calculated from {expense_count} expense(s)",
+                    "count": expense_count
+                }
+            }
+        }
+    
+    @staticmethod
     async def estimate_tax(workspace_id: str, data: TaxEstimateRequest) -> dict:
         """Estimate tax based on revenue and expenses"""
         taxable_income = data.annualRevenue - data.annualExpenses
