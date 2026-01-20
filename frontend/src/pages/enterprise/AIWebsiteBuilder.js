@@ -376,7 +376,7 @@ export default function AIWebsiteBuilder() {
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="templates" className="flex items-center gap-2">
             <LayoutTemplate size={16} />
             Templates
@@ -396,6 +396,14 @@ export default function AIWebsiteBuilder() {
           <TabsTrigger value="history" className="flex items-center gap-2">
             <Clock size={16} />
             History
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <LineChart size={16} />
+            Analytics
+          </TabsTrigger>
+          <TabsTrigger value="domains" className="flex items-center gap-2">
+            <Globe size={16} />
+            Domains
           </TabsTrigger>
         </TabsList>
 
