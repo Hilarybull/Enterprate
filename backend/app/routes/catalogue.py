@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, UploadFile, File
 from typing import Optional, List
 from pydantic import BaseModel
-from app.core.auth import get_current_user, get_workspace_id
+from app.core.security import get_current_user, get_workspace_id
 from app.services.catalogue_service import (
     CatalogueService, 
     CatalogueItemCreate, 

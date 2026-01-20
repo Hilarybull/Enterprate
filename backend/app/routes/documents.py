@@ -1,7 +1,7 @@
 """Business Documents Routes"""
 from fastapi import APIRouter, Depends, Response
 from typing import Optional
-from app.core.auth import get_current_user, get_workspace_id
+from app.core.security import get_current_user, get_workspace_id
 from app.services.document_service import (
     DocumentService,
     DocumentGenerateRequest,
