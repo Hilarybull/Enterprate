@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   Lightbulb,
   Globe,
-  Globe2,
   FileText,
   BookOpen,
   DollarSign,
@@ -15,9 +14,8 @@ import {
   Settings,
   HelpCircle,
   Users,
-  FlaskConical,
-  Zap,
-  BarChart3
+  Package,
+  FileSignature
 } from 'lucide-react';
 
 const navItems = [
@@ -36,7 +34,7 @@ const navItems = [
   { 
     path: '/business-registration', 
     icon: FileText, 
-    label: 'Business Registration Companion',
+    label: 'Business Registration',
     description: 'Legal & compliance'
   },
   { 
@@ -49,25 +47,19 @@ const navItems = [
     path: '/ai-website-builder', 
     icon: Globe, 
     label: 'AI Website Builder',
-    description: 'Generate landing pages with AI'
-  },
-  { 
-    path: '/website-analytics', 
-    icon: BarChart3, 
-    label: 'Website Analytics',
-    description: 'Track visits & conversions'
-  },
-  { 
-    path: '/custom-domains', 
-    icon: Globe2, 
-    label: 'Custom Domains',
-    description: 'Connect your domains'
+    description: 'Generate & manage websites'
   },
   { 
     path: '/business-blueprint', 
     icon: BookOpen, 
-    label: 'Business Blueprint Generator',
+    label: 'Business Blueprint',
     description: 'Strategic planning'
+  },
+  { 
+    path: '/catalogue', 
+    icon: Package, 
+    label: 'Product Catalogue',
+    description: 'Products & services'
   },
   { 
     path: '/finance-automation', 
@@ -82,6 +74,12 @@ const navItems = [
     description: 'Process management'
   },
   { 
+    path: '/documents', 
+    icon: FileSignature, 
+    label: 'Business Documents',
+    description: 'Generate legal documents'
+  },
+  { 
     path: '/growth', 
     icon: TrendingUp, 
     label: 'Growth',
@@ -94,21 +92,9 @@ const navItems = [
     description: 'Collaboration & roles'
   },
   { 
-    path: '/ab-testing', 
-    icon: FlaskConical, 
-    label: 'A/B Testing',
-    description: 'Optimize campaigns'
-  },
-  { 
-    path: '/automation', 
-    icon: Zap, 
-    label: 'Automation',
-    description: 'Campaign automation rules'
-  },
-  { 
     path: '/resources', 
     icon: FolderOpen, 
-    label: 'Business Resources Hub',
+    label: 'Resources Hub',
     description: 'Tools & templates'
   }
 ];
@@ -148,7 +134,9 @@ export default function EnterpriseSidebar({ isOpen, onClose }) {
         <div className="space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname === item.path || 
+              (item.path === '/ai-website-builder' && 
+                (location.pathname === '/website-analytics' || location.pathname === '/custom-domains'));
             
             return (
               <Link
@@ -168,34 +156,26 @@ export default function EnterpriseSidebar({ isOpen, onClose }) {
                 <div className={`
                   w-9 h-9 rounded-lg flex items-center justify-center mr-3
                   transition-all duration-200
-                  ${isActive 
-                    ? 'bg-purple-100' 
-                    : 'bg-gray-100 group-hover:bg-gray-200'
+                  ${isActive
+                    ? 'bg-purple-100 text-purple-700'
+                    : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
                   }
                 `}>
-                  <Icon 
-                    size={18} 
-                    className={isActive ? 'text-purple-600' : 'text-gray-500 group-hover:text-gray-700'} 
-                  />
+                  <Icon size={18} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className={`text-sm font-medium block truncate ${isActive ? 'text-purple-700' : ''}`}>
+                  <p className={`text-sm font-medium truncate ${isActive ? 'text-purple-700' : ''}`}>
                     {item.label}
-                  </span>
-                  <span className="text-xs text-gray-400 truncate block">
-                    {item.description}
-                  </span>
+                  </p>
+                  <p className="text-xs text-gray-400 truncate">{item.description}</p>
                 </div>
-                {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-purple-600 rounded-r-full" />
-                )}
               </Link>
             );
           })}
         </div>
       </nav>
 
-      {/* Bottom Items */}
+      {/* Bottom Navigation */}
       <div className="p-3 border-t border-gray-200">
         {bottomItems.map((item) => {
           const Icon = item.icon;
@@ -207,15 +187,15 @@ export default function EnterpriseSidebar({ isOpen, onClose }) {
               to={item.path}
               onClick={onClose}
               className={`
-                flex items-center px-3 py-2 rounded-lg transition-colors
+                flex items-center px-3 py-2 rounded-lg
                 ${isActive
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                  ? 'bg-purple-50 text-purple-700'
+                  : 'text-gray-500 hover:bg-gray-100'
                 }
               `}
             >
               <Icon size={18} className="mr-3" />
-              <span className="text-sm">{item.label}</span>
+              <span className="text-sm font-medium">{item.label}</span>
             </Link>
           );
         })}
