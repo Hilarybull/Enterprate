@@ -47,9 +47,22 @@ import {
   HeartHandshake,
   Camera,
   Music,
-  Plane
+  Plane,
+  BarChart3,
+  Globe2,
+  Users,
+  MousePointer,
+  ArrowUpRight,
+  TrendingUp,
+  Plus,
+  Copy,
+  Shield,
+  Server,
+  Info,
+  AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
