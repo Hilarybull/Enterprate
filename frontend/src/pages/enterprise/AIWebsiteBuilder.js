@@ -1128,3 +1128,413 @@ export default function AIWebsiteBuilder() {
     </div>
   );
 }
+
+
+// Website Analytics Sub-Section Component
+function WebsiteAnalyticsSection({ websites, getHeaders }) {
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedPeriod, setSelectedPeriod] = useState('30d');
+
+  useEffect(() => {
+    loadAnalytics();
+  }, [selectedPeriod]);
+
+  const loadAnalytics = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API_URL}/website-analytics/summary?period=${selectedPeriod}`, {
+        headers: getHeaders()
+      });
+      setAnalytics(response.data);
+    } catch (error) {
+      console.error('Failed to load analytics:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
+  const deployedWebsites = websites.filter(w => w.status === 'deployed');
+
+  return (
+    <div className="space-y-6">
+      {/* Period Selector */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Website Analytics</h3>
+        <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="7d">Last 7 days</SelectItem>
+            <SelectItem value="30d">Last 30 days</SelectItem>
+            <SelectItem value="90d">Last 90 days</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Users className="text-blue-600" size={24} />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Total Visits</p>
+                <p className="text-2xl font-bold">{analytics?.totalVisits || 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-green-100 rounded-lg">
+                <MousePointer className="text-green-600" size={24} />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Conversions</p>
+                <p className="text-2xl font-bold">{analytics?.totalConversions || 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <TrendingUp className="text-purple-600" size={24} />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Conversion Rate</p>
+                <p className="text-2xl font-bold">{analytics?.conversionRate || 0}%</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-amber-100 rounded-lg">
+                <Globe className="text-amber-600" size={24} />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Active Sites</p>
+                <p className="text-2xl font-bold">{deployedWebsites.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Per-Site Analytics */}
+      {analytics?.siteAnalytics?.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Performance by Website</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {analytics.siteAnalytics.map((site, idx) => (
+                <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Globe className="text-gray-400" size={20} />
+                    <div>
+                      <p className="font-medium">{site.siteName || 'Website'}</p>
+                      <p className="text-sm text-gray-500">{site.visits} visits</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-6">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-500">Conversions</p>
+                      <p className="font-semibold">{site.conversions}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm text-gray-500">Rate</p>
+                      <p className="font-semibold text-green-600">{site.conversionRate}%</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="p-12 text-center">
+          <BarChart3 className="mx-auto text-gray-300 mb-4" size={48} />
+          <h3 className="text-lg font-medium text-gray-700">No Analytics Data Yet</h3>
+          <p className="text-gray-500 mt-1">Deploy a website to start tracking visits and conversions</p>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// Custom Domains Sub-Section Component
+function CustomDomainsSection({ websites, getHeaders }) {
+  const [domains, setDomains] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedWebsite, setSelectedWebsite] = useState(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newDomain, setNewDomain] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [verifying, setVerifying] = useState(null);
+
+  const deployedWebsites = websites.filter(w => w.status === 'deployed');
+
+  useEffect(() => {
+    if (deployedWebsites.length > 0 && !selectedWebsite) {
+      setSelectedWebsite(deployedWebsites[0]);
+    }
+  }, [deployedWebsites]);
+
+  useEffect(() => {
+    if (selectedWebsite) {
+      loadDomains();
+    } else {
+      setDomains([]);
+      setLoading(false);
+    }
+  }, [selectedWebsite]);
+
+  const loadDomains = async () => {
+    if (!selectedWebsite) return;
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API_URL}/domains/website/${selectedWebsite.id}`, {
+        headers: getHeaders()
+      });
+      setDomains(response.data || []);
+    } catch (error) {
+      console.error('Failed to load domains:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addDomain = async () => {
+    if (!newDomain.trim() || !selectedWebsite) return;
+    
+    setAdding(true);
+    try {
+      const response = await axios.post(`${API_URL}/domains`, {
+        websiteId: selectedWebsite.id,
+        domain: newDomain
+      }, { headers: getHeaders() });
+      
+      if (response.data?.success) {
+        toast.success('Domain added! Configure DNS records to complete setup.');
+        setShowAddDialog(false);
+        setNewDomain('');
+        loadDomains();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to add domain');
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const verifyDomain = async (domainId) => {
+    setVerifying(domainId);
+    try {
+      const response = await axios.post(`${API_URL}/domains/${domainId}/verify`, {}, {
+        headers: getHeaders()
+      });
+      
+      if (response.data?.dnsVerified) {
+        toast.success('Domain verified successfully!');
+      } else {
+        toast.info('DNS not yet propagated. Please wait and try again.');
+      }
+      loadDomains();
+    } catch (error) {
+      toast.error('Verification failed');
+    } finally {
+      setVerifying(null);
+    }
+  };
+
+  const removeDomain = async (domainId) => {
+    if (!window.confirm('Remove this domain?')) return;
+    
+    try {
+      await axios.delete(`${API_URL}/domains/${domainId}`, { headers: getHeaders() });
+      toast.success('Domain removed');
+      loadDomains();
+    } catch (error) {
+      toast.error('Failed to remove domain');
+    }
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard');
+  };
+
+  if (deployedWebsites.length === 0) {
+    return (
+      <Card className="p-12 text-center">
+        <Globe2 className="mx-auto text-gray-300 mb-4" size={48} />
+        <h3 className="text-lg font-medium text-gray-700">No Deployed Websites</h3>
+        <p className="text-gray-500 mt-1">Deploy a website first to connect a custom domain</p>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Website Selector & Add Button */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Label className="shrink-0">Website:</Label>
+          <Select 
+            value={selectedWebsite?.id || ''} 
+            onValueChange={(id) => setSelectedWebsite(deployedWebsites.find(w => w.id === id))}
+          >
+            <SelectTrigger className="w-[300px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {deployedWebsites.map((website) => (
+                <SelectItem key={website.id} value={website.id}>
+                  {website.businessContext?.companyName || 'Untitled Website'}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button onClick={() => setShowAddDialog(true)}>
+          <Plus className="mr-2" size={16} /> Add Domain
+        </Button>
+      </div>
+
+      {/* Add Domain Dialog */}
+      {showAddDialog && (
+        <Card className="border-indigo-200 bg-indigo-50/50">
+          <CardContent className="p-6">
+            <h4 className="font-semibold mb-4">Add Custom Domain</h4>
+            <div className="flex gap-4">
+              <Input
+                value={newDomain}
+                onChange={(e) => setNewDomain(e.target.value)}
+                placeholder="example.com or subdomain.example.com"
+                className="flex-1"
+              />
+              <Button onClick={addDomain} disabled={adding}>
+                {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add'}
+              </Button>
+              <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancel</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Domains List */}
+      {loading ? (
+        <div className="flex items-center justify-center h-32">
+          <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+        </div>
+      ) : domains.length > 0 ? (
+        <div className="space-y-4">
+          {domains.map((domain) => (
+            <Card key={domain.id}>
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Globe2 className="text-indigo-600" size={20} />
+                      <span className="text-lg font-medium">{domain.domain}</span>
+                      <Badge className={domain.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}>
+                        {domain.status === 'active' ? <CheckCircle2 size={12} className="mr-1" /> : <Clock size={12} className="mr-1" />}
+                        {domain.status.replace(/_/g, ' ')}
+                      </Badge>
+                      <Badge variant="outline">
+                        <Shield size={12} className="mr-1" />
+                        SSL: {domain.sslStatus}
+                      </Badge>
+                    </div>
+                    
+                    {domain.status === 'pending_dns' && domain.dnsRecords?.length > 0 && (
+                      <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertDescription>
+                          <div className="font-medium mb-2">Configure these DNS records:</div>
+                          <div className="space-y-2 font-mono text-sm">
+                            {domain.dnsRecords.map((record, idx) => (
+                              <div key={idx} className="flex items-center gap-4 bg-white p-2 rounded">
+                                <span className="font-semibold w-16">{record.type}</span>
+                                <span className="text-gray-600">Name:</span>
+                                <span>{record.name}</span>
+                                <span className="text-gray-600">Value:</span>
+                                <span className="flex-1 truncate">{record.value}</span>
+                                <Button variant="ghost" size="sm" onClick={() => copyToClipboard(record.value)}>
+                                  <Copy size={14} />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {domain.status !== 'active' && (
+                      <Button variant="outline" size="sm" onClick={() => verifyDomain(domain.id)} disabled={verifying === domain.id}>
+                        {verifying === domain.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw size={14} className="mr-1" />}
+                        Verify
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="sm" className="text-red-500" onClick={() => removeDomain(domain.id)}>
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card className="p-12 text-center">
+          <Server className="mx-auto text-gray-300 mb-4" size={48} />
+          <h3 className="text-lg font-medium text-gray-700">No Custom Domains</h3>
+          <p className="text-gray-500 mt-1">
+            Website available at: {selectedWebsite?.deploymentUrl}
+          </p>
+          <Button className="mt-4" onClick={() => setShowAddDialog(true)}>
+            <Plus className="mr-2" size={16} /> Add Custom Domain
+          </Button>
+        </Card>
+      )}
+
+      {/* Instructions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">How to Set Up a Custom Domain</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
+            <li>Click &quot;Add Domain&quot; and enter your domain name</li>
+            <li>Copy the DNS records shown after adding</li>
+            <li>Add the records in your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.)</li>
+            <li>Wait for DNS propagation (5 min - 48 hours)</li>
+            <li>Click &quot;Verify&quot; to check configuration</li>
+            <li>SSL will be automatically provisioned once verified</li>
+          </ol>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
