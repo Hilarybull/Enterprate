@@ -123,6 +123,17 @@ async def scan_receipt(
 
 # === TAX ESTIMATION ===
 
+@router.get("/tax-autofill")
+async def get_tax_autofill(
+    tax_year: Optional[str] = None,
+    user: dict = Depends(get_current_user),
+    workspace_id: str = Depends(get_workspace_id)
+):
+    """Get auto-fill data for tax estimation from invoices and expenses"""
+    await verify_workspace_access(workspace_id, user)
+    return await FinanceService.get_tax_autofill_data(workspace_id, tax_year)
+
+
 @router.post("/estimate-tax", response_model=TaxEstimateResponse)
 async def estimate_tax(
     data: TaxEstimateRequest,
