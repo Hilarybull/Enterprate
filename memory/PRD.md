@@ -343,5 +343,39 @@ EnterprateAI is a comprehensive AI Operating System for Business that helps entr
 - `/app/test_reports/iteration_5.json` - Quick Templates + Fixes (23 passed)
 - `/app/test_reports/iteration_6.json` - Enterprise Features (39 passed)
 - `/app/test_reports/iteration_7.json` - WebSocket & Custom Domains (27 passed)
+- `/app/test_reports/iteration_8.json` - Phase 1: Catalogue, Documents, Tax Fix (27 passed)
 
-**Total: 227 tests, 100% pass rate**
+**Total: 254 tests, 100% pass rate**
+
+## Phase 1 Implementation (Iteration 8)
+
+### 17. Product/Service Catalogue System ✅
+- **Upload Support**: CSV, Excel (with validation), PDF/Word (future AI extraction)
+- **Validation Flow**: Accepted / Needs Review / Rejected items
+- **One-Click Add**: Add all validated items to catalogue
+- **CRUD Operations**: Create, Read, Update, Delete items
+- **Search & Filter**: By name, SKU, category
+- **Fields**: Name, Description, Unit Price, Currency, Tax Rate, SKU, Category
+
+### 18. Business Documents Wizard ✅
+- **5 Document Types**: Terms & Conditions, Privacy Policy, Service Agreement, Business Proposal, NDA
+- **Wizard Flow**: Select Type → Fill Details → Review & Edit → Export
+- **AI Generation**: Uses Claude with fallback templates
+- **Export**: PDF download, save to library
+- **Recent Documents**: View previously generated documents
+
+### 19. Tax Calculator Auto-Fill Fix ✅
+- **Annual Revenue**: Calculated from invoices (sent/paid/overdue status)
+- **Annual Expenses**: Calculated from expenses (excluding void)
+- **Tax Year**: UK tax year (April 6 - April 5)
+- **Source Tracking**: Shows invoice/expense count used for calculation
+
+### 20. Menu Restructure ✅
+- **Added**: Product Catalogue, Business Documents to sidebar
+- **Moved**: Website Analytics, Custom Domains → AI Website Builder tabs
+- **Removed**: A/B Testing, Automation from main menu (legacy redirects added)
+
+### 21. Intelligence Graph Events ✅
+- catalogue_item_added, catalogue_uploaded, catalogue_bulk_added
+- document_generated, document_saved
+- tax_autofill_used
