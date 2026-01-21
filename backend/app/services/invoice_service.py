@@ -280,7 +280,7 @@ class InvoiceService:
                 logo_buffer = io.BytesIO(logo_data)
                 logo = Image(logo_buffer, width=60*mm, height=20*mm)
                 header_data.append([logo, Paragraph(f"<b>{company_name}</b>", styles['Normal'])])
-            except:
+            except Exception:
                 header_data.append([Paragraph(f"<b>{company_name}</b>", title_style)])
         else:
             header_data.append([Paragraph(f"<b>{company_name}</b>", title_style)])
