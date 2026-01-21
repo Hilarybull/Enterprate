@@ -113,7 +113,6 @@ export default function IntelligenceGraph() {
         </Card>
       </div>
     );
-    );
   }
 
   // Filter events by entity type
