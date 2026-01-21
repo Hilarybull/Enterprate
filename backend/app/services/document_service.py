@@ -573,25 +573,3 @@ Last updated: {now}
         buffer = io.BytesIO()
         doc.save(buffer)
         return buffer.getvalue()
-    
-    @staticmethod
-    def _format_content_for_html(content: str) -> str:
-        """Format plain text content for HTML display"""
-        import html
-        
-        # Escape HTML entities
-        content = html.escape(content)
-        
-        # Convert line breaks
-        content = content.replace('\n\n', '</p><p>')
-        content = content.replace('\n', '<br>')
-        
-        # Wrap in paragraph
-        content = f"<p>{content}</p>"
-        
-        # Format headings (lines that look like section titles)
-        import re
-        # Numbers followed by period and text
-        content = re.sub(r'<p>(\d+)\.\s+([A-Z][A-Z\s]+)(?:</p>|<br>)', r'<h2>\1. \2</h2>', content)
-        
-        return content
