@@ -393,18 +393,17 @@ Last updated: {now}
         
         await db.documents.insert_one(document)
         
-        # Log save event
-        await db.intelligence_events.insert_one({
-            "id": str(uuid.uuid4()),
-            "workspace_id": workspace_id,
-            "type": "document_saved",
-            "data": {
-                "documentId": doc_id,
+        # Log intelligence event
+        await log_document_event(
+            workspace_id=workspace_id,
+            user_id=user_id,
+            event_type="saved",
+            doc_id=doc_id,
+            data={
                 "title": data.title,
                 "documentType": data.documentType
-            },
-            "occurredAt": now
-        })
+            }
+        )
         
         return {"id": doc_id, "success": True}
     
