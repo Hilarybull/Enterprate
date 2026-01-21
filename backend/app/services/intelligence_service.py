@@ -124,7 +124,8 @@ class IntelligenceGraphService:
         if entity_type:
             query["entityType"] = entity_type
         if event_type:
-            query["eventType"] = event_type
+            # Support both old 'type' and new 'eventType' field names
+            query["$or"] = [{"eventType": event_type}, {"type": event_type}]
         if entity_id:
             query["entityId"] = entity_id
         if start_date:
