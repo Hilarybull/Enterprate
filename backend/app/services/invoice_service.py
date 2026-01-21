@@ -538,14 +538,14 @@ class InvoiceService:
             asset_data["createdAt"] = now
             await db.brand_assets.insert_one(asset_data)
         
-        # Log event
-        await db.intelligence_events.insert_one({
-            "id": str(uuid.uuid4()),
-            "workspace_id": workspace_id,
-            "type": "brand_asset_saved",
-            "data": {"assetType": data.assetType, "filename": data.filename},
-            "occurredAt": now
-        })
+        # Log intelligence event
+        await log_brand_event(
+            workspace_id=workspace_id,
+            user_id=user_id,
+            event_type="logo_uploaded",
+            asset_id=asset_id,
+            data={"assetType": data.assetType, "filename": data.filename}
+        )
         
         return {"id": asset_id, "success": True, "assetType": data.assetType}
     
