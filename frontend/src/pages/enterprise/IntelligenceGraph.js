@@ -381,7 +381,7 @@ export default function IntelligenceGraph() {
             <CardContent>
               {activitySummary.length > 0 ? (
                 <div className="space-y-4">
-                  {activitySummary.reverse().map((summary, index) => (
+                  {[...activitySummary].reverse().map((summary, index) => (
                     <div key={summary.period || index} className="flex items-center gap-4">
                       <div className="w-24 text-sm text-gray-500">{summary.period}</div>
                       <div className="flex-1 h-8 bg-gray-100 rounded-full overflow-hidden">
