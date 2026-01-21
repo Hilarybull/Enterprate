@@ -133,6 +133,7 @@ function AppRouter() {
         <Route path="website-builder/:websiteId" element={<WebsiteEditor />} />
         <Route path="business-blueprint" element={<BusinessBlueprint />} />
         <Route path="catalogue" element={<ProductCatalogue />} />
+        <Route path="invoicing" element={<Invoicing />} />
         <Route path="finance-automation" element={<FinanceAutomation />} />
         <Route path="business-operations" element={<BusinessOperations />} />
         <Route path="documents" element={<BusinessDocuments />} />
