@@ -478,18 +478,18 @@ class InvoiceService:
                     }}
                 )
                 
-                # Log event
-                await db.intelligence_events.insert_one({
-                    "id": str(uuid.uuid4()),
-                    "workspace_id": workspace_id,
-                    "type": "invoice_sent",
-                    "data": {
-                        "invoice_id": invoice_id,
+                # Log intelligence event
+                await log_invoice_event(
+                    workspace_id=workspace_id,
+                    user_id=user_id,
+                    event_type="sent",
+                    invoice_id=invoice_id,
+                    data={
                         "invoiceNumber": invoice.get("invoiceNumber"),
-                        "recipient": invoice.get("clientEmail")
-                    },
-                    "occurredAt": datetime.now(timezone.utc).isoformat()
-                })
+                        "recipient": invoice.get("clientEmail"),
+                        "total": invoice.get("total")
+                    }
+                )
                 
                 return {"success": True, "message": "Invoice sent successfully"}
             else:
