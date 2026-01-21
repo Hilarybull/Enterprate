@@ -56,6 +56,7 @@ api_router.include_router(domains.router)
 api_router.include_router(catalogue.router)
 api_router.include_router(documents.router)
 api_router.include_router(invoices.router)
+api_router.include_router(intelligence.router)
 
 # Include API router in main app
 app.include_router(api_router)
