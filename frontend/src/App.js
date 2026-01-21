@@ -39,6 +39,7 @@ import {
 // New pages (to be created)
 import ProductCatalogue from '@/pages/enterprise/ProductCatalogue';
 import BusinessDocuments from '@/pages/enterprise/BusinessDocuments';
+import Invoicing from '@/pages/enterprise/Invoicing';
 
 // Legacy imports for website editor
 import WebsiteEditor from '@/pages/WebsiteEditor';
