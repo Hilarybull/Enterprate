@@ -41,7 +41,7 @@ const ENTITY_CONFIG = {
 };
 
 export default function IntelligenceGraph() {
-  const { currentWorkspace, getHeaders } = useWorkspace();
+  const { currentWorkspace, getHeaders, loading: workspaceLoading } = useWorkspace();
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
   const [insights, setInsights] = useState(null);
@@ -49,24 +49,28 @@ export default function IntelligenceGraph() {
   const [activitySummary, setActivitySummary] = useState([]);
   const [selectedEntityType, setSelectedEntityType] = useState('all');
   const [periodType, setPeriodType] = useState('daily');
+  const [error, setError] = useState(null);
 
   // Load insights
   const loadInsights = useCallback(async () => {
     if (!currentWorkspace) return;
     
     setLoading(true);
+    setError(null);
     try {
+      const headers = getHeaders();
       const [insightsRes, eventsRes, summaryRes] = await Promise.all([
-        axios.get(`${API_URL}/intelligence/insights`, { headers: getHeaders() }),
-        axios.get(`${API_URL}/intelligence/events?limit=50`, { headers: getHeaders() }),
-        axios.get(`${API_URL}/intelligence/summary?period_type=${periodType}&periods=7`, { headers: getHeaders() })
+        axios.get(`${API_URL}/intelligence/insights`, { headers }),
+        axios.get(`${API_URL}/intelligence/events?limit=50`, { headers }),
+        axios.get(`${API_URL}/intelligence/summary?period_type=${periodType}&periods=7`, { headers })
       ]);
       
       setInsights(insightsRes.data);
       setEvents(eventsRes.data || []);
       setActivitySummary(summaryRes.data || []);
-    } catch (error) {
-      console.error('Failed to load intelligence data:', error);
+    } catch (err) {
+      console.error('Failed to load intelligence data:', err);
+      setError(err.message || 'Failed to load analytics');
       toast.error('Failed to load analytics');
     } finally {
       setLoading(false);
@@ -74,8 +78,38 @@ export default function IntelligenceGraph() {
   }, [currentWorkspace, getHeaders, periodType]);
 
   useEffect(() => {
-    loadInsights();
-  }, [loadInsights]);
+    if (currentWorkspace) {
+      loadInsights();
+    }
+  }, [currentWorkspace, loadInsights]);
+
+  // Show loading while workspace is loading
+  if (workspaceLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error && !loading) {
+    return (
+      <div className="space-y-6 animate-slide-in" data-testid="intelligence-graph-page">
+        <PageHeader
+          icon={Activity}
+          title="Intelligence Graph"
+          description="Track activities, analyze patterns, and gain insights across your business"
+        />
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-red-500 mb-4">Failed to load data: {error}</p>
+            <Button onClick={loadInsights}>Try Again</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Filter events by entity type
   const filteredEvents = selectedEntityType === 'all' 
