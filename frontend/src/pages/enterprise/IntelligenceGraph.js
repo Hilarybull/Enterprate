@@ -122,7 +122,10 @@ export default function IntelligenceGraph() {
 
   // Format event description
   const formatEventDescription = (event) => {
-    const { eventType, entityType, data } = event;
+    // Handle both old 'type' field and new 'eventType' field
+    const eventType = event.eventType || event.type || 'unknown';
+    const entityType = event.entityType || 'unknown';
+    const data = event.data || {};
     
     switch (`${entityType}_${eventType}`) {
       case 'invoice_created':
@@ -132,7 +135,7 @@ export default function IntelligenceGraph() {
       case 'invoice_paid':
         return `Invoice ${data?.invoiceNumber || ''} marked as paid`;
       case 'document_generated':
-        return `Generated ${data?.documentType?.replace(/_/g, ' ') || 'document'}: ${data?.title || ''}`;
+        return `Generated ${(data?.documentType || 'document').replace(/_/g, ' ')}: ${data?.title || ''}`;
       case 'document_saved':
         return `Saved document: ${data?.title || ''}`;
       case 'catalogue_bulk_added':
@@ -148,7 +151,7 @@ export default function IntelligenceGraph() {
       case 'website_published':
         return `Published website to ${data?.provider || 'hosting'}`;
       default:
-        return `${eventType.replace(/_/g, ' ')} - ${entityType}`;
+        return `${(eventType || 'event').replace(/_/g, ' ')} - ${entityType || 'unknown'}`;
     }
   };
 
