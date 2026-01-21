@@ -104,6 +104,12 @@ const navItems = [
     icon: FolderOpen, 
     label: 'Resources Hub',
     description: 'Tools & templates'
+  },
+  { 
+    path: '/intelligence-graph', 
+    icon: Activity, 
+    label: 'Intelligence Graph',
+    description: 'Activity tracking & insights'
   }
 ];
 
