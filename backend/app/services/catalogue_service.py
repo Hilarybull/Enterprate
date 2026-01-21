@@ -3,6 +3,8 @@ import uuid
 import io
 import csv
 import re
+import os
+import json
 from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 from fastapi import HTTPException, UploadFile
@@ -16,15 +18,28 @@ try:
 except ImportError:
     PANDAS_AVAILABLE = False
 
-# Try to import LLM for PDF/document extraction
+# Try to import Gemini for AI extraction
 try:
-    from emergentintegrations.llm.chat import LlmChat, UserMessage
-    import os
-    LLM_KEY = os.environ.get("EMERGENT_LLM_KEY")
-    LLM_AVAILABLE = bool(LLM_KEY)
+    import google.generativeai as genai
+    GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
+    GEMINI_AVAILABLE = bool(GEMINI_KEY)
 except ImportError:
-    LLM_AVAILABLE = False
-    LLM_KEY = None
+    GEMINI_AVAILABLE = False
+    GEMINI_KEY = None
+
+# Try to import PDF reader
+try:
+    from pypdf import PdfReader
+    PDF_AVAILABLE = True
+except ImportError:
+    PDF_AVAILABLE = False
+
+# Try to import DOCX reader
+try:
+    from docx import Document as DocxDocument
+    DOCX_AVAILABLE = True
+except ImportError:
+    DOCX_AVAILABLE = False
 
 
 class CatalogueItemCreate(BaseModel):
