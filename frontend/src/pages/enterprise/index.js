@@ -21,3 +21,4 @@ export { default as WebsiteAnalytics } from './WebsiteAnalytics';
 export { default as CustomDomains } from './CustomDomains';
 export { default as ProductCatalogue } from './ProductCatalogue';
 export { default as BusinessDocuments } from './BusinessDocuments';
+export { default as Invoicing } from './Invoicing';
