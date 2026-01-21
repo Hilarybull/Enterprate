@@ -9,6 +9,9 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from app.core.database import get_db
 
+# Intelligence Graph logging
+from app.services.intelligence_service import log_invoice_event, log_brand_event
+
 # PDF generation
 try:
     from reportlab.lib.pagesizes import A4
