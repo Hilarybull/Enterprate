@@ -299,16 +299,103 @@ class CatalogueService:
     
     @staticmethod
     async def _extract_from_document(content: bytes, filename: str) -> List[dict]:
-        """Extract catalogue items from PDF/Word using AI"""
-        if not LLM_AVAILABLE:
+        """Extract catalogue items from PDF/Word using Gemini AI"""
+        # First, extract text from the document
+        text_content = ""
+        
+        if filename.endswith('.pdf'):
+            if not PDF_AVAILABLE:
+                raise HTTPException(
+                    status_code=400,
+                    detail="PDF parsing library not available. Please use CSV or Excel format."
+                )
+            try:
+                pdf_reader = PdfReader(io.BytesIO(content))
+                for page in pdf_reader.pages:
+                    text_content += page.extract_text() + "\n"
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Failed to read PDF: {str(e)}")
+        
+        elif filename.endswith('.docx'):
+            if not DOCX_AVAILABLE:
+                raise HTTPException(
+                    status_code=400,
+                    detail="DOCX parsing library not available. Please use CSV or Excel format."
+                )
+            try:
+                doc = DocxDocument(io.BytesIO(content))
+                for para in doc.paragraphs:
+                    text_content += para.text + "\n"
+                # Also extract from tables
+                for table in doc.tables:
+                    for row in table.rows:
+                        row_text = " | ".join(cell.text for cell in row.cells)
+                        text_content += row_text + "\n"
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Failed to read DOCX: {str(e)}")
+        
+        elif filename.endswith('.doc'):
             raise HTTPException(
-                status_code=400, 
-                detail="Document extraction requires AI capability. Please use CSV or Excel format."
+                status_code=400,
+                detail="Legacy .doc format not supported. Please convert to .docx or use CSV/Excel."
             )
         
-        # For now, return empty - would need document parsing library
-        # This is a placeholder for AI-based extraction
-        return []
+        if not text_content.strip():
+            raise HTTPException(status_code=400, detail="No text content found in document")
+        
+        # Use Gemini to extract structured data
+        if not GEMINI_AVAILABLE:
+            raise HTTPException(
+                status_code=400,
+                detail="AI extraction requires Gemini API key. Please use CSV or Excel format."
+            )
+        
+        try:
+            genai.configure(api_key=GEMINI_KEY)
+            model = genai.GenerativeModel('gemini-2.0-flash')
+            
+            prompt = f"""Analyze the following text from a product/service catalogue and extract all items.
+For each item, extract:
+- name (required): The product or service name
+- description: A brief description if available
+- unitPrice (required): The price as a number (remove currency symbols)
+- currency: The currency code (GBP, USD, EUR) - default to GBP if not specified
+- taxRate: VAT/tax percentage if mentioned
+- sku: Product code/SKU if available
+- category: Product category if available
+
+Return ONLY a valid JSON array of objects. Do not include any text before or after the JSON.
+If no valid items can be extracted, return an empty array [].
+
+Document text:
+{text_content[:8000]}"""
+            
+            response = model.generate_content(prompt)
+            response_text = response.text.strip()
+            
+            # Clean up response - extract JSON from potential markdown
+            if "```json" in response_text:
+                response_text = response_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in response_text:
+                response_text = response_text.split("```")[1].split("```")[0].strip()
+            
+            # Parse JSON
+            items = json.loads(response_text)
+            
+            if not isinstance(items, list):
+                items = [items] if isinstance(items, dict) else []
+            
+            return items
+            
+        except json.JSONDecodeError as e:
+            print(f"JSON parse error from Gemini: {e}")
+            return []
+        except Exception as e:
+            print(f"Gemini extraction error: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"AI extraction failed: {str(e)}. Please use CSV or Excel format."
+            )
     
     @staticmethod
     def _validate_items(items: List[dict], workspace_id: str) -> dict:
