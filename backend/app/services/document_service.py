@@ -1,6 +1,7 @@
 """Business Documents Service - Wizard-based Document Generator"""
 import uuid
 import os
+import io
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 from fastapi import HTTPException
@@ -15,6 +16,41 @@ try:
 except ImportError:
     LLM_AVAILABLE = False
     LLM_KEY = None
+
+# Try to import Gemini as fallback
+try:
+    import google.generativeai as genai
+    GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
+    GEMINI_AVAILABLE = bool(GEMINI_KEY)
+except ImportError:
+    GEMINI_AVAILABLE = False
+    GEMINI_KEY = None
+
+# PDF generation with WeasyPrint
+try:
+    from weasyprint import HTML, CSS
+    WEASYPRINT_AVAILABLE = True
+except ImportError:
+    WEASYPRINT_AVAILABLE = False
+
+# ReportLab as fallback
+try:
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+    from reportlab.lib.units import mm
+    REPORTLAB_AVAILABLE = True
+except ImportError:
+    REPORTLAB_AVAILABLE = False
+
+# DOCX generation
+try:
+    from docx import Document as DocxDoc
+    from docx.shared import Inches, Pt
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    DOCX_AVAILABLE = True
+except ImportError:
+    DOCX_AVAILABLE = False
 
 
 class DocumentGenerateRequest(BaseModel):
