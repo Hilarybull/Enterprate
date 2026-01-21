@@ -15,7 +15,8 @@ import {
   HelpCircle,
   Users,
   Package,
-  FileSignature
+  FileSignature,
+  Receipt
 } from 'lucide-react';
 
 const navItems = [
@@ -62,10 +63,16 @@ const navItems = [
     description: 'Products & services'
   },
   { 
+    path: '/invoicing', 
+    icon: Receipt, 
+    label: 'Invoicing',
+    description: 'Create & send invoices'
+  },
+  { 
     path: '/finance-automation', 
     icon: DollarSign, 
     label: 'Finance',
-    description: 'Invoicing & accounting'
+    description: 'Expenses & tax'
   },
   { 
     path: '/business-operations', 
