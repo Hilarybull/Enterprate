@@ -26,6 +26,9 @@ except ImportError:
     GEMINI_AVAILABLE = False
     GEMINI_KEY = None
 
+# Intelligence Graph logging
+from app.services.intelligence_service import log_document_event
+
 # PDF generation with ReportLab (pure Python)
 try:
     from reportlab.lib.pagesizes import A4
