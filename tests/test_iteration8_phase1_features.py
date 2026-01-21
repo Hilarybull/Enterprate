@@ -8,7 +8,7 @@ import os
 import io
 import csv
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://enterpriseai-hub.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://business-wizard.preview.emergentagent.com')
 WORKSPACE_ID = "592c480e-7da2-4500-a987-567c1c450ba7"
 
 # Test credentials from previous iterations

@@ -4,7 +4,7 @@ echo "========================================"
 echo "Enterprate OS - API Testing"
 echo "========================================"
 
-API_URL="https://enterpriseai-hub.preview.emergentagent.com/api"
+API_URL="https://business-wizard.preview.emergentagent.com/api"
 
 # Test 1: Register
 echo -e "\n1. Testing Registration..."
