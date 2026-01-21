@@ -9,7 +9,8 @@ from app.routes import (
     intel, chat, password_reset, validation_reports,
     blueprint, finance, operations, marketing, company_profile,
     scheduling, analytics, notifications, ab_testing, team, ai_websites,
-    automation, website_analytics, websocket, domains, catalogue, documents
+    automation, website_analytics, websocket, domains, catalogue, documents,
+    invoices
 )
 
 # Configure logging
