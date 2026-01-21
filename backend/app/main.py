@@ -55,6 +55,7 @@ api_router.include_router(websocket.router)
 api_router.include_router(domains.router)
 api_router.include_router(catalogue.router)
 api_router.include_router(documents.router)
+api_router.include_router(invoices.router)
 
 # Include API router in main app
 app.include_router(api_router)
