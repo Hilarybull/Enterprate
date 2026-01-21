@@ -532,13 +532,12 @@ Document text:
             await db.catalogue_items.insert_one(item)
             added_count += 1
         
-        # Log bulk add event
-        await db.intelligence_events.insert_one({
-            "id": str(uuid.uuid4()),
-            "workspace_id": workspace_id,
-            "type": "catalogue_bulk_added",
-            "data": {"count": added_count},
-            "occurredAt": now
-        })
+        # Log intelligence event for bulk add
+        await log_catalogue_event(
+            workspace_id=workspace_id,
+            user_id=user_id,
+            event_type="bulk_added",
+            data={"count": added_count}
+        )
         
         return {"success": True, "addedCount": added_count}
