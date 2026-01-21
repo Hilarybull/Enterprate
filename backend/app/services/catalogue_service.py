@@ -11,6 +11,9 @@ from fastapi import HTTPException, UploadFile
 from pydantic import BaseModel
 from app.core.database import get_db
 
+# Intelligence Graph logging
+from app.services.intelligence_service import log_catalogue_event
+
 # Try to import pandas for Excel support
 try:
     import pandas as pd
