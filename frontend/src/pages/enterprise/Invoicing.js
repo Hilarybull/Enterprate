@@ -781,7 +781,7 @@ export default function Invoicing() {
               <Alert>
                 <CheckCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Invoice is ready to send. Click "Send Invoice" to email it to the client.
+                  Invoice is ready to send. Click &quot;Send Invoice&quot; to email it to the client.
                 </AlertDescription>
               </Alert>
             </div>
