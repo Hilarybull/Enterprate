@@ -345,34 +345,28 @@ EnterprateAI is a comprehensive AI Operating System for Business that helps entr
 - `/app/test_reports/iteration_7.json` - WebSocket & Custom Domains (27 passed)
 - `/app/test_reports/iteration_8.json` - Phase 1: Catalogue, Documents, Tax Fix (27 passed)
 - `/app/test_reports/iteration_9.json` - Phase 2: Invoicing, PDF Gen, Brand Assets (19 passed)
+- `/app/test_reports/iteration_10.json` - Phase 3: Intelligence Graph (15 passed)
 
-**Total: 273 tests, 100% pass rate**
+**Total: 288 tests, 100% pass rate**
 
-## Phase 2 Implementation (Iteration 9) - 21 January 2026
+## Phase 3 Implementation (Iteration 10) - 21 January 2026
 
-### 22. Enhanced Invoicing System ✅
-- **Catalogue Integration**: Select items from product catalogue when creating invoices
-- **Line Items**: Multiple items with quantity, unit price, tax rate
-- **Auto-Calculation**: Subtotal, tax total, grand total auto-calculated
-- **Status Flow**: draft → pending_review → sent → paid/overdue
-- **Brand Logo**: Upload company logo, automatically placed on invoices
-- **PDF Generation**: Professional PDF using ReportLab library
-- **Email Sending**: Send invoices via SendGrid (requires API key)
-- **Frontend Page**: New /invoicing page with tabs (All, Drafts, Sent)
+### 25. Intelligence Graph System ✅
+- **Event Logging**: Automatic logging of user actions across all services
+- **Entity Types**: catalogue, invoice, document, expense, customer, website, brand, finance
+- **Event Types**: created, updated, deleted, sent, paid, generated, saved, exported, etc.
+- **Activity Summaries**: Daily and monthly aggregations with counts
+- **Insights API**: Aggregated metrics for dashboard (today/month counts, entity totals)
+- **Entity Timeline**: Complete history for any specific entity
+- **Frontend Page**: `/intelligence-graph` with Overview, Activity Feed, Analytics tabs
 
-### 23. Business Documents PDF Export ✅
-- **PDF Generation**: Using ReportLab for proper PDF output
-- **DOCX Export**: Using python-docx library
-- **Professional Formatting**: Title, date, sections, proper styling
+### Integration Points:
+- Invoice Service: logs created, sent, paid events
+- Document Service: logs generated, saved events
+- Catalogue Service: logs bulk_added events
+- Brand Assets: logs logo_uploaded events
 
-### 24. Product Catalogue AI Extraction ✅
-- **CSV/Excel Upload**: Full parsing with validation
-- **PDF/Word Upload**: AI extraction using Gemini API
-- **Validation**: Accepted / Needs Review / Rejected workflow
-
-### Files Created/Updated:
-- `/app/backend/app/services/invoice_service.py` - New invoice service with PDF generation
-- `/app/backend/app/routes/invoices.py` - Invoice API endpoints
-- `/app/frontend/src/pages/enterprise/Invoicing.js` - New invoicing page
-- `/app/backend/app/services/document_service.py` - Updated with PDF export
-- `/app/backend/app/services/catalogue_service.py` - Updated with Gemini extraction
+### Files Created:
+- `/app/backend/app/services/intelligence_service.py` - IntelligenceGraphService
+- `/app/backend/app/routes/intelligence.py` - API endpoints
+- `/app/frontend/src/pages/enterprise/IntelligenceGraph.js` - Frontend page
