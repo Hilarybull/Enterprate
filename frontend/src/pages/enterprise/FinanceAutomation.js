@@ -422,28 +422,40 @@ export default function FinanceAutomation() {
     }
   };
 
-  // Auto-populate tax from invoices and expenses
-  const handleAutoPopulateTax = () => {
-    const paidInvoices = invoices.filter(i => i.status === 'PAID');
-    const totalRevenue = paidInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0);
-    const totalExpenses = expenseSummary?.totalAmount || expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
-    
-    // Determine business type based on revenue
-    let businessType = 'sole_proprietor';
-    if (totalRevenue > 150000) {
-      businessType = 'limited_company';
-    } else if (totalRevenue > 50000) {
-      businessType = 'partnership';
+  // Auto-populate tax from invoices and expenses using API
+  const handleAutoPopulateTax = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/finance/tax-autofill`, {
+        headers: getHeaders()
+      });
+      
+      const data = response.data;
+      
+      // Determine business type based on revenue
+      let businessType = 'sole_proprietor';
+      if (data.annualRevenue > 150000) {
+        businessType = 'limited_company';
+      } else if (data.annualRevenue > 50000) {
+        businessType = 'partnership';
+      }
+      
+      setTaxInput({
+        ...taxInput,
+        annualRevenue: data.annualRevenue?.toFixed(2) || '0.00',
+        annualExpenses: data.annualExpenses?.toFixed(2) || '0.00',
+        businessType: businessType
+      });
+      
+      // Show details about what was calculated
+      const revenueInfo = data.sources?.revenue?.description || '';
+      const expenseInfo = data.sources?.expenses?.description || '';
+      toast.success(`Tax fields populated for ${data.taxYear}`, {
+        description: `${revenueInfo}. ${expenseInfo}`
+      });
+    } catch (error) {
+      console.error('Auto-fill failed:', error);
+      toast.error('Failed to auto-fill tax data');
     }
-    
-    setTaxInput({
-      ...taxInput,
-      annualRevenue: totalRevenue.toFixed(2),
-      annualExpenses: totalExpenses.toFixed(2),
-      businessType: businessType
-    });
-    
-    toast.success('Tax fields populated from your financial data!');
   };
 
   // === STATS ===
