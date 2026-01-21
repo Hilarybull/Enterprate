@@ -376,7 +376,7 @@ export default function IntelligenceGraph() {
                         <div className="flex items-center gap-2 mt-1">
                           <p className="text-xs text-gray-500">{formatTimeAgo(event.occurredAt)}</p>
                           <span className="text-xs text-gray-300">•</span>
-                          <p className="text-xs text-gray-500 capitalize">{event.eventType.replace(/_/g, ' ')}</p>
+                          <p className="text-xs text-gray-500 capitalize">{(event.eventType || event.type || 'event').replace(/_/g, ' ')}</p>
                         </div>
                       </div>
                     </div>
