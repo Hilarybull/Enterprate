@@ -41,7 +41,10 @@ const ENTITY_CONFIG = {
 };
 
 export default function IntelligenceGraph() {
-  const { currentWorkspace, getHeaders, loading: workspaceLoading } = useWorkspace();
+  const workspaceContext = useWorkspace();
+  const { currentWorkspace, getHeaders } = workspaceContext;
+  const workspaceLoading = workspaceContext.loading;
+  
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
   const [insights, setInsights] = useState(null);
@@ -53,7 +56,10 @@ export default function IntelligenceGraph() {
 
   // Load insights
   const loadInsights = useCallback(async () => {
-    if (!currentWorkspace) return;
+    if (!currentWorkspace) {
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
     setError(null);
@@ -78,15 +84,13 @@ export default function IntelligenceGraph() {
   }, [currentWorkspace, getHeaders, periodType]);
 
   useEffect(() => {
-    if (currentWorkspace) {
-      loadInsights();
-    }
-  }, [currentWorkspace, loadInsights]);
+    loadInsights();
+  }, [loadInsights]);
 
   // Show loading while workspace is loading
-  if (workspaceLoading) {
+  if (workspaceLoading || (loading && !insights)) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64" data-testid="intelligence-graph-page">
         <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
       </div>
     );
@@ -108,6 +112,7 @@ export default function IntelligenceGraph() {
           </CardContent>
         </Card>
       </div>
+    );
     );
   }
 
