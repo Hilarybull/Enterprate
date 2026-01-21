@@ -251,17 +251,17 @@ Make it comprehensive but clear. Balanced obligations."""
         # Generate title
         title = DocumentService._generate_title(data.documentType, data.inputs)
         
-        # Log generation event
-        await db.intelligence_events.insert_one({
-            "id": str(uuid.uuid4()),
-            "workspace_id": workspace_id,
-            "type": "document_generated",
-            "data": {
+        # Log intelligence event for document generation
+        await log_document_event(
+            workspace_id=workspace_id,
+            user_id=user_id,
+            event_type="generated",
+            data={
                 "documentType": data.documentType,
-                "title": title
-            },
-            "occurredAt": datetime.now(timezone.utc).isoformat()
-        })
+                "title": title,
+                "inputs": list(data.inputs.keys())
+            }
+        )
         
         return {
             "title": title,
