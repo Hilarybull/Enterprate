@@ -132,19 +132,21 @@ class InvoiceService:
         
         await db.invoices.insert_one(invoice)
         
-        # Log event
-        await db.intelligence_events.insert_one({
-            "id": str(uuid.uuid4()),
-            "workspace_id": workspace_id,
-            "type": "invoice_created",
-            "data": {
-                "invoice_id": invoice_id,
+        # Log intelligence event
+        await log_invoice_event(
+            workspace_id=workspace_id,
+            user_id=user_id,
+            event_type="created",
+            invoice_id=invoice_id,
+            data={
                 "invoiceNumber": invoice_number,
+                "clientName": data.clientName,
                 "total": total,
+                "currency": data.currency,
+                "itemCount": len(data.lineItems),
                 "status": data.status
-            },
-            "occurredAt": now
-        })
+            }
+        )
         
         return {k: v for k, v in invoice.items() if k != '_id'}
     
