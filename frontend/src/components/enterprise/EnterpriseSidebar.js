@@ -16,7 +16,8 @@ import {
   Users,
   Package,
   FileSignature,
-  Receipt
+  Receipt,
+  Activity
 } from 'lucide-react';
 
 const navItems = [
