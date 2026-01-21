@@ -26,19 +26,13 @@ except ImportError:
     GEMINI_AVAILABLE = False
     GEMINI_KEY = None
 
-# PDF generation with WeasyPrint
-try:
-    from weasyprint import HTML, CSS
-    WEASYPRINT_AVAILABLE = True
-except ImportError:
-    WEASYPRINT_AVAILABLE = False
-
-# ReportLab as fallback
+# PDF generation with ReportLab (pure Python)
 try:
     from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
     from reportlab.lib.units import mm
+    from reportlab.lib import colors
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False
