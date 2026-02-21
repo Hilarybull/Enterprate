@@ -17,7 +17,6 @@ import {
   Plus, 
   Search,
   Edit,
-  Trash2,
   Send,
   Download,
   Eye,
@@ -29,7 +28,9 @@ import {
   Clock,
   AlertCircle,
   X,
-  CreditCard
+  DollarSign,
+  Bell,
+  TrendingUp
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -42,12 +43,16 @@ export default function Invoicing() {
   const [invoices, setInvoices] = useState([]);
   const [catalogueItems, setCatalogueItems] = useState([]);
   const [brandLogo, setBrandLogo] = useState(null);
+  const [paymentSummary, setPaymentSummary] = useState(null);
+  const [pendingReminders, setPendingReminders] = useState([]);
   
   // Dialog states
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [showLogoDialog, setShowLogoDialog] = useState(false);
+  const [showMarkPaidDialog, setShowMarkPaidDialog] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState(null);
+  const [selectedInvoiceForPayment, setSelectedInvoiceForPayment] = useState(null);
   
   // Form state
   const [formData, setFormData] = useState({
