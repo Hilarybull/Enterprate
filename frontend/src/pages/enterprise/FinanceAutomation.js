@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import axios from 'axios';
 import { useWorkspace } from '@/context/WorkspaceContext';
 import { PageHeader, StatsCard, FeatureCard } from '@/components/enterprise';
@@ -48,6 +48,9 @@ import {
   Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+// Lazy load the full Invoicing component
+const InvoicingContent = lazy(() => import('./Invoicing'));
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
