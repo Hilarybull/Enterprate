@@ -992,6 +992,63 @@ export default function Invoicing() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Mark Paid Dialog */}
+      <Dialog open={showMarkPaidDialog} onOpenChange={setShowMarkPaidDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mark Invoice as Paid</DialogTitle>
+            <DialogDescription>
+              Record payment for {selectedInvoiceForPayment?.invoiceNumber}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Amount</span>
+                <span className="text-2xl font-bold text-green-600">
+                  £{selectedInvoiceForPayment?.total?.toFixed(2)}
+                </span>
+              </div>
+            </div>
+            <div>
+              <Label>Payment Date</Label>
+              <Input
+                type="date"
+                value={paymentDate}
+                onChange={(e) => setPaymentDate(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>Payment Method</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="card">Card Payment</SelectItem>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                  <SelectItem value="paypal">PayPal</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowMarkPaidDialog(false)}>Cancel</Button>
+            <Button 
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={handleMarkPaid}
+              disabled={markingPaid}
+            >
+              {markingPaid ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle size={16} className="mr-2" />}
+              Confirm Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
