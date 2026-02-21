@@ -515,65 +515,15 @@ export default function FinanceAutomation() {
           <TabsTrigger value="compliance">Compliance</TabsTrigger>
         </TabsList>
 
-        {/* INVOICES TAB */}
+        {/* INVOICES TAB - Full Invoicing Component */}
         <TabsContent value="invoices" className="mt-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Invoices</CardTitle>
-                <CardDescription>Create and manage your invoices</CardDescription>
-              </div>
-              <Button onClick={() => setShowInvoiceDialog(true)} className="gradient-primary border-0">
-                <Plus className="mr-2" size={18} /> Create Invoice
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {invoices.length === 0 ? (
-                <div className="text-center py-12">
-                  <FileText className="mx-auto mb-2 text-gray-300" size={48} />
-                  <p className="text-gray-500">No invoices yet. Create your first invoice!</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-4 font-medium">Invoice #</th>
-                        <th className="text-left py-3 px-4 font-medium">Client</th>
-                        <th className="text-right py-3 px-4 font-medium">Amount</th>
-                        <th className="text-left py-3 px-4 font-medium">Due Date</th>
-                        <th className="text-left py-3 px-4 font-medium">Status</th>
-                        <th className="text-right py-3 px-4 font-medium">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {invoices.map((invoice) => (
-                        <tr key={invoice.id} className="border-b hover:bg-gray-50">
-                          <td className="py-3 px-4 font-mono text-sm">#{invoice.invoiceNumber || invoice.id.slice(0, 8)}</td>
-                          <td className="py-3 px-4">
-                            <div className="font-medium">{invoice.clientName}</div>
-                            <div className="text-sm text-gray-500">{invoice.clientEmail}</div>
-                          </td>
-                          <td className="py-3 px-4 text-right font-semibold">£{invoice.amount?.toLocaleString()}</td>
-                          <td className="py-3 px-4 text-gray-600">
-                            {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : '-'}
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusBadge(invoice.status)}`}>
-                              {invoice.status}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <Button variant="ghost" size="sm"><Send size={14} className="mr-1" /> Send</Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+            </div>
+          }>
+            <InvoicingContent />
+          </Suspense>
         </TabsContent>
 
         {/* EXPENSES TAB */}
