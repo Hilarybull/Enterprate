@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import axios from 'axios';
 import { useWorkspace } from '@/context/WorkspaceContext';
 import { PageHeader } from '@/components/enterprise';
@@ -52,9 +52,14 @@ import {
   Share2,
   Shield,
   ScrollText,
-  Copy
+  Copy,
+  Briefcase
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+// Lazy load Business Documents and Operations components
+const BusinessDocumentsContent = lazy(() => import('./BusinessDocuments'));
+const BusinessOperationsContent = lazy(() => import('./BusinessOperations'));
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
