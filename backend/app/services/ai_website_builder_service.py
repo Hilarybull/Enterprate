@@ -1510,9 +1510,10 @@ Generate the refined HTML starting with <!DOCTYPE html>:"""
         email: str,
         phone: Optional[str] = None,
         message: Optional[str] = None,
-        source: str = "website_form"
+        source: str = "website_form",
+        website_id: Optional[str] = None
     ) -> dict:
-        """Handle lead form submission from generated websites"""
+        """Handle lead form submission from generated websites and sync to CRM"""
         db = get_db()
         
         # Create lead record
@@ -1527,12 +1528,31 @@ Generate the refined HTML starting with <!DOCTYPE html>:"""
             "phone": phone,
             "message": message,
             "source": source,
+            "website_id": website_id,
             "status": "new",
             "createdAt": now,
             "updatedAt": now
         }
         
         await db.leads.insert_one(lead)
+        
+        # Sync to CRM - Create/Update contact in Growth module
+        try:
+            from app.services.lead_crm_service import LeadCRMService
+            crm_result = await LeadCRMService.process_website_lead(
+                workspace_id=workspace_id,
+                website_id=website_id or source,
+                lead_data={
+                    "name": name,
+                    "email": email,
+                    "phone": phone,
+                    "message": message
+                }
+            )
+            lead["crm_sync"] = crm_result
+        except Exception as e:
+            print(f"Failed to sync lead to CRM: {e}")
+            lead["crm_sync"] = {"success": False, "error": str(e)}
         
         # Try to send email notification
         try:
@@ -1544,5 +1564,6 @@ Generate the refined HTML starting with <!DOCTYPE html>:"""
         return {
             "success": True,
             "leadId": lead_id,
-            "message": "Thank you for your submission!"
+            "message": "Thank you for your submission!",
+            "crm_synced": lead.get("crm_sync", {}).get("success", False)
         }
