@@ -378,6 +378,64 @@ export default function Invoicing() {
         }
       />
 
+      {/* Payment Summary Cards */}
+      {paymentSummary && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Outstanding</p>
+                  <p className="text-2xl font-bold text-amber-600">
+                    £{paymentSummary.totalOutstanding?.toFixed(2) || '0.00'}
+                  </p>
+                </div>
+                <Clock className="text-amber-500" size={24} />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Collected</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    £{paymentSummary.totalCollected?.toFixed(2) || '0.00'}
+                  </p>
+                </div>
+                <CheckCircle className="text-green-500" size={24} />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Overdue</p>
+                  <p className="text-2xl font-bold text-red-600">
+                    {paymentSummary.overdueCount || 0}
+                  </p>
+                </div>
+                <AlertCircle className="text-red-500" size={24} />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Pending Reminders</p>
+                  <p className="text-2xl font-bold text-indigo-600">
+                    {pendingReminders.length}
+                  </p>
+                </div>
+                <Bell className="text-indigo-500" size={24} />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="invoices">
@@ -391,6 +449,10 @@ export default function Invoicing() {
           <TabsTrigger value="sent">
             <Send size={16} className="mr-2" />
             Sent ({invoices.filter(i => ['sent', 'paid'].includes(i.status)).length})
+          </TabsTrigger>
+          <TabsTrigger value="overdue">
+            <AlertCircle size={16} className="mr-2" />
+            Overdue ({invoices.filter(i => i.status === 'overdue').length})
           </TabsTrigger>
         </TabsList>
 
