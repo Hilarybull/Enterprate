@@ -350,7 +350,36 @@ EnterprateAI is a comprehensive AI Operating System for Business that helps entr
 
 **Total: 299 tests, 100% pass rate**
 
-## Iteration 11 - Payment Reminders & Lead CRM (21 February 2026)
+## Iteration 12 - Menu Simplification (21 February 2026)
+
+### 29. Sidebar Menu Consolidation ✅
+Simplified the sidebar navigation by consolidating related modules:
+
+**Removed from main sidebar:**
+- Invoicing → Now a tab inside **Finance**
+- Business Documents → Now a tab inside **Business Blueprint** (as "Legal Docs")
+- Operations → Now a tab inside **Business Blueprint**
+- Intelligence Graph → Hidden from sidebar (still accessible via direct URL)
+
+**Updated Menu Structure:**
+1. Dashboard
+2. Idea Discovery
+3. Business Registration
+4. Branding
+5. AI Website Builder (contains: Websites, Analytics, Custom Domains)
+6. Business Blueprint (contains: Sections, SWOT, Financials, Documents, Legal Docs, Operations)
+7. Product Catalogue
+8. Finance (contains: Invoices, Expenses, Tax Calculator, Compliance)
+9. Growth
+10. Team
+11. Resources Hub
+12. Settings
+13. Help & Support
+
+**Files Updated:**
+- `/app/frontend/src/components/enterprise/EnterpriseSidebar.js` - Removed 4 items
+- `/app/frontend/src/pages/enterprise/FinanceAutomation.js` - Added lazy-loaded Invoicing tab
+- `/app/frontend/src/pages/enterprise/BusinessBlueprint.js` - Added Legal Docs and Operations tabs
 
 ### 26. Payment Tracking & Automated Reminders ✅
 - **Payment Summary**: Dashboard cards showing Outstanding, Collected, Overdue amounts
