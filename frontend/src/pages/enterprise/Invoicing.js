@@ -579,9 +579,24 @@ export default function Invoicing() {
                       </div>
                       <div className="flex items-center gap-4">
                         <p className="font-bold">£{invoice.total?.toFixed(2)}</p>
-                        <Button variant="outline" size="sm" onClick={() => handleDownloadPdf(invoice.id)}>
-                          <Download size={14} className="mr-1" /> PDF
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button variant="outline" size="sm" onClick={() => handleDownloadPdf(invoice.id)}>
+                            <Download size={14} className="mr-1" /> PDF
+                          </Button>
+                          {invoice.status === 'sent' && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="text-green-600 border-green-200 hover:bg-green-50"
+                              onClick={() => {
+                                setSelectedInvoiceForPayment(invoice);
+                                setShowMarkPaidDialog(true);
+                              }}
+                            >
+                              <DollarSign size={14} className="mr-1" /> Mark Paid
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -591,6 +606,62 @@ export default function Invoicing() {
           ) : (
             <Card className="p-8 text-center">
               <p className="text-gray-500">No sent invoices</p>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Overdue Tab */}
+        <TabsContent value="overdue" className="space-y-4 mt-4">
+          {invoices.filter(i => i.status === 'overdue').length > 0 ? (
+            <div className="space-y-3">
+              {invoices.filter(i => i.status === 'overdue').map((invoice) => (
+                <Card key={invoice.id} className="hover:shadow-md transition-shadow border-l-4 border-l-red-500">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold">{invoice.invoiceNumber}</h3>
+                          {getStatusBadge(invoice.status)}
+                        </div>
+                        <p className="text-sm text-gray-600">{invoice.clientName} • {invoice.clientEmail}</p>
+                        <p className="text-xs text-red-500 mt-1">
+                          Due: {invoice.dueDate} • Last reminder: {invoice.lastReminderType || 'None sent'}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="font-bold text-red-600">£{invoice.total?.toFixed(2)}</p>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleSendReminder(invoice.id, 'first_overdue')}
+                          >
+                            <Bell size={14} className="mr-1" /> Send Reminder
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-green-600 border-green-200 hover:bg-green-50"
+                            onClick={() => {
+                              setSelectedInvoiceForPayment(invoice);
+                              setShowMarkPaidDialog(true);
+                            }}
+                          >
+                            <DollarSign size={14} className="mr-1" /> Mark Paid
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="p-8 text-center">
+              <CheckCircle className="mx-auto text-green-300 mb-4" size={48} />
+              <p className="text-gray-500">No overdue invoices - Great job!</p>
             </Card>
           )}
         </TabsContent>
