@@ -57,6 +57,8 @@ api_router.include_router(catalogue.router)
 api_router.include_router(documents.router)
 api_router.include_router(invoices.router)
 api_router.include_router(intelligence.router)
+api_router.include_router(payment_reminders.router)
+api_router.include_router(lead_crm.router)
 
 # Include API router in main app
 app.include_router(api_router)
