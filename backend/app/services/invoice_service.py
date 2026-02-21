@@ -388,7 +388,12 @@ class InvoiceService:
     async def send_invoice_email(invoice_id: str, workspace_id: str, user_id: str) -> dict:
         """Send invoice via email"""
         if not SENDGRID_AVAILABLE:
-            raise HTTPException(status_code=500, detail="Email service not configured")
+            if SENDGRID_FROM and SENDGRID_FROM.startswith("REPLACE_"):
+                raise HTTPException(
+                    status_code=500, 
+                    detail="Please configure SENDGRID_FROM_EMAIL in backend/.env with your verified sender email"
+                )
+            raise HTTPException(status_code=500, detail="Email service not configured - SendGrid API key required")
         
         db = get_db()
         
