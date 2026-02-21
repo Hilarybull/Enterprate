@@ -346,27 +346,44 @@ EnterprateAI is a comprehensive AI Operating System for Business that helps entr
 - `/app/test_reports/iteration_8.json` - Phase 1: Catalogue, Documents, Tax Fix (27 passed)
 - `/app/test_reports/iteration_9.json` - Phase 2: Invoicing, PDF Gen, Brand Assets (19 passed)
 - `/app/test_reports/iteration_10.json` - Phase 3: Intelligence Graph (15 passed)
+- `/app/test_reports/iteration_11.json` - Payment Reminders & Lead CRM (11 passed)
 
-**Total: 288 tests, 100% pass rate**
+**Total: 299 tests, 100% pass rate**
 
-## Phase 3 Implementation (Iteration 10) - 21 January 2026
+## Iteration 11 - Payment Reminders & Lead CRM (21 February 2026)
 
-### 25. Intelligence Graph System ✅
-- **Event Logging**: Automatic logging of user actions across all services
-- **Entity Types**: catalogue, invoice, document, expense, customer, website, brand, finance
-- **Event Types**: created, updated, deleted, sent, paid, generated, saved, exported, etc.
-- **Activity Summaries**: Daily and monthly aggregations with counts
-- **Insights API**: Aggregated metrics for dashboard (today/month counts, entity totals)
-- **Entity Timeline**: Complete history for any specific entity
-- **Frontend Page**: `/intelligence-graph` with Overview, Activity Feed, Analytics tabs
+### 26. Payment Tracking & Automated Reminders ✅
+- **Payment Summary**: Dashboard cards showing Outstanding, Collected, Overdue amounts
+- **Mark as Paid**: Dialog to record payment with date and method (bank transfer, card, cash, cheque, PayPal)
+- **Overdue Tab**: Dedicated tab for overdue invoices with reminder actions
+- **Reminder Schedule** (Standard):
+  - 3 days before due date
+  - On due date
+  - 7 days after (first overdue)
+  - 14 days after (second overdue)
+  - 30 days after (final notice)
+- **Reminder History**: Tracks all sent reminders per invoice
+- **Intelligence Logging**: All payment events logged (paid, reminder_sent)
 
-### Integration Points:
-- Invoice Service: logs created, sent, paid events
-- Document Service: logs generated, saved events
-- Catalogue Service: logs bulk_added events
-- Brand Assets: logs logo_uploaded events
+### 27. Lead Capture → CRM Integration ✅
+- **Automatic Sync**: Website form submissions create/update contacts in Growth module
+- **Contact Fields**: firstName, lastName, email, phone, company, source, status, tags
+- **Lead Status**: new → lead → customer (conversion tracking)
+- **Interaction History**: All website submissions logged per contact
+- **Analytics API**: bySource, byStatus, byStage breakdowns
+
+### 28. SendGrid Email Configuration ✅
+- **API Key**: Configured in backend/.env
+- **Sender Email**: Placeholder set - requires user to configure verified sender
+- **Email Templates**: Professional HTML templates for invoices and reminders
+- **Urgency Levels**: Color-coded emails (low=indigo, medium=amber, high=red, critical=dark red)
 
 ### Files Created:
-- `/app/backend/app/services/intelligence_service.py` - IntelligenceGraphService
-- `/app/backend/app/routes/intelligence.py` - API endpoints
-- `/app/frontend/src/pages/enterprise/IntelligenceGraph.js` - Frontend page
+- `/app/backend/app/services/payment_reminder_service.py`
+- `/app/backend/app/routes/payment_reminders.py`
+- `/app/backend/app/services/lead_crm_service.py`
+- `/app/backend/app/routes/lead_crm.py`
+
+### Files Updated:
+- `/app/backend/app/services/ai_website_builder_service.py` - Lead sync to CRM
+- `/app/frontend/src/pages/enterprise/Invoicing.js` - Payment tracking UI
