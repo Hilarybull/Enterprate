@@ -7,17 +7,13 @@ import {
   FileText,
   BookOpen,
   DollarSign,
-  Briefcase,
   TrendingUp,
   Palette,
   FolderOpen,
   Settings,
   HelpCircle,
   Users,
-  Package,
-  FileSignature,
-  Receipt,
-  Activity
+  Package
 } from 'lucide-react';
 
 const navItems = [
@@ -55,7 +51,7 @@ const navItems = [
     path: '/business-blueprint', 
     icon: BookOpen, 
     label: 'Business Blueprint',
-    description: 'Strategic planning'
+    description: 'Planning & documents'
   },
   { 
     path: '/catalogue', 
@@ -64,28 +60,10 @@ const navItems = [
     description: 'Products & services'
   },
   { 
-    path: '/invoicing', 
-    icon: Receipt, 
-    label: 'Invoicing',
-    description: 'Create & send invoices'
-  },
-  { 
     path: '/finance-automation', 
     icon: DollarSign, 
     label: 'Finance',
-    description: 'Expenses & tax'
-  },
-  { 
-    path: '/business-operations', 
-    icon: Briefcase, 
-    label: 'Operations',
-    description: 'Process management'
-  },
-  { 
-    path: '/documents', 
-    icon: FileSignature, 
-    label: 'Business Documents',
-    description: 'Generate legal documents'
+    description: 'Invoicing, expenses & tax'
   },
   { 
     path: '/growth', 
@@ -104,12 +82,6 @@ const navItems = [
     icon: FolderOpen, 
     label: 'Resources Hub',
     description: 'Tools & templates'
-  },
-  { 
-    path: '/intelligence-graph', 
-    icon: Activity, 
-    label: 'Intelligence Graph',
-    description: 'Activity tracking & insights'
   }
 ];
 
