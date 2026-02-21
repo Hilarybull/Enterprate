@@ -10,7 +10,7 @@ from app.routes import (
     blueprint, finance, operations, marketing, company_profile,
     scheduling, analytics, notifications, ab_testing, team, ai_websites,
     automation, website_analytics, websocket, domains, catalogue, documents,
-    invoices, intelligence
+    invoices, intelligence, payment_reminders, lead_crm
 )
 
 # Configure logging
