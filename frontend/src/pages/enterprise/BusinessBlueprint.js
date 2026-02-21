@@ -839,6 +839,28 @@ export default function BusinessBlueprint() {
                       );
                     })}
                   </TabsContent>
+
+                  {/* Legal Documents Tab - Full Business Documents Wizard */}
+                  <TabsContent value="legal" className="mt-4">
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center h-64">
+                        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                      </div>
+                    }>
+                      <BusinessDocumentsContent />
+                    </Suspense>
+                  </TabsContent>
+
+                  {/* Operations Tab - Full Operations Content */}
+                  <TabsContent value="operations" className="mt-4">
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center h-64">
+                        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                      </div>
+                    }>
+                      <BusinessOperationsContent />
+                    </Suspense>
+                  </TabsContent>
                 </Tabs>
               </>
             )}
