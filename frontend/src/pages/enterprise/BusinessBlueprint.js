@@ -555,11 +555,13 @@ export default function BusinessBlueprint() {
                 </Card>
 
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList>
+                  <TabsList className="grid grid-cols-6 w-full">
                     <TabsTrigger value="sections">Sections</TabsTrigger>
                     <TabsTrigger value="swot">SWOT Analysis</TabsTrigger>
-                    <TabsTrigger value="financials">Financial Projections</TabsTrigger>
+                    <TabsTrigger value="financials">Financials</TabsTrigger>
                     <TabsTrigger value="documents">Documents</TabsTrigger>
+                    <TabsTrigger value="legal">Legal Docs</TabsTrigger>
+                    <TabsTrigger value="operations">Operations</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="sections" className="space-y-4 mt-4">
