@@ -69,6 +69,9 @@ export default function Invoicing() {
   const [submitting, setSubmitting] = useState(false);
   const [sendingInvoice, setSendingInvoice] = useState(null);
   const [downloadingPdf, setDownloadingPdf] = useState(null);
+  const [markingPaid, setMarkingPaid] = useState(false);
+  const [paymentDate, setPaymentDate] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('');
 
   // Load data
   const loadData = useCallback(async () => {
@@ -76,15 +79,19 @@ export default function Invoicing() {
     
     setLoading(true);
     try {
-      const [invoicesRes, catalogueRes, brandRes] = await Promise.all([
+      const [invoicesRes, catalogueRes, brandRes, summaryRes, remindersRes] = await Promise.all([
         axios.get(`${API_URL}/invoices`, { headers: getHeaders() }),
         axios.get(`${API_URL}/catalogue`, { headers: getHeaders() }),
-        axios.get(`${API_URL}/invoices/brand/assets/logo`, { headers: getHeaders() }).catch(() => ({ data: null }))
+        axios.get(`${API_URL}/invoices/brand/assets/logo`, { headers: getHeaders() }).catch(() => ({ data: null })),
+        axios.get(`${API_URL}/invoices/reminders/summary`, { headers: getHeaders() }).catch(() => ({ data: null })),
+        axios.get(`${API_URL}/invoices/reminders/pending`, { headers: getHeaders() }).catch(() => ({ data: [] }))
       ]);
       
       setInvoices(invoicesRes.data || []);
       setCatalogueItems(catalogueRes.data || []);
       setBrandLogo(brandRes.data?.imageData ? brandRes.data : null);
+      setPaymentSummary(summaryRes.data);
+      setPendingReminders(remindersRes.data || []);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
@@ -95,6 +102,45 @@ export default function Invoicing() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Mark invoice as paid
+  const handleMarkPaid = async () => {
+    if (!selectedInvoiceForPayment) return;
+    
+    setMarkingPaid(true);
+    try {
+      await axios.post(
+        `${API_URL}/invoices/reminders/${selectedInvoiceForPayment.id}/mark-paid`,
+        { paymentDate, paymentMethod },
+        { headers: getHeaders() }
+      );
+      toast.success('Invoice marked as paid');
+      setShowMarkPaidDialog(false);
+      setSelectedInvoiceForPayment(null);
+      setPaymentDate('');
+      setPaymentMethod('');
+      loadData();
+    } catch (error) {
+      toast.error('Failed to mark as paid');
+    } finally {
+      setMarkingPaid(false);
+    }
+  };
+
+  // Send payment reminder
+  const handleSendReminder = async (invoiceId, reminderType = 'first_overdue') => {
+    try {
+      await axios.post(
+        `${API_URL}/invoices/reminders/${invoiceId}/send?reminder_type=${reminderType}`,
+        {},
+        { headers: getHeaders() }
+      );
+      toast.success('Payment reminder sent');
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to send reminder');
+    }
+  };
 
   // Add item from catalogue
   const handleAddCatalogueItem = (item) => {
