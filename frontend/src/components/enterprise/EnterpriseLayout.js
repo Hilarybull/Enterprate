@@ -51,7 +51,7 @@ export default function EnterpriseLayout() {
         />
 
         {/* Page Content */}
-        <main className="p-6 lg:p-8">
+        <main className="p-4 sm:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>

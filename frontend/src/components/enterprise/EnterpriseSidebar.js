@@ -3,12 +3,9 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Lightbulb,
-  Globe,
   FileText,
   BookOpen,
   DollarSign,
-  TrendingUp,
-  Palette,
   FolderOpen,
   Settings,
   HelpCircle,
@@ -36,18 +33,6 @@ const navItems = [
     description: 'Legal & compliance'
   },
   { 
-    path: '/branding', 
-    icon: Palette, 
-    label: 'Branding',
-    description: 'Visual identity & assets'
-  },
-  { 
-    path: '/ai-website-builder', 
-    icon: Globe, 
-    label: 'AI Website Builder',
-    description: 'Generate & manage websites'
-  },
-  { 
     path: '/business-blueprint', 
     icon: BookOpen, 
     label: 'Business Blueprint',
@@ -65,12 +50,25 @@ const navItems = [
     label: 'Finance',
     description: 'Invoicing, expenses & tax'
   },
-  { 
-    path: '/growth', 
-    icon: TrendingUp, 
-    label: 'Growth',
-    description: 'Marketing & sales'
-  },
+  // Hidden for now per simplified scope:
+  // { 
+  //   path: '/branding', 
+  //   icon: Palette, 
+  //   label: 'Branding',
+  //   description: 'Visual identity & assets'
+  // },
+  // { 
+  //   path: '/ai-website-builder', 
+  //   icon: Globe, 
+  //   label: 'AI Website Builder',
+  //   description: 'Generate & manage websites'
+  // },
+  // { 
+  //   path: '/growth', 
+  //   icon: TrendingUp, 
+  //   label: 'Growth',
+  //   description: 'Marketing & sales'
+  // },
   { 
     path: '/team', 
     icon: Users, 

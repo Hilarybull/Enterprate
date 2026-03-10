@@ -46,17 +46,26 @@ class AuthService:
         
         # Find user by email
         user = await db.users.find_one({"email": credentials.email})
-        
-        if not user or not user.get("password_hash"):
+
+        # Support both new and legacy password field names.
+        password_hash = None
+        if user:
+            password_hash = user.get("password_hash") or user.get("passwordHash")
+
+        if not user or not password_hash:
             raise HTTPException(status_code=401, detail="Invalid credentials")
-        
-        if not verify_password(credentials.password, user["password_hash"]):
+
+        if not verify_password(credentials.password, password_hash):
             raise HTTPException(status_code=401, detail="Invalid credentials")
-        
+
         # Create token
-        token = create_token(user["id"])
+        user_id = user.get("id") or user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+
+        token = create_token(user_id)
         
         return {
             "token": token,
-            "user": {"id": user["id"], "email": user["email"], "name": user["name"]}
+            "user": {"id": user_id, "email": user["email"], "name": user["name"]}
         }

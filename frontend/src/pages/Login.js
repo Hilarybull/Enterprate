@@ -18,7 +18,7 @@ const LogoPattern = () => (
       transform: 'rotate(-15deg) scale(1.5)',
     }} />
     {/* Gradient overlay for depth */}
-    <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/80 via-white/90 to-purple-50/80" />
+    <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/65 via-slate-100/60 to-purple-100/65" />
   </div>
 );
 
@@ -81,18 +81,18 @@ export default function Login() {
           <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent" style={{ fontFamily: 'Space Grotesk' }}>
             Welcome to EnterprateAI
           </h1>
-          <p className="text-gray-600">Your AI Operating System for Business</p>
+          <p className="text-gray-800 font-medium">Your AI Operating System for Business</p>
         </div>
 
-        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+        <Card className="shadow-xl border border-gray-200 bg-white/95 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>Choose your preferred login method</CardDescription>
+            <CardTitle className="text-gray-900">Sign In</CardTitle>
+            <CardDescription className="text-gray-700">Choose your preferred login method</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-gray-900">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
@@ -110,10 +110,10 @@ export default function Login() {
 
               <div>
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-gray-900">Password</Label>
                   <Link 
                     to="/auth/forgot-password" 
-                    className="text-sm text-purple-600 hover:text-purple-800"
+                    className="text-sm text-purple-700 hover:text-purple-900 font-medium"
                   >
                     Forgot password?
                   </Link>
@@ -171,8 +171,8 @@ export default function Login() {
             */}
 
             <div className="text-center mt-6">
-              <span className="text-gray-600">Don&apos;t have an account? </span>
-              <Link to="/auth/register" className="text-purple-600 hover:underline font-medium" data-testid="register-link">
+              <span className="text-gray-800">Don&apos;t have an account? </span>
+              <Link to="/auth/register" className="text-purple-700 hover:underline font-semibold" data-testid="register-link">
                 Sign up
               </Link>
             </div>
@@ -180,7 +180,7 @@ export default function Login() {
         </Card>
 
         {/* Footer */}
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs text-gray-600 mt-6">
           &copy; {new Date().getFullYear()} Enterprate. All rights reserved.
         </p>
       </div>

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
+import { ThemeProvider } from '@/components/theme-provider';
 import AuthProvider, { useAuth } from '@/context/AuthContext';
 import WorkspaceProvider from '@/context/WorkspaceContext';
 import WebSocketProvider from '@/context/WebSocketContext';
@@ -127,31 +128,36 @@ function AppRouter() {
         <Route path="validation-report/:reportId" element={<ValidationReport />} />
         <Route path="validation-history" element={<ValidationHistory />} />
         <Route path="business-registration" element={<BusinessRegistration />} />
+        <Route path="business-blueprint" element={<BusinessBlueprint />} />
+        <Route path="catalogue" element={<ProductCatalogue />} />
+        <Route path="finance-automation" element={<FinanceAutomation />} />
+        <Route path="team" element={<TeamCollaboration />} />
+        <Route path="resources" element={<Resources />} />
+        <Route path="settings" element={<Settings />} />
+        <Route path="help" element={<Help />} />
+
+        {/* Hidden routes for now (kept for future re-enable)
         <Route path="branding" element={<Branding />} />
         <Route path="website-setup" element={<WebsiteSetup />} />
         <Route path="ai-website-builder" element={<AIWebsiteBuilder />} />
         <Route path="website-builder/:websiteId" element={<WebsiteEditor />} />
-        <Route path="business-blueprint" element={<BusinessBlueprint />} />
-        <Route path="catalogue" element={<ProductCatalogue />} />
         <Route path="invoicing" element={<Invoicing />} />
-        <Route path="finance-automation" element={<FinanceAutomation />} />
         <Route path="business-operations" element={<BusinessOperations />} />
         <Route path="documents" element={<BusinessDocuments />} />
         <Route path="growth" element={<Growth />} />
-        <Route path="team" element={<TeamCollaboration />} />
-        <Route path="resources" element={<Resources />} />
         <Route path="intelligence-graph" element={<IntelligenceGraph />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="help" element={<Help />} />
+        */}
         
         {/* Legacy redirects */}
         <Route path="genesis" element={<Navigate to="/idea-discovery" />} />
         <Route path="navigator" element={<Navigate to="/finance-automation" />} />
+        {/* Hidden redirects for now (kept for future re-enable)
         <Route path="website-builder" element={<Navigate to="/ai-website-builder" />} />
         <Route path="website-analytics" element={<Navigate to="/ai-website-builder" />} />
         <Route path="custom-domains" element={<Navigate to="/ai-website-builder" />} />
         <Route path="ab-testing" element={<Navigate to="/growth" />} />
         <Route path="automation" element={<Navigate to="/growth" />} />
+        */}
       </Route>
 
       {/* Catch all - redirect to dashboard */}
@@ -163,12 +169,14 @@ function AppRouter() {
 function App() {
   return (
     <div className="App">
-      <AuthProvider>
-        <BrowserRouter>
-          <AppRouter />
-          <Toaster position="top-right" richColors />
-        </BrowserRouter>
-      </AuthProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <AuthProvider>
+          <BrowserRouter>
+            <AppRouter />
+            <Toaster position="top-right" richColors />
+          </BrowserRouter>
+        </AuthProvider>
+      </ThemeProvider>
     </div>
   );
 }

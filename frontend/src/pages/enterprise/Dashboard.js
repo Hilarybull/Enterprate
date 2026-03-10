@@ -1,157 +1,63 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useWorkspace } from '@/context/WorkspaceContext';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { 
-  LayoutDashboard, 
-  Lightbulb, 
-  FileText, 
-  Users, 
-  TrendingUp, 
+import {
+  LayoutDashboard,
+  FileText,
+  Users,
+  TrendingUp,
   Globe,
   DollarSign,
   ArrowRight,
-  Sparkles,
   CheckCircle,
-  Building,
   Send,
-  Mail,
-  Share2,
   Receipt,
-  ChevronUp,
-  ChevronDown,
-  List,
   HelpCircle,
   MessageCircle,
-  Clock,
   Bell,
   Brain,
-  Briefcase,
   Settings
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
+const JOURNEY_STORAGE_KEY = 'enterprate_journey_progress';
+const IDEA_STORAGE_KEY = 'enterprate_last_validated_idea';
 
 // Action Card Component matching Bolt design
-const ActionCard = ({ icon: Icon, title, description, to, iconBg = "bg-purple-100", iconColor = "text-purple-600" }) => {
+const ActionCard = ({
+  icon: Icon,
+  title,
+  description,
+  to,
+  ctaLabel = "Get Started",
+  iconBg = "bg-purple-100",
+  iconColor = "text-purple-600"
+}) => {
   const navigate = useNavigate();
   return (
-    <Card className="group hover:shadow-lg transition-all duration-200 cursor-pointer border border-gray-100" onClick={() => navigate(to)}>
-      <CardContent className="p-5">
+    <Card className="group h-full hover:shadow-lg transition-all duration-200 cursor-pointer border border-gray-100" onClick={() => navigate(to)}>
+      <CardContent className="p-5 h-full flex flex-col">
         <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center mb-4`}>
           <Icon className={iconColor} size={24} />
         </div>
-        <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
-        <p className="text-sm text-gray-500 mb-3">{description}</p>
-        <span className="text-purple-600 text-sm font-medium group-hover:underline inline-flex items-center">
-          Get Started <ArrowRight size={14} className="ml-1" />
+        <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
+        <p className="text-sm text-gray-500 min-h-[52px]">{description}</p>
+        <span className="mt-auto pt-4 text-purple-600 text-sm font-medium group-hover:underline inline-flex items-center">
+          {ctaLabel} <ArrowRight size={14} className="ml-1" />
         </span>
       </CardContent>
     </Card>
   );
 };
 
-// Circular Progress Component
-const CircularProgress = ({ percentage, stepsComplete, totalSteps }) => {
-  const radius = 45;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
-
-  return (
-    <div className="flex flex-col items-center">
-      <div className="relative w-28 h-28">
-        <svg className="w-full h-full transform -rotate-90">
-          <circle
-            cx="56"
-            cy="56"
-            r={radius}
-            stroke="#E5E7EB"
-            strokeWidth="8"
-            fill="none"
-          />
-          <circle
-            cx="56"
-            cy="56"
-            r={radius}
-            stroke="url(#progressGradient)"
-            strokeWidth="8"
-            fill="none"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
-            className="transition-all duration-500"
-          />
-          <defs>
-            <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#8B5CF6" />
-              <stop offset="100%" stopColor="#6366F1" />
-            </linearGradient>
-          </defs>
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-2xl font-bold text-gray-900">{percentage}%</span>
-        </div>
-      </div>
-      <p className="text-sm text-gray-500 mt-2">{stepsComplete} of {totalSteps} steps complete</p>
-    </div>
-  );
-};
-
-// Wizard Companion Component
-const WizardCompanion = ({ currentStep, totalSteps, stepTitle, stepDescription, onContinue }) => {
-  const [expanded, setExpanded] = useState(true);
-  
-  return (
-    <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-            <Sparkles className="text-purple-600" size={20} />
-          </div>
-          <div>
-            <h4 className="font-semibold text-gray-900">Wizard Companion</h4>
-            <p className="text-xs text-gray-500">I'll guide you step-by-step</p>
-          </div>
-        </div>
-        <button onClick={() => setExpanded(!expanded)} className="text-gray-400 hover:text-gray-600">
-          {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-        </button>
-      </div>
-      
-      {expanded && (
-        <>
-          <div className="mb-3">
-            <span className="text-xs font-semibold text-purple-600 uppercase">
-              NEXT STEP {currentStep} OF {totalSteps}
-            </span>
-          </div>
-          <h5 className="font-semibold text-gray-900 mb-2">{stepTitle}</h5>
-          <p className="text-sm text-gray-600 mb-4">{stepDescription}</p>
-          <Button 
-            onClick={onContinue}
-            className="w-full gradient-primary border-0 text-white"
-          >
-            Continue <ArrowRight size={16} className="ml-2" />
-          </Button>
-          <button className="w-full mt-3 flex items-center justify-center text-sm text-purple-600 hover:underline">
-            <List size={14} className="mr-2" />
-            View all steps
-          </button>
-        </>
-      )}
-    </div>
-  );
-};
-
 // Notification Item Component
 const NotificationItem = ({ icon: Icon, iconBg, title, subtitle, timestamp }) => (
-  <div className="flex items-start space-x-3 py-3 border-b border-gray-100 last:border-0">
+  <div className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
     <div className={`w-8 h-8 rounded-full ${iconBg} flex items-center justify-center flex-shrink-0`}>
       <Icon size={14} className="text-white" />
     </div>
@@ -159,7 +65,7 @@ const NotificationItem = ({ icon: Icon, iconBg, title, subtitle, timestamp }) =>
       <p className="font-medium text-sm text-gray-900">{title}</p>
       {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
     </div>
-    <span className="text-xs text-gray-400 flex-shrink-0">{timestamp}</span>
+    <span className="text-xs text-gray-400 shrink-0 hidden sm:block">{timestamp}</span>
   </div>
 );
 
@@ -190,14 +96,44 @@ export default function Dashboard() {
     websites: 0,
     validations: 0
   });
-  const [recentEvents, setRecentEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [aiQuestion, setAiQuestion] = useState('');
   const [wizardStep, setWizardStep] = useState(4);
-  const totalSteps = 8;
+  const [acceptedReportId, setAcceptedReportId] = useState(null);
+  const hasCompletedValidation = wizardStep >= 5;
 
-  // Calculate progress percentage
-  const progressPercentage = Math.round((wizardStep - 1) / totalSteps * 100);
+  useEffect(() => {
+    const savedJourney = localStorage.getItem(JOURNEY_STORAGE_KEY);
+    if (savedJourney) {
+      try {
+        const parsed = JSON.parse(savedJourney);
+        if (parsed?.wizardStep && Number.isFinite(parsed.wizardStep)) {
+          setWizardStep(Math.max(1, Math.min(8, parsed.wizardStep)));
+        }
+      } catch (e) {
+        console.error('Failed to load saved journey progress');
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const savedIdea = localStorage.getItem(IDEA_STORAGE_KEY);
+    if (!savedIdea) return;
+    try {
+      const parsed = JSON.parse(savedIdea);
+      if (parsed?.reportId) {
+        setAcceptedReportId(parsed.reportId);
+      }
+    } catch (e) {
+      console.error('Failed to load accepted idea state');
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(JOURNEY_STORAGE_KEY, JSON.stringify({
+      wizardStep
+    }));
+  }, [wizardStep]);
 
   useEffect(() => {
     if (currentWorkspace) {
@@ -228,12 +164,22 @@ export default function Dashboard() {
       // Load websites
       const websitesRes = await axios.get(`${API_URL}/websites`, { headers });
 
-      // Load recent events
-      const eventsRes = await axios.get(`${API_URL}/intel/events?limit=5`, { headers });
-
       // Load validation engagement
       try {
         const engagementRes = await axios.get(`${API_URL}/validation-reports/engagement`, { headers });
+        if ((engagementRes.data?.acceptedCount || 0) > 0) {
+          setWizardStep(prev => Math.max(prev, 5));
+          if (!acceptedReportId) {
+            const reportsRes = await axios.get(`${API_URL}/validation-reports?limit=50`, { headers });
+            const latestAccepted = (reportsRes.data || []).find((r) => r.status === 'accepted');
+            if (latestAccepted?.id) {
+              setAcceptedReportId(latestAccepted.id);
+              localStorage.setItem(IDEA_STORAGE_KEY, JSON.stringify({
+                reportId: latestAccepted.id
+              }));
+            }
+          }
+        }
         setStats(prev => ({
           ...prev,
           validations: engagementRes.data.totalValidations
@@ -248,8 +194,6 @@ export default function Dashboard() {
         leads: leadsRes.data.length,
         websites: websitesRes.data?.length || 0
       }));
-
-      setRecentEvents(eventsRes.data);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
@@ -292,31 +236,26 @@ export default function Dashboard() {
   return (
     <div className="animate-slide-in" data-testid="dashboard">
       {/* Main Content Grid - Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,2.1fr)_minmax(320px,1fr)] gap-6">
         
         {/* Left Column - Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
               <p className="text-gray-500">Your business launch and operations hub</p>
             </div>
-            <Button 
-              className="gradient-primary border-0"
-              onClick={() => navigate('/idea-discovery')}
-            >
-              Continue Journey <ArrowRight size={16} className="ml-2" />
-            </Button>
           </div>
 
-          {/* Action Cards Grid - 2x3 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Action Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 auto-rows-fr gap-4">
             <ActionCard
               icon={CheckCircle}
               title="Validate my idea"
-              description="Score ideas, get customer persona"
-              to="/idea-discovery"
+              description={hasCompletedValidation ? "Modify accepted idea or create a new one" : "Score ideas, get customer persona"}
+              to={hasCompletedValidation && acceptedReportId ? `/idea-discovery/modify/${acceptedReportId}` : "/idea-discovery"}
+              ctaLabel={hasCompletedValidation ? "Modify Accepted Idea" : "Start Validation"}
               iconBg="bg-purple-100"
               iconColor="text-purple-600"
             />
@@ -329,13 +268,39 @@ export default function Dashboard() {
               iconColor="text-blue-600"
             />
             <ActionCard
-              icon={Briefcase}
-              title="Run my company"
-              description="Contracts, compliance, ops"
-              to="/business-operations"
-              iconBg="bg-blue-100"
-              iconColor="text-blue-600"
+              icon={Settings}
+              title="Run my business"
+              description="Manage daily operations and keep your business moving"
+              to="/business-blueprint"
+              ctaLabel="Open Operations"
+              iconBg="bg-amber-100"
+              iconColor="text-amber-600"
             />
+            <ActionCard
+              icon={Receipt}
+              title="Finance & Invoicing"
+              description="Manage invoices, expenses & tax"
+              to="/finance-automation"
+              iconBg="bg-green-100"
+              iconColor="text-green-600"
+            />
+            <ActionCard
+              icon={Users}
+              title="Team Collaboration"
+              description="Invite teammates and manage shared workspaces"
+              to="/team"
+              iconBg="bg-indigo-100"
+              iconColor="text-indigo-600"
+            />
+            <ActionCard
+              icon={Globe}
+              title="Resources & Help"
+              description="Access business resources, guides, and support"
+              to="/resources"
+              iconBg="bg-cyan-100"
+              iconColor="text-cyan-600"
+            />
+            {/* Hidden cards for now (kept for future re-enable)
             <ActionCard
               icon={Mail}
               title="Send Email AI Agent"
@@ -352,14 +317,7 @@ export default function Dashboard() {
               iconBg="bg-teal-100"
               iconColor="text-teal-600"
             />
-            <ActionCard
-              icon={Receipt}
-              title="Invoice Agent"
-              description="Create and track invoices"
-              to="/finance-automation"
-              iconBg="bg-purple-100"
-              iconColor="text-purple-600"
-            />
+            */}
           </div>
 
           {/* Market Watch Card */}
@@ -367,11 +325,11 @@ export default function Dashboard() {
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center text-base">
                 <TrendingUp className="mr-2 text-purple-600" size={18} />
-                Market watch – General Markets
+                Market Watch - General Markets
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">S&P 500:</span>
                   <div className="flex items-center">
@@ -412,8 +370,12 @@ export default function Dashboard() {
                 <h4 className="font-semibold text-sm text-gray-900 mb-3">Today's Focus</h4>
                 <div className="space-y-2">
                   {[
-                    "Run comprehensive validation to get SWOT, demand metrics, risks, and UVP",
-                    "Choose your business entity type and begin formation",
+                    hasCompletedValidation
+                      ? "Choose your business entity type and begin formation"
+                      : "Run comprehensive validation to get SWOT, demand metrics, risks, and UVP",
+                    hasCompletedValidation
+                      ? "Create your customized operating agreement"
+                      : "Choose your business entity type and begin formation",
                     "Create your customized operating agreement"
                   ].map((item, i) => (
                     <div key={i} className="flex items-start space-x-2">
@@ -427,7 +389,7 @@ export default function Dashboard() {
               {/* Ask AI Coach */}
               <div>
                 <h4 className="font-semibold text-sm text-gray-900 mb-2">Ask the AI Coach</h4>
-                <div className="flex space-x-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Input
                     placeholder="Ask anything about your business..."
                     value={aiQuestion}
@@ -435,7 +397,7 @@ export default function Dashboard() {
                     onKeyDown={(e) => e.key === 'Enter' && handleAiQuestion()}
                     className="flex-1"
                   />
-                  <Button onClick={handleAiQuestion} className="gradient-primary border-0 px-3">
+                  <Button onClick={handleAiQuestion} className="gradient-primary border-0 px-3 w-full sm:w-auto">
                     <Send size={16} />
                   </Button>
                 </div>
@@ -447,7 +409,11 @@ export default function Dashboard() {
                 <div className="space-y-2">
                   <AdviceCard
                     title="What's next in my journey?"
-                    content='Complete "Validate Idea (All-in-One)" - Run comprehensive validation to get SWOT, demand metrics, risks, and UVP'
+                    content={
+                      hasCompletedValidation
+                        ? 'Complete "Register my business" - Choose your entity and start formation.'
+                        : 'Complete "Validate Idea (All-in-One)" - Run comprehensive validation to get SWOT, demand metrics, risks, and UVP.'
+                    }
                     timestamp="Just now"
                   />
                 </div>
@@ -458,37 +424,6 @@ export default function Dashboard() {
 
         {/* Right Column - Quick Insights */}
         <div className="space-y-6">
-          {/* Business Setup Progress */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Business Setup Progress</CardTitle>
-            </CardHeader>
-            <CardContent className="flex justify-center py-4">
-              <CircularProgress 
-                percentage={progressPercentage} 
-                stepsComplete={wizardStep - 1} 
-                totalSteps={totalSteps} 
-              />
-            </CardContent>
-          </Card>
-
-          {/* Next Best Action */}
-          <Card className="border-purple-200">
-            <CardContent className="p-4">
-              <span className="text-xs font-semibold text-purple-600 uppercase">NEXT BEST ACTION</span>
-              <h4 className="font-semibold text-gray-900 mt-2 mb-1">Validate Idea (All-in-One)</h4>
-              <p className="text-sm text-gray-500 mb-3">
-                Run comprehensive validation to get SWOT, demand metrics, risks, and UVP
-              </p>
-              <Button 
-                className="w-full gradient-primary border-0"
-                onClick={() => navigate('/idea-discovery')}
-              >
-                Continue <ArrowRight size={16} className="ml-2" />
-              </Button>
-            </CardContent>
-          </Card>
-
           {/* Notifications */}
           <Card>
             <CardHeader className="pb-2">
@@ -521,35 +456,24 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Quick Insights / Wizard Companion */}
+          {/* Quick Insights */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Quick Insights</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <WizardCompanion
-                currentStep={wizardStep}
-                totalSteps={totalSteps}
-                stepTitle="Validate Idea (All-in-One)"
-                stepDescription="Run comprehensive validation to get SWOT, demand metrics, risks, and UVP"
-                onContinue={() => navigate('/idea-discovery')}
-              />
-
               {/* Suggestions */}
               <div>
                 <h5 className="text-xs font-semibold text-gray-500 uppercase mb-2">SUGGESTIONS</h5>
-                <ul className="space-y-1 text-sm text-gray-700">
-                  <li className="flex items-start">
-                    <span className="mr-2">•</span>
-                    Describe your idea in one sentence
+                <ul className="space-y-2 text-sm text-gray-700 list-disc pl-5">
+                  <li>
+                    {hasCompletedValidation ? 'Choose your legal entity type' : 'Describe your idea in one sentence'}
                   </li>
-                  <li className="flex items-start">
-                    <span className="mr-2">•</span>
-                    Identify your target customer
+                  <li>
+                    {hasCompletedValidation ? 'Prepare your formation details' : 'Identify your target customer'}
                   </li>
-                  <li className="flex items-start">
-                    <span className="mr-2">•</span>
-                    Run validation to get SWOT, demand, risks, and UVP
+                  <li>
+                    {hasCompletedValidation ? 'Start business registration and continue onboarding' : 'Run validation to get SWOT, demand, risks, and UVP'}
                   </li>
                 </ul>
               </div>
@@ -557,11 +481,11 @@ export default function Dashboard() {
               {/* Quick Actions */}
               <div>
                 <h5 className="text-xs font-semibold text-gray-500 uppercase mb-2">QUICK ACTIONS</h5>
-                <div className="flex space-x-2">
-                  <Button variant="outline" size="sm" className="flex-1" onClick={() => navigate('/dashboard')}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => navigate('/dashboard')}>
                     Dashboard
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1" onClick={() => {
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => {
                     setWizardStep(1);
                     toast.success('Journey reset!');
                   }}>
@@ -584,3 +508,4 @@ export default function Dashboard() {
     </div>
   );
 }
+

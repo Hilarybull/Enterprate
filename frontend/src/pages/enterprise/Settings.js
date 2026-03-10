@@ -17,10 +17,12 @@ import {
   Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTheme } from 'next-themes';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
 export default function Settings() {
+  const { theme, setTheme } = useTheme();
   const { currentWorkspace, getHeaders, loadWorkspaces } = useWorkspace();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -82,9 +84,16 @@ export default function Settings() {
 
   const tabs = [
     { id: 'workspace', label: 'Workspace', icon: Building2 },
+    { id: 'appearance', label: 'Appearance', icon: SettingsIcon },
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'Security', icon: Shield }
+  ];
+
+  const themeOptions = [
+    { id: 'light', label: 'Light', description: 'Bright interface for daytime use' },
+    { id: 'dark', label: 'Dark', description: 'Dim interface for low-light environments' },
+    { id: 'system', label: 'System', description: 'Match your device appearance settings' }
   ];
 
   if (loading) {
@@ -244,6 +253,38 @@ export default function Settings() {
               <CardContent className="text-center py-12">
                 <User className="mx-auto text-gray-300 mb-3" size={48} />
                 <p className="text-gray-500">Profile settings coming soon</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === 'appearance' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Theme</CardTitle>
+                <CardDescription>Choose how EnterprateAI should look</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {themeOptions.map((option) => {
+                  const isActive = (theme || 'system') === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => {
+                        setTheme(option.id);
+                        toast.success(`Theme set to ${option.label}`);
+                      }}
+                      className={`w-full text-left border rounded-lg p-4 transition-colors ${
+                        isActive
+                          ? 'border-purple-500 bg-purple-50'
+                          : 'border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      <p className="font-medium text-gray-900">{option.label}</p>
+                      <p className="text-sm text-gray-500 mt-1">{option.description}</p>
+                    </button>
+                  );
+                })}
               </CardContent>
             </Card>
           )}

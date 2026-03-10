@@ -92,11 +92,9 @@ export default function AIChatbot() {
     }
   }, [isOpen]);
 
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    if (!input.trim() || loading) return;
-
-    const userMessage = input.trim();
+  const submitMessage = async (userMessageRaw, injectedContext = null) => {
+    const userMessage = (userMessageRaw || '').trim();
+    if (!userMessage || loading) return;
     setInput('');
     setMessages(prev => [...prev, { 
       role: 'user', 
@@ -110,6 +108,9 @@ export default function AIChatbot() {
         message: userMessage,
         session_id: sessionId
       };
+      if (injectedContext) {
+        payload.context = injectedContext;
+      }
       
       // Include company context if provided
       if (companyContext.number) {
@@ -148,15 +149,39 @@ export default function AIChatbot() {
       }]);
     } catch (error) {
       console.error('Chat error:', error);
+      const backendDetail = error?.response?.data?.detail;
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: 'I apologise, but I encountered an error processing your request. Please try again.',
+        content: backendDetail || 'I apologise, but I encountered an error processing your request. Please try again.',
         isError: true
       }]);
     } finally {
       setLoading(false);
     }
   };
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    await submitMessage(input);
+  };
+
+  useEffect(() => {
+    const handleExternalAsk = async (event) => {
+      const message = event?.detail?.message || '';
+      const context = event?.detail?.context || null;
+      const autoSend = event?.detail?.autoSend !== false;
+      if (!message || loading) return;
+      setIsOpen(true);
+      if (autoSend) {
+        await submitMessage(message, context);
+      } else {
+        setInput(message);
+      }
+    };
+
+    window.addEventListener('enterprate:ask-ai', handleExternalAsk);
+    return () => window.removeEventListener('enterprate:ask-ai', handleExternalAsk);
+  }, [loading]);
 
   const clearChat = async () => {
     if (sessionId) {

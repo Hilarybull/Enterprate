@@ -416,6 +416,49 @@ I can also answer questions about the **EnterprateAI platform** itself — featu
 How can I help you with your business today?"""
 
 
+def _ctxv(data: Dict[str, Any], key: str, default: str = "") -> str:
+    value = (data or {}).get(key)
+    if value is None:
+        return default
+    return str(value)
+
+
+def _offline_answer(message: str, workspace_context: dict = None) -> str:
+    ctx = workspace_context or {}
+    idea_input = ctx.get("ideaInput", ctx)
+    report = ctx.get("report", {})
+    det = report.get("deterministicSummary", {})
+    metrics = det.get("metrics", {})
+    factors = det.get("marketContext", {}).get("factors", {})
+    score = det.get("validationScore", "N/A")
+    problem = _ctxv(idea_input, "problemSolved", "the core customer pain")
+    audience = _ctxv(idea_input, "targetAudience", _ctxv(idea_input, "customerSegment", "target users"))
+    delivery = _ctxv(idea_input, "deliveryModel", "service")
+    how = _ctxv(idea_input, "howItWorks", "deliver value through a repeatable process")
+    m = (message or "").lower()
+
+    if "problem" in m and "solve" in m:
+        return f"It solves {problem} for {audience}, using a {delivery} approach."
+    if "market" in m and ("opportunity" in m or "big" in m or "size" in m):
+        d = factors.get("demand", "N/A")
+        c = factors.get("competition", "N/A")
+        return f"Current market signal is demand {d}/100 and competition {c}/100, with overall validation score {score}/100."
+    if "revenue" in m or "money" in m or "price" in m:
+        rev = metrics.get("monthlyRevenue", 0)
+        net = metrics.get("monthlyNet", 0)
+        return f"Projected monthly revenue is {rev} and monthly net is {net}. This should be validated against real conversion and retention data."
+    if "risk" in m:
+        margin = metrics.get("contributionMarginPct", 0)
+        return f"Key risks are execution capacity, acquisition cost pressure, and margin stability (current margin: {margin}%)."
+    if "build" in m or "hard" in m or "difficult" in m:
+        return f"Execution depends on delivering consistently at planned capacity. Current operating approach: {how}."
+
+    return (
+        f"Based on your report, this idea targets {audience} and addresses {problem}. "
+        f"Current validation score is {score}/100. Ask about market, risks, pricing, or execution and I will break it down."
+    )
+
+
 # =====================================================
 # COMPANIES HOUSE DATA FETCHER
 # =====================================================
@@ -509,9 +552,18 @@ async def process_assistant_message(
     """
     Process a message through the EnterprateAI AI Assistant.
     """
-    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        has_emergent_sdk = True
+    except ImportError:
+        LlmChat = None
+        UserMessage = None
+        has_emergent_sdk = False
     
-    api_key = os.environ.get("EMERGENT_LLM_KEY")
+    claude_key = os.environ.get("CLAUDE_API_KEY")
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    emergent_key = os.environ.get("EMERGENT_LLM_KEY")
+    api_key = claude_key or gemini_key or emergent_key
     if not api_key:
         raise ValueError("AI service not configured")
     
@@ -571,20 +623,63 @@ Once you provide this, I can access Companies House records to give you accurate
     # Build system prompt
     system_prompt = assistant.build_system_prompt(mode, domain, company_data)
     
-    # Create chat instance
-    session_key = f"{user_id}_{session_id}"
-    chat = LlmChat(
-        api_key=api_key,
-        session_id=session_key,
-        system_message=system_prompt
-    ).with_model("openai", "gpt-4o")
-    
-    # Send message
-    response = await chat.send_message(UserMessage(text=message))
+    # Generate response text using available AI SDK.
+    response = None
+    ai_error = None
+    if has_emergent_sdk:
+        try:
+            session_key = f"{user_id}_{session_id}"
+            provider = "anthropic" if claude_key else ("google" if gemini_key else "openai")
+            model = "claude-sonnet-4-20250514" if claude_key else ("gemini-2.0-flash" if gemini_key else "gpt-4o")
+            chat = LlmChat(
+                api_key=api_key,
+                session_id=session_key,
+                system_message=system_prompt
+            ).with_model(provider, model)
+            # Use SDK-compatible message field name. Keep fallback for older SDK variants.
+            try:
+                response = await chat.send_message(UserMessage(content=message))
+            except TypeError:
+                response = await chat.send_message(UserMessage(text=message))
+        except Exception as e:
+            logger.warning(f"Primary SDK chat failed, trying provider fallback: {e}")
+            ai_error = str(e)
+            response = None
+
+    if response is None and gemini_key:
+        try:
+            import google.generativeai as genai
+            genai.configure(api_key=gemini_key)
+            model = genai.GenerativeModel("gemini-2.0-flash")
+            prompt = f"{system_prompt}\n\nUser message:\n{message}"
+            gemini_response = model.generate_content(prompt)
+            response = getattr(gemini_response, "text", None) or str(gemini_response)
+        except Exception as e:
+            logger.error(f"Gemini fallback error: {e}")
+            ai_error = str(e)
+            response = None
+
+    if response is None:
+        offline = _offline_answer(message, workspace_context)
+        if ai_error and ("429" in ai_error or "quota" in ai_error.lower()):
+            offline = (
+                "Live AI is temporarily unavailable due to API quota limits. "
+                "Showing a report-based instant answer instead.\n\n" + offline
+            )
+        return AssistantResponse(
+            response=offline,
+            mode=AssistantMode.ADVISORY.value,
+            domain=domain.value,
+            data_source="report_context_fallback",
+            confidence="standard",
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            session_id=session_id
+        )
     
     # Format response with disclosures
+    response_text = response.content if hasattr(response, "content") else str(response)
     formatted_response = assistant.format_response(
-        raw_response=response,
+        raw_response=response_text,
         mode=mode,
         domain=domain,
         data_source=data_source

@@ -156,6 +156,35 @@ class ValidationReportCreate(BaseModel):
     targetLocation: str
     customerBudget: str
     goToMarketChannel: List[str]
+    
+    # Business idea validation journey fields
+    businessType: Optional[str] = None  # service_micro_business, agency, etc.
+    founderAvailabilityHoursPerWeek: Optional[int] = Field(default=None, ge=0)
+    stage: Optional[str] = "idea"
+    customerSegment: Optional[str] = None
+    customerSegmentNotes: Optional[str] = None
+    problemType: Optional[List[str]] = None  # cost | time | compliance | quality | reliability (multi-select)
+    problemFrequency: Optional[str] = None  # daily | weekly | monthly
+    currentAlternatives: Optional[str] = None
+    serviceType: Optional[str] = None
+    packageTiers: Optional[str] = None
+    upfrontCosts: Optional[float] = Field(default=None, ge=0)
+    
+    # Deterministic modeling inputs (Validate My Idea v1)
+    pricingModel: Optional[str] = None  # hourly | fixed_job | retainer | subscription
+    priceAmount: Optional[float] = Field(default=None, ge=0)
+    deliverableUnit: Optional[str] = None  # hours | job | month
+    expectedUnitsPerMonth: Optional[int] = Field(default=None, ge=0)
+    expectedCustomers: Optional[int] = Field(default=None, ge=0)
+    salesCycleDays: Optional[int] = Field(default=None, ge=0)
+    paymentTermsDays: Optional[int] = Field(default=None, ge=0)
+    variableCostPerUnit: Optional[float] = Field(default=None, ge=0)
+    fixedMonthlyCosts: Optional[float] = Field(default=None, ge=0)
+    founderDrawMonthly: Optional[float] = Field(default=None, ge=0)
+    contractorCostsMonthly: Optional[float] = Field(default=None, ge=0)
+    staffCount: Optional[int] = Field(default=None, ge=0)
+    capacityPerStaffPerMonth: Optional[float] = Field(default=None, ge=0)
+    cashBuffer: Optional[float] = Field(default=None, ge=0)
 
 
 class ValidationReportDB(BaseModel):
@@ -212,3 +241,5 @@ class EngagementStats(BaseModel):
     acceptedCount: int
     rejectedCount: int
     pendingCount: int
+    ideaValidationStatus: str = "in_progress"  # in_progress | finished
+    ideaValidationProgress: int = 0

@@ -18,7 +18,7 @@ const LogoPattern = () => (
       transform: 'rotate(-15deg) scale(1.5)',
     }} />
     {/* Gradient overlay for depth */}
-    <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/80 via-white/90 to-purple-50/80" />
+    <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/65 via-slate-100/60 to-purple-100/65" />
   </div>
 );
 
@@ -72,13 +72,13 @@ export default function Register() {
           <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent" style={{ fontFamily: 'Space Grotesk' }}>
             Create Your Account
           </h1>
-          <p className="text-gray-600">Start your journey with EnterprateAI</p>
+          <p className="text-gray-800 font-medium">Start your journey with EnterprateAI</p>
         </div>
 
-        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+        <Card className="shadow-xl border border-gray-200 bg-white/95 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle>Sign Up</CardTitle>
-            <CardDescription>Create your account to get started</CardDescription>
+            <CardTitle className="text-gray-900">Sign Up</CardTitle>
+            <CardDescription className="text-gray-700">Create your account to get started</CardDescription>
           </CardHeader>
           <CardContent>
             {/* Google Sign Up temporarily disabled
@@ -109,7 +109,7 @@ export default function Register() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name" className="text-gray-900">Full Name</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
@@ -126,7 +126,7 @@ export default function Register() {
               </div>
 
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-gray-900">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
@@ -143,7 +143,7 @@ export default function Register() {
               </div>
 
               <div>
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-gray-900">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
@@ -158,7 +158,7 @@ export default function Register() {
                     minLength={6}
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                <p className="text-xs text-gray-700 mt-1">Minimum 6 characters</p>
               </div>
 
               <Button
@@ -173,8 +173,8 @@ export default function Register() {
             </form>
 
             <div className="text-center mt-6">
-              <span className="text-gray-600">Already have an account? </span>
-              <Link to="/auth/login" className="text-purple-600 hover:underline font-medium" data-testid="login-link">
+              <span className="text-gray-800">Already have an account? </span>
+              <Link to="/auth/login" className="text-purple-700 hover:underline font-semibold" data-testid="login-link">
                 Sign in
               </Link>
             </div>
@@ -182,7 +182,7 @@ export default function Register() {
         </Card>
 
         {/* Footer */}
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs text-gray-600 mt-6">
           &copy; {new Date().getFullYear()} Enterprate. All rights reserved.
         </p>
       </div>
