@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+﻿import React, { useState, useEffect, lazy, Suspense } from 'react';
 import axios from 'axios';
 import { useWorkspace } from '@/context/WorkspaceContext';
 import { PageHeader } from '@/components/enterprise';
@@ -56,6 +56,7 @@ import {
   Briefcase
 } from 'lucide-react';
 import { toast } from 'sonner';
+import Module2BlueprintWorkflow from './Module2BlueprintWorkflow';
 
 // Lazy load Business Documents and Operations components
 const BusinessDocumentsContent = lazy(() => import('./BusinessDocuments'));
@@ -140,7 +141,7 @@ export default function BusinessBlueprint() {
   const [generating, setGenerating] = useState({});
   const [expandedSections, setExpandedSections] = useState({});
   const [generatedDocuments, setGeneratedDocuments] = useState({});
-  const [activeTab, setActiveTab] = useState('sections');
+  const [activeTab, setActiveTab] = useState('blueprint_outputs');
   
   const [newBlueprint, setNewBlueprint] = useState({
     businessName: '',
@@ -156,11 +157,26 @@ export default function BusinessBlueprint() {
   useEffect(() => {
     if (currentWorkspace) {
       loadCompanyProfile();
+      loadLatestValidationContext();
       loadBlueprints();
     } else {
       setLoading(false);
     }
   }, [currentWorkspace]);
+
+  const mapIndustryForSelect = (raw) => {
+    if (!raw) return '';
+    const normalized = String(raw).trim().toLowerCase();
+    const matched = industries.find((item) => item.toLowerCase() === normalized);
+    return matched || '';
+  };
+
+  const mapBusinessModelForSelect = (raw) => {
+    if (!raw) return '';
+    const normalized = String(raw).trim().toLowerCase();
+    const matched = businessModels.find((item) => item.toLowerCase() === normalized);
+    return matched || '';
+  };
 
   const loadCompanyProfile = async () => {
     try {
@@ -172,13 +188,43 @@ export default function BusinessBlueprint() {
         // Pre-fill new blueprint with company details
         setNewBlueprint(prev => ({
           ...prev,
-          businessName: response.data.legalName || response.data.proposedName || '',
-          industry: response.data.officialProfile?.companyType || '',
-          description: response.data.businessDescription || ''
+          businessName: prev.businessName || response.data.legalName || response.data.proposedName || '',
+          industry: prev.industry || mapIndustryForSelect(response.data.industry || response.data.officialProfile?.companyType),
+          description: prev.description || response.data.businessDescription || '',
+          targetMarket: prev.targetMarket || response.data.targetMarket || '',
+          fundingGoal: prev.fundingGoal || (response.data.fundingGoal ? String(response.data.fundingGoal) : '')
         }));
       }
     } catch (error) {
       console.error('Failed to load company profile:', error);
+    }
+  };
+
+  const loadLatestValidationContext = async () => {
+    try {
+      const listRes = await axios.get(`${API_URL}/validation-reports?limit=20`, {
+        headers: getHeaders(),
+      });
+      const reports = listRes.data || [];
+      if (!reports.length) return;
+      const chosen = reports.find((r) => r.status === 'accepted') || reports[0];
+      if (!chosen?.id) return;
+      const detailRes = await axios.get(`${API_URL}/validation-reports/${chosen.id}`, {
+        headers: getHeaders(),
+      });
+      const idea = detailRes?.data?.ideaInput || {};
+      setNewBlueprint((prev) => ({
+        ...prev,
+        businessName: prev.businessName || idea.businessName || idea.ideaName || '',
+        industry: prev.industry || mapIndustryForSelect(idea.industry),
+        description: prev.description || idea.whatYouAreBuilding || idea.ideaDescription || idea.problemSolved || '',
+        targetMarket: prev.targetMarket || idea.targetMarket || idea.customerSegment || '',
+        businessModel:
+          prev.businessModel ||
+          mapBusinessModelForSelect(idea.businessModel || idea.deliveryModel || idea.ideaType || ''),
+      }));
+    } catch (error) {
+      console.error('Failed to load validation context for blueprint prefill:', error);
     }
   };
 
@@ -555,7 +601,8 @@ export default function BusinessBlueprint() {
                 </Card>
 
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="grid grid-cols-6 w-full">
+                  <TabsList className="grid grid-cols-7 w-full">
+                    <TabsTrigger value="blueprint_outputs">Blueprint Outputs</TabsTrigger>
                     <TabsTrigger value="sections">Sections</TabsTrigger>
                     <TabsTrigger value="swot">SWOT Analysis</TabsTrigger>
                     <TabsTrigger value="financials">Financials</TabsTrigger>
@@ -563,6 +610,10 @@ export default function BusinessBlueprint() {
                     <TabsTrigger value="legal">Legal Docs</TabsTrigger>
                     <TabsTrigger value="operations">Operations</TabsTrigger>
                   </TabsList>
+
+                  <TabsContent value="blueprint_outputs" className="mt-4">
+                    <Module2BlueprintWorkflow getHeaders={getHeaders} />
+                  </TabsContent>
 
                   <TabsContent value="sections" className="space-y-4 mt-4">
                     {blueprintSections.map((section) => {
@@ -1037,3 +1088,4 @@ export default function BusinessBlueprint() {
     </div>
   );
 }
+

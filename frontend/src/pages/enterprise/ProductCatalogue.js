@@ -216,8 +216,8 @@ export default function ProductCatalogue() {
     <div className="space-y-6 animate-slide-in" data-testid="product-catalogue-page">
       <PageHeader
         icon={Package}
-        title="Product & Service Catalogue"
-        description="Manage your products and services for use across invoices, quotes, and website"
+        title="Catalogue"
+        description="Manage product and user data for use across invoices, quotes, and website"
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setShowUploadDialog(true)}>

@@ -41,8 +41,8 @@ const navItems = [
   { 
     path: '/catalogue', 
     icon: Package, 
-    label: 'Product Catalogue',
-    description: 'Products & services'
+    label: 'Catalogue',
+    description: 'Product and user'
   },
   { 
     path: '/finance-automation', 

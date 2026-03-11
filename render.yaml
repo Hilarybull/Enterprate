@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: enterprate-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
+      - key: MONGO_URL
+        sync: false
+      - key: DB_NAME
+        value: enterprate
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: CLAUDE_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: EMERGENT_LLM_KEY
+        sync: false
+      - key: COMPANIES_HOUSE_API_KEY
+        sync: false
+      - key: DATAFORSEO_LOGIN
+        sync: false
+      - key: DATAFORSEO_PASSWORD
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: FACEBOOK_GRAPH_TOKEN
+        sync: false
+      - key: BING_SEARCH_API_KEY
+        sync: false
+
+  - type: static
+    name: enterprate-frontend
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: build
+    envVars:
+      - key: REACT_APP_BACKEND_URL
+        sync: false

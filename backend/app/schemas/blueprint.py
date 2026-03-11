@@ -13,6 +13,14 @@ class BlueprintSectionType(str, Enum):
     SWOT_ANALYSIS = "swot_analysis"
     COMPETITIVE_ANALYSIS = "competitive_analysis"
 
+class BlueprintDocumentType(str, Enum):
+    BUSINESS_PLAN = "business_plan"
+    CLIENT_PROPOSAL = "client_proposal"
+    SALES_LETTER = "sales_letter"
+    SALES_QUOTATION = "sales_quotation"
+    CASHFLOW_ANALYSIS = "cashflow_analysis"
+    FINANCIAL_PROJECTION = "financial_projection"
+
 class BlueprintCreate(BaseModel):
     """Create a new business blueprint"""
     businessName: str
@@ -70,3 +78,79 @@ class BlueprintResponse(BaseModel):
     financialProjections: List[FinancialProjection] = []
     createdAt: str
     updatedAt: Optional[str] = None
+
+
+class BlueprintRequirement(BaseModel):
+    key: str
+    label: str
+    source: str
+
+
+class BlueprintEligibilityItem(BaseModel):
+    documentType: BlueprintDocumentType
+    label: str
+    ready: bool
+    missingFields: List[BlueprintRequirement] = []
+    completionPercent: int = 0
+
+
+class BlueprintEligibilityResponse(BaseModel):
+    businessId: str
+    available: List[BlueprintEligibilityItem] = []
+    partial: List[BlueprintEligibilityItem] = []
+    missing: List[BlueprintEligibilityItem] = []
+
+
+class BlueprintInputRequest(BaseModel):
+    businessId: Optional[str] = None
+    documentType: BlueprintDocumentType
+    inputs: dict
+    provenance: Optional[dict] = None
+
+
+class BlueprintGenerateRequest(BaseModel):
+    businessId: Optional[str] = None
+    documentType: BlueprintDocumentType
+    regenerate: bool = False
+
+
+class BlueprintSectionUpdateRequest(BaseModel):
+    sectionId: str
+    content: str
+
+
+class BlueprintSectionRegenerateRequest(BaseModel):
+    sectionId: str
+
+
+class BlueprintDocumentSection(BaseModel):
+    id: str
+    title: str
+    content: str
+    editable: bool = True
+
+
+class BlueprintDocumentVersion(BaseModel):
+    version: int
+    createdAt: str
+    sourceStateVersion: str
+    templateVersion: str
+    llmGenerationVersion: str
+
+
+class BlueprintDocumentResponse(BaseModel):
+    id: str
+    workspaceId: str
+    businessId: str
+    documentType: BlueprintDocumentType
+    title: str
+    status: str
+    renderedHtml: str
+    sections: List[BlueprintDocumentSection] = []
+    sourceStateVersion: str
+    templateVersion: str
+    llmGenerationVersion: str
+    versions: List[BlueprintDocumentVersion] = []
+    createdBy: str
+    createdAt: str
+    updatedAt: str
