@@ -57,6 +57,37 @@ import { toast } from 'sonner';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
+const IDEA_STORAGE_KEY = 'enterprate_last_validated_idea';
+const AUTO_PROFILE_STORAGE_KEY = 'enterprate_autofill_profile';
+
+const mapIdeaBusinessTypeToRegistrationType = (businessType = '') => {
+  const key = String(businessType || '').toLowerCase();
+  if (['consulting', 'it_services', 'marketing', 'agency', 'cleaning', 'trades'].includes(key)) return 'ltd';
+  return 'ltd';
+};
+
+const getAcceptedIdeaInputForPrefill = () => {
+  try {
+    const autoRaw = localStorage.getItem(AUTO_PROFILE_STORAGE_KEY);
+    if (autoRaw) {
+      const auto = JSON.parse(autoRaw);
+      if (auto && auto.ideaName) {
+        return {
+          ideaName: auto.ideaName || '',
+          businessType: auto.businessType || '',
+          ideaDescription: auto.description || '',
+          targetLocation: auto.location || 'UK',
+        };
+      }
+    }
+    const raw = localStorage.getItem(IDEA_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.ideaInput || null;
+  } catch (e) {
+    return null;
+  }
+};
 
 // Step configuration
 const STEPS = [
@@ -510,6 +541,19 @@ export default function BusinessRegistration() {
     understandsNotFormationAgent: false,
     understandsOfficialRegistration: false
   });
+
+  useEffect(() => {
+    const idea = getAcceptedIdeaInputForPrefill();
+    if (!idea) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      businessType: prev.businessType || mapIdeaBusinessTypeToRegistrationType(idea.businessType),
+      companyName: prev.companyName || idea.ideaName || '',
+      businessDescription: prev.businessDescription || idea.ideaDescription || '',
+      registeredAddress: prev.registeredAddress || idea.targetLocation || '',
+    }));
+  }, []);
 
   // Dynamic fees state
   const [dynamicFees, setDynamicFees] = useState({});
@@ -2022,7 +2066,7 @@ You must complete the actual registration at Companies House.
   };
 
   return (
-    <div className="space-y-6 animate-slide-in" data-testid="business-registration-page">
+    <div className="space-y-6 animate-slide-in pb-24" data-testid="business-registration-page">
       <PageHeader
         icon={FileText}
         title="Business Registration Companion"
@@ -2088,35 +2132,40 @@ You must complete the actual registration at Companies House.
         {renderStepContent()}
       </div>
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-between pt-4 border-t print:hidden">
-        <Button
-          variant="outline"
-          onClick={prevStep}
-          disabled={currentStep === 1}
-        >
-          <ArrowLeft size={16} className="mr-2" />
-          Previous
-        </Button>
-        
-        {currentStep < STEPS.length ? (
-          <Button
-            onClick={nextStep}
-            disabled={!canProceed()}
-            className="gradient-primary border-0"
-          >
-            Next Step
-            <ArrowRight size={16} className="ml-2" />
-          </Button>
-        ) : (
-          <Button
-            onClick={copySummary}
-            className="gradient-primary border-0"
-          >
-            <Copy size={16} className="mr-2" />
-            Copy Summary
-          </Button>
-        )}
+      {/* Sticky Navigation Buttons */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white/95 backdrop-blur-sm print:hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <Button
+              variant="outline"
+              onClick={prevStep}
+              disabled={currentStep === 1}
+              className="min-w-[110px]"
+            >
+              <ArrowLeft size={16} className="mr-2" />
+              Previous
+            </Button>
+
+            {currentStep < STEPS.length ? (
+              <Button
+                onClick={nextStep}
+                disabled={!canProceed()}
+                className="gradient-primary border-0 min-w-[130px]"
+              >
+                Next Step
+                <ArrowRight size={16} className="ml-2" />
+              </Button>
+            ) : (
+              <Button
+                onClick={copySummary}
+                className="gradient-primary border-0 min-w-[130px]"
+              >
+                <Copy size={16} className="mr-2" />
+                Copy Summary
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -38,7 +38,53 @@ import { toast } from 'sonner';
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 const JOURNEY_STORAGE_KEY = 'enterprate_journey_progress';
 const IDEA_STORAGE_KEY = 'enterprate_last_validated_idea';
+const AUTO_PROFILE_STORAGE_KEY = 'enterprate_autofill_profile';
 const DASHBOARD_VIEW_STORAGE_KEY = 'enterprate_validation_dashboard_view';
+
+const normalizeAcceptedIdeaForAutofill = (ideaInput = {}) => ({
+  ideaName: ideaInput.ideaName || '',
+  ideaType: ideaInput.ideaType || 'business',
+  industry: ideaInput.industry || '',
+  businessType: ideaInput.businessType || '',
+  location: ideaInput.targetLocation || 'UK',
+  description: ideaInput.ideaDescription || '',
+  targetMarket: ideaInput.targetMarket || 'B2C',
+  customerSegment: ideaInput.customerSegment || '',
+  serviceType: ideaInput.serviceType || '',
+  deliveryModel: ideaInput.deliveryModel || '',
+  pricingModel: ideaInput.pricingModel || '',
+  priceAmount: ideaInput.priceAmount ?? null,
+  goToMarketChannel: Array.isArray(ideaInput.goToMarketChannel) ? ideaInput.goToMarketChannel : [],
+  acceptedAt: new Date().toISOString(),
+});
+
+const buildCompanyProfilePatchFromIdea = (ideaInput = {}) => ({
+  proposedName: ideaInput.ideaName || undefined,
+  businessDescription: ideaInput.ideaDescription || undefined,
+  targetMarket: ideaInput.targetMarket || undefined,
+  operatingProfile: {
+    tradingName: ideaInput.ideaName || undefined,
+    tradingAddress: ideaInput.targetLocation || undefined,
+    marketingDescription: ideaInput.ideaDescription || undefined,
+    industry: ideaInput.industry || undefined,
+  },
+});
+
+const mapIdeaBusinessTypeToRegistrationType = (businessType = '') => {
+  const key = String(businessType || '').toLowerCase();
+  if (['consulting', 'it_services', 'marketing', 'agency', 'cleaning', 'trades'].includes(key)) return 'ltd';
+  return 'ltd';
+};
+
+const buildRegistrationDataFromIdea = (ideaInput = {}) => ({
+  businessType: mapIdeaBusinessTypeToRegistrationType(ideaInput.businessType),
+  companyName: ideaInput.ideaName || '',
+  businessDescription: ideaInput.ideaDescription || '',
+  registeredAddress: ideaInput.targetLocation || '',
+  source: 'idea_validation_accept',
+  syncedAt: new Date().toISOString(),
+  sourceIdeaInput: ideaInput,
+});
 
 const MetricInfoTip = ({ text }) => (
   <Tooltip delayDuration={150}>
@@ -224,19 +270,36 @@ export default function ValidationReport() {
 
       if (status === 'accepted') {
         const acceptedAt = new Date().toISOString();
+        const acceptedIdeaInput = report?.ideaInput || {};
+        const autofillProfile = normalizeAcceptedIdeaForAutofill(acceptedIdeaInput);
 
         // Persist accepted idea input so it can be reused in dashboard/onboarding.
         localStorage.setItem(IDEA_STORAGE_KEY, JSON.stringify({
           reportId,
           acceptedAt,
-          ideaInput: report?.ideaInput || null
+          ideaInput: acceptedIdeaInput
         }));
+        localStorage.setItem(AUTO_PROFILE_STORAGE_KEY, JSON.stringify(autofillProfile));
 
         // Move business journey forward after validation acceptance.
         localStorage.setItem(JOURNEY_STORAGE_KEY, JSON.stringify({
           wizardStep: 5,
           updatedAt: acceptedAt
         }));
+
+        // Sync accepted idea into shared profile so downstream modules can auto-prefill.
+        await Promise.allSettled([
+          axios.patch(
+            `${API_URL}/company-profile`,
+            buildCompanyProfilePatchFromIdea(acceptedIdeaInput),
+            { headers: getHeaders() }
+          ),
+          axios.post(
+            `${API_URL}/company-profile/registration-data`,
+            buildRegistrationDataFromIdea(acceptedIdeaInput),
+            { headers: getHeaders() }
+          )
+        ]);
       }
 
       toast.success(`Idea ${status === 'accepted' ? 'accepted' : 'rejected'}!`);

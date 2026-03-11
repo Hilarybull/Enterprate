@@ -55,6 +55,46 @@ import {
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
+const IDEA_STORAGE_KEY = 'enterprate_last_validated_idea';
+const AUTO_PROFILE_STORAGE_KEY = 'enterprate_autofill_profile';
+
+const getFallbackCompanyProfileFromAcceptedIdea = () => {
+  try {
+    const autoRaw = localStorage.getItem(AUTO_PROFILE_STORAGE_KEY);
+    if (autoRaw) {
+      const auto = JSON.parse(autoRaw);
+      if (auto && auto.ideaName) {
+        return {
+          operatingProfile: {
+            companyName: auto.ideaName,
+            tradingName: auto.ideaName,
+            industry: auto.industry || '',
+            description: auto.description || '',
+            marketingDescription: auto.description || '',
+          },
+          officialProfile: null,
+        };
+      }
+    }
+    const raw = localStorage.getItem(IDEA_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const idea = parsed?.ideaInput;
+    if (!idea?.ideaName) return null;
+    return {
+      operatingProfile: {
+        companyName: idea.ideaName,
+        tradingName: idea.ideaName,
+        industry: idea.industry || '',
+        description: idea.ideaDescription || '',
+        marketingDescription: idea.ideaDescription || '',
+      },
+      officialProfile: null,
+    };
+  } catch (e) {
+    return null;
+  }
+};
 
 const taskPriorities = [
   { value: 'low', label: 'Low', color: 'bg-gray-100 text-gray-700' },
@@ -276,9 +316,16 @@ export default function BusinessOperations() {
   const loadCompanyProfile = async () => {
     try {
       const response = await axios.get(`${API_URL}/company-profile`, { headers: getHeaders() });
-      setCompanyProfile(response.data);
+      if (response.data) {
+        setCompanyProfile(response.data);
+        return;
+      }
+      const fallback = getFallbackCompanyProfileFromAcceptedIdea();
+      if (fallback) setCompanyProfile(fallback);
     } catch (error) {
       console.error('Failed to load company profile:', error);
+      const fallback = getFallbackCompanyProfileFromAcceptedIdea();
+      if (fallback) setCompanyProfile(fallback);
     }
   };
 
