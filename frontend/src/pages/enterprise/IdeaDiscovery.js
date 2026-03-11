@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useWorkspace } from '@/context/WorkspaceContext';
-import { useAuth } from '@/context/AuthContext';
 import { PageHeader } from '@/components/enterprise';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -77,7 +76,7 @@ const PRICING_MODELS = [
   { value: 'subscription', label: 'Subscription' }
 ];
 const DELIVERABLE_UNITS = ['hour', 'job', 'month', 'project'];
-const PAYMENT_TERMS = [7, 14, 30, 60];
+const PAYMENT_TERMS = [0, 7, 14, 30, 60];
 
 const TOTAL_STEPS = 6;
 
@@ -92,7 +91,7 @@ const FieldHelp = ({ text }) => (
 );
 
 const EMPTY_FORM = {
-  ideaType: '',
+  ideaType: 'business',
   ideaName: '',
   ideaDescription: '',
   industry: '',
@@ -136,13 +135,9 @@ export default function IdeaDiscovery() {
   const navigate = useNavigate();
   const { modifyId } = useParams(); // For modify mode
   const { currentWorkspace, getHeaders } = useWorkspace();
-  const { token } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [isModifyMode, setIsModifyMode] = useState(false);
-  const [aiLoadingField, setAiLoadingField] = useState('');
-  const [suggestionMeta, setSuggestionMeta] = useState({});
-  const [feedbackLoadingField, setFeedbackLoadingField] = useState('');
   
   const [formData, setFormData] = useState(EMPTY_FORM);
 
@@ -224,216 +219,7 @@ export default function IdeaDiscovery() {
 
   const isBusinessPath = formData.ideaType === 'business';
 
-  const sanitizeAssistantText = (text) => {
-    if (!text) return '';
-    let cleaned = text.trim();
-    const parts = cleaned.split('\n\n---\n');
-    cleaned = parts[0].trim();
-    cleaned = cleaned.replace(/^.*Mode.*?\n\n/s, '');
-    return cleaned.trim();
-  };
-
-  const suggestFieldWithAI = async (field) => {
-    if (!token) {
-      toast.error('You need to be logged in to use AI suggestions');
-      return;
-    }
-
-    const allowedFields = ['targetAudience', 'problemSolved', 'serviceType', 'howItWorks'];
-    if (!allowedFields.includes(field)) return;
-
-    const expectedResultByField = {
-      targetAudience: 'specific ICP the founder can target immediately for validation interviews and first outreach',
-      problemSolved: 'clear, measurable pain statement that supports deterministic scoring and actionable recommendations',
-      serviceType: 'concise commercial service label that matches pricing and delivery assumptions',
-      howItWorks: 'practical 2-sentence delivery flow aligned with demand, capacity, and pricing assumptions'
-    };
-
-    setAiLoadingField(field);
-    try {
-      const response = await axios.post(
-        `${API_URL}/chat/suggest`,
-        {
-          field,
-          context: {
-            ...formData,
-            businessName: formData.ideaName,
-            whatYouAreBuilding: formData.ideaDescription,
-            expectedResult: expectedResultByField[field]
-          },
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      const suggestion = sanitizeAssistantText(response.data?.suggestion || '');
-      if (!suggestion) {
-        toast.error('No suggestion returned');
-        return;
-      }
-
-      updateField(field, suggestion);
-      setSuggestionMeta((prev) => ({
-        ...prev,
-        [field]: {
-          suggestionId: response.data?.suggestion_id || '',
-          suggestedText: suggestion,
-          provider: response.data?.provider || 'unknown',
-          submitted: false
-        }
-      }));
-      toast.success(response.data?.provider === 'fallback' ? 'Suggestion added (fallback)' : 'AI suggestion added');
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to get AI suggestion');
-    } finally {
-      setAiLoadingField('');
-    }
-  };
-
-  const submitSuggestionFeedback = async (field, feedbackType) => {
-    const meta = suggestionMeta[field];
-    if (!meta?.suggestionId) {
-      toast.error('No suggestion reference found for feedback');
-      return;
-    }
-    if (!token) {
-      toast.error('You need to be logged in to submit feedback');
-      return;
-    }
-
-    setFeedbackLoadingField(field);
-    try {
-      await axios.post(
-        `${API_URL}/chat/suggest-feedback`,
-        {
-          suggestion_id: meta.suggestionId,
-          field,
-          feedback: feedbackType,
-          suggested_text: meta.suggestedText,
-          final_text: formData[field] || '',
-          provider: meta.provider,
-          context: {
-            ...formData,
-            businessName: formData.ideaName,
-            whatYouAreBuilding: formData.ideaDescription
-          }
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setSuggestionMeta((prev) => ({
-        ...prev,
-        [field]: {
-          ...prev[field],
-          submitted: true,
-          submittedType: feedbackType
-        }
-      }));
-      toast.success('Feedback saved');
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to save feedback');
-    } finally {
-      setFeedbackLoadingField('');
-    }
-  };
-
-  const renderSuggestionFeedback = (field) => {
-    const meta = suggestionMeta[field];
-    if (!meta?.suggestionId) return null;
-    return (
-      <div className="mt-2 flex items-center gap-2">
-        <span className="text-xs text-gray-500">Was this suggestion useful?</span>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={feedbackLoadingField === field || meta.submitted}
-          onClick={() => submitSuggestionFeedback(field, 'accept')}
-        >
-          Accept
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={feedbackLoadingField === field || meta.submitted}
-          onClick={() => submitSuggestionFeedback(field, 'edit')}
-        >
-          Edited
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={feedbackLoadingField === field || meta.submitted}
-          onClick={() => submitSuggestionFeedback(field, 'reject')}
-        >
-          Reject
-        </Button>
-        {meta.submitted && (
-          <span className="text-xs text-green-600">saved</span>
-        )}
-      </div>
-    );
-  };
-
-  const canProceed = () => {
-    switch (currentStep) {
-      case 1:
-        return formData.ideaType !== '';
-      case 2:
-        if (isBusinessPath) {
-          return (
-            formData.ideaName.trim() !== '' &&
-            formData.ideaDescription.trim() !== '' &&
-            formData.businessType !== '' &&
-            formData.industry !== '' &&
-            formData.targetLocation.trim() !== '' &&
-            formData.founderAvailabilityHoursPerWeek !== ''
-          );
-        }
-        return (
-          formData.ideaName.trim() !== '' &&
-          formData.ideaDescription.trim() !== '' &&
-          formData.industry !== '' &&
-          formData.targetLocation.trim() !== ''
-        );
-      case 3:
-        return (
-          formData.customerSegment !== '' &&
-          formData.targetAudience.trim() !== '' &&
-          formData.problemSolved.trim() !== '' &&
-          formData.problemType.length > 0 &&
-          formData.problemFrequency !== '' &&
-          formData.urgencyLevel !== ''
-        );
-      case 4:
-        return (
-          formData.serviceType.trim() !== '' &&
-          formData.pricingModel !== '' &&
-          formData.priceAmount !== '' &&
-          formData.deliverableUnit !== '' &&
-          formData.deliveryModel !== '' &&
-          formData.howItWorks.trim() !== '' &&
-          formData.expectedUnitsPerMonth !== '' &&
-          formData.expectedCustomers !== '' &&
-          formData.salesCycleDays !== '' &&
-          formData.paymentTermsDays !== ''
-        );
-      case 5:
-        return (
-          formData.variableCostPerUnit !== '' &&
-          formData.fixedMonthlyCosts !== '' &&
-          formData.capacityPerStaffPerMonth !== ''
-        );
-      case 6:
-        return (
-          formData.targetMarket !== '' &&
-          formData.customerBudget !== '' &&
-          formData.goToMarketChannel.length > 0
-        );
-      default:
-        return true;
-    }
-  };
+  const canProceed = () => true;
 
   const handleNext = () => {
     if (currentStep < TOTAL_STEPS) {
@@ -459,8 +245,38 @@ export default function IdeaDiscovery() {
       return Number.isFinite(parsed) ? parsed : null;
     };
 
+    const toTextOrNull = (value) => {
+      if (value === null || value === undefined) return null;
+      const text = String(value).trim();
+      return text.length ? text : null;
+    };
+
     const payload = {
       ...formData,
+      ideaType: toTextOrNull(formData.ideaType) || 'business',
+      ideaName: toTextOrNull(formData.ideaName),
+      ideaDescription: toTextOrNull(formData.ideaDescription),
+      industry: toTextOrNull(formData.industry) || 'General',
+      subIndustry: toTextOrNull(formData.subIndustry),
+      businessType: toTextOrNull(formData.businessType),
+      problemSolved: toTextOrNull(formData.problemSolved),
+      targetAudience: toTextOrNull(formData.targetAudience),
+      urgencyLevel: toTextOrNull(formData.urgencyLevel),
+      howItWorks: toTextOrNull(formData.howItWorks),
+      deliveryModel: toTextOrNull(formData.deliveryModel),
+      targetMarket: toTextOrNull(formData.targetMarket) || 'B2C',
+      targetLocation: toTextOrNull(formData.targetLocation) || 'UK',
+      customerBudget: toTextOrNull(formData.customerBudget) || 'unknown',
+      customerSegment: toTextOrNull(formData.customerSegment),
+      problemFrequency: toTextOrNull(formData.problemFrequency),
+      currentAlternatives: toTextOrNull(formData.currentAlternatives),
+      serviceType: toTextOrNull(formData.serviceType),
+      pricingModel: toTextOrNull(formData.pricingModel),
+      deliverableUnit: toTextOrNull(formData.deliverableUnit),
+      packageTiers: toTextOrNull(formData.packageTiers),
+      stage: toTextOrNull(formData.stage) || 'idea',
+      goToMarketChannel: Array.isArray(formData.goToMarketChannel) ? formData.goToMarketChannel : [],
+      problemType: Array.isArray(formData.problemType) ? formData.problemType : [],
       founderAvailabilityHoursPerWeek: toNumberOrNull(formData.founderAvailabilityHoursPerWeek),
       priceAmount: toNumberOrNull(formData.priceAmount),
       expectedUnitsPerMonth: toNumberOrNull(formData.expectedUnitsPerMonth),
@@ -606,7 +422,7 @@ export default function IdeaDiscovery() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="ideaName">
-                    {isBusinessPath ? 'Business Name *' : 'Product/Service Name *'}
+                    {isBusinessPath ? 'Business Name' : 'Product/Service Name'}
                     <FieldHelp text="Use the name customers will recognize." />
                   </Label>
                   <Input
@@ -620,14 +436,14 @@ export default function IdeaDiscovery() {
 
                 <div>
                   <Label htmlFor="targetLocation">
-                    Location *
+                    Location
                     <FieldHelp text="Enter your main launch market: city, country, or global." />
                   </Label>
                   <Input
                     id="targetLocation"
                     value={formData.targetLocation}
                     onChange={(e) => updateField('targetLocation', e.target.value)}
-                    placeholder="e.g., Manchester / Lagos / Global"
+                    placeholder="e.g., London / Manchester / UK-wide"
                     className="mt-1.5"
                   />
                 </div>
@@ -635,7 +451,7 @@ export default function IdeaDiscovery() {
 
               <div>
                 <Label htmlFor="ideaDescription">
-                  What are you building? *
+                  What are you building?
                   <FieldHelp text="Write one clear sentence on what the app or service does and who it helps." />
                 </Label>
                 <Textarea
@@ -651,7 +467,7 @@ export default function IdeaDiscovery() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="industry">
-                    Primary Industry *
+                    Primary Industry
                     <FieldHelp text="Choose the closest industry to your core use case." />
                   </Label>
                   <Select
@@ -672,7 +488,7 @@ export default function IdeaDiscovery() {
                 {isBusinessPath && (
                   <div>
                     <Label>
-                      Business Type *
+                      Business Type
                       <FieldHelp text="Pick the operating model that best fits your service." />
                     </Label>
                     <Select
@@ -695,7 +511,7 @@ export default function IdeaDiscovery() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="founderAvailabilityHoursPerWeek">
-                    Founder hours/week {isBusinessPath ? '*' : '(optional)'}
+                    Founder hours/week (optional)
                     <FieldHelp text="How many hours per week you can commit to building and delivery." />
                   </Label>
                   <Input
@@ -739,7 +555,7 @@ export default function IdeaDiscovery() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>
-                    Customer Segment *
+                    Customer Segment
                     <FieldHelp text="Choose the primary group you want to serve first." />
                   </Label>
                   <Select
@@ -759,7 +575,7 @@ export default function IdeaDiscovery() {
 
                 <div>
                   <Label>
-                    Problem Frequency *
+                    Problem Frequency
                     <FieldHelp text="How often this pain happens for the customer." />
                   </Label>
                   <Select value={formData.problemFrequency} onValueChange={(value) => updateField('problemFrequency', value)}>
@@ -776,21 +592,10 @@ export default function IdeaDiscovery() {
               </div>
 
               <div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="targetAudience">
-                    Target Audience Details *
-                    <FieldHelp text="Specify who they are, where they are, and the concrete pain they face." />
-                  </Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => suggestFieldWithAI('targetAudience')}
-                    disabled={aiLoadingField === 'targetAudience'}
-                  >
-                    {aiLoadingField === 'targetAudience' ? 'Suggesting...' : 'Suggest with AI'}
-                  </Button>
-                </div>
+                <Label htmlFor="targetAudience">
+                  Target Audience Details
+                  <FieldHelp text="Specify who they are, where they are, and the concrete pain they face." />
+                </Label>
                 <Textarea
                   id="targetAudience"
                   value={formData.targetAudience}
@@ -799,12 +604,11 @@ export default function IdeaDiscovery() {
                   rows={3}
                   className="mt-1.5"
                 />
-                {renderSuggestionFeedback('targetAudience')}
               </div>
 
               <div>
                 <Label className="mb-3 block">
-                  Problem Type * (select all that apply)
+                  Problem Type (select all that apply)
                   <FieldHelp text="Select the pain categories this idea addresses." />
                 </Label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -821,21 +625,10 @@ export default function IdeaDiscovery() {
               </div>
 
               <div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="problemSolved">
-                    Problem Statement *
-                    <FieldHelp text="One sentence: customer pain plus measurable impact." />
-                  </Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => suggestFieldWithAI('problemSolved')}
-                    disabled={aiLoadingField === 'problemSolved'}
-                  >
-                    {aiLoadingField === 'problemSolved' ? 'Suggesting...' : 'Suggest with AI'}
-                  </Button>
-                </div>
+                <Label htmlFor="problemSolved">
+                  Problem Statement
+                  <FieldHelp text="One sentence: customer pain plus measurable impact." />
+                </Label>
                 <Textarea
                   id="problemSolved"
                   value={formData.problemSolved}
@@ -844,7 +637,6 @@ export default function IdeaDiscovery() {
                   rows={3}
                   className="mt-1.5"
                 />
-                {renderSuggestionFeedback('problemSolved')}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -864,7 +656,7 @@ export default function IdeaDiscovery() {
                 </div>
                 <div>
                   <Label>
-                    Urgency Level *
+                    Urgency Level
                     <FieldHelp text="How urgent this pain is for customers right now." />
                   </Label>
                   <Select
@@ -895,21 +687,10 @@ export default function IdeaDiscovery() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="serviceType">
-                      Service Type *
-                      <FieldHelp text="Name the exact offer customers will buy." />
-                    </Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => suggestFieldWithAI('serviceType')}
-                      disabled={aiLoadingField === 'serviceType'}
-                    >
-                      {aiLoadingField === 'serviceType' ? 'Suggesting...' : 'Suggest with AI'}
-                    </Button>
-                  </div>
+                  <Label htmlFor="serviceType">
+                    Service Type
+                    <FieldHelp text="Name the exact offer customers will buy." />
+                  </Label>
                   <Input
                     id="serviceType"
                     value={formData.serviceType}
@@ -917,12 +698,11 @@ export default function IdeaDiscovery() {
                     placeholder="e.g., Deep Cleaning, IT support retainer"
                     className="mt-1.5"
                   />
-                  {renderSuggestionFeedback('serviceType')}
                 </div>
 
                 <div>
                   <Label>
-                    Delivery Model *
+                    Delivery Model
                     <FieldHelp text="How customers receive it: service, app, marketplace, or subscription." />
                   </Label>
                   <Select
@@ -942,21 +722,10 @@ export default function IdeaDiscovery() {
               </div>
 
               <div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="howItWorks">
-                    How It Works *
-                    <FieldHelp text="Two short sentences: how users access it and how value is delivered." />
-                  </Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => suggestFieldWithAI('howItWorks')}
-                    disabled={aiLoadingField === 'howItWorks'}
-                  >
-                    {aiLoadingField === 'howItWorks' ? 'Suggesting...' : 'Suggest with AI'}
-                  </Button>
-                </div>
+                <Label htmlFor="howItWorks">
+                  How It Works
+                  <FieldHelp text="Two short sentences: how users access it and how value is delivered." />
+                </Label>
                 <Textarea
                   id="howItWorks"
                   value={formData.howItWorks}
@@ -965,13 +734,12 @@ export default function IdeaDiscovery() {
                   rows={3}
                   className="mt-1.5"
                 />
-                {renderSuggestionFeedback('howItWorks')}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <Label>
-                    Pricing Model *
+                    Pricing Model
                     <FieldHelp text="How you charge: hourly, fixed job, retainer, or subscription." />
                   </Label>
                   <Select
@@ -991,7 +759,7 @@ export default function IdeaDiscovery() {
 
                 <div>
                   <Label htmlFor="priceAmount">
-                    Price (local currency) *
+                    Price (local currency)
                     <FieldHelp text="Amount paid per deliverable unit." />
                   </Label>
                   <Input
@@ -1007,7 +775,7 @@ export default function IdeaDiscovery() {
 
                 <div>
                   <Label>
-                    Deliverable Unit *
+                    Deliverable Unit
                     <FieldHelp text="Unit tied to your price, for example hour, job, month, or project." />
                   </Label>
                   <Select
@@ -1043,7 +811,7 @@ export default function IdeaDiscovery() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <Label htmlFor="expectedUnitsPerMonth">
-                    Expected Units/Month *
+                    Expected Units/Month
                     <FieldHelp text="Estimated billable units you can deliver monthly." />
                   </Label>
                   <Input
@@ -1058,7 +826,7 @@ export default function IdeaDiscovery() {
 
                 <div>
                   <Label htmlFor="expectedCustomers">
-                    Expected Customers *
+                    Expected Customers
                     <FieldHelp text="Estimated number of paying customers per month." />
                   </Label>
                   <Input
@@ -1073,7 +841,7 @@ export default function IdeaDiscovery() {
 
                 <div>
                   <Label htmlFor="salesCycleDays">
-                    Sales Cycle (days) *
+                    Sales Cycle (days)
                     <FieldHelp text="Average days from first contact to payment commitment." />
                   </Label>
                   <Input
@@ -1088,7 +856,7 @@ export default function IdeaDiscovery() {
 
                 <div>
                   <Label>
-                    Payment Terms *
+                    Payment Terms
                     <FieldHelp text="How long after invoice customers pay." />
                   </Label>
                   <Select
@@ -1100,7 +868,9 @@ export default function IdeaDiscovery() {
                     </SelectTrigger>
                     <SelectContent>
                       {PAYMENT_TERMS.map((item) => (
-                        <SelectItem key={item} value={String(item)}>{item} days</SelectItem>
+                        <SelectItem key={item} value={String(item)}>
+                          {item === 0 ? 'Immediately' : `${item} days`}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -1120,7 +890,7 @@ export default function IdeaDiscovery() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="variableCostPerUnit">
-                    Variable Cost per Unit (local currency) *
+                    Variable Cost per Unit (local currency)
                     <FieldHelp text="Direct cost to deliver one unit (materials, tools, transaction fees)." />
                   </Label>
                   <Input
@@ -1136,7 +906,7 @@ export default function IdeaDiscovery() {
 
                 <div>
                   <Label htmlFor="fixedMonthlyCosts">
-                    Fixed Monthly Costs (local currency) *
+                    Fixed Monthly Costs (local currency)
                     <FieldHelp text="Recurring monthly overheads like rent, software, admin, and utilities." />
                   </Label>
                   <Input
@@ -1216,7 +986,7 @@ export default function IdeaDiscovery() {
                 </div>
                 <div>
                   <Label htmlFor="capacityPerStaffPerMonth">
-                    Capacity per Staff/Month *
+                    Capacity per Staff/Month
                     <FieldHelp text="How many units one staff member can deliver in a month." />
                   </Label>
                   <Input
@@ -1282,7 +1052,7 @@ export default function IdeaDiscovery() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <Label>
-                      Target Market *
+                      Target Market
                       <FieldHelp text="Choose whether you sell primarily to consumers, businesses, or government." />
                     </Label>
                     <Select
@@ -1303,7 +1073,7 @@ export default function IdeaDiscovery() {
 
                   <div>
                     <Label>
-                      Customer Budget Level *
+                      Customer Budget Level
                       <FieldHelp text="Expected customer spending ability for this offer." />
                     </Label>
                     <Select
@@ -1339,7 +1109,7 @@ export default function IdeaDiscovery() {
 
                 <div>
                   <Label className="mb-3 block">
-                    Go-To-Market Channels *
+                    Go-To-Market Channels
                     <FieldHelp text="Select your first customer acquisition channels." />
                   </Label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

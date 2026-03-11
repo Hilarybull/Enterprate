@@ -142,20 +142,20 @@ class ComprehensiveReport(BaseModel):
 
 class ValidationReportCreate(BaseModel):
     """Request to create a validation report"""
-    ideaType: str
-    ideaName: str
-    ideaDescription: str
-    industry: str
+    ideaType: Optional[str] = None
+    ideaName: Optional[str] = None
+    ideaDescription: Optional[str] = None
+    industry: Optional[str] = None
     subIndustry: Optional[str] = None
-    problemSolved: str
-    targetAudience: str
-    urgencyLevel: str
-    howItWorks: str
-    deliveryModel: str
-    targetMarket: str
-    targetLocation: str
-    customerBudget: str
-    goToMarketChannel: List[str]
+    problemSolved: Optional[str] = None
+    targetAudience: Optional[str] = None
+    urgencyLevel: Optional[str] = None
+    howItWorks: Optional[str] = None
+    deliveryModel: Optional[str] = None
+    targetMarket: Optional[str] = None
+    targetLocation: Optional[str] = None
+    customerBudget: Optional[str] = None
+    goToMarketChannel: List[str] = Field(default_factory=list)
     
     # Business idea validation journey fields
     businessType: Optional[str] = None  # service_micro_business, agency, etc.
@@ -163,7 +163,7 @@ class ValidationReportCreate(BaseModel):
     stage: Optional[str] = "idea"
     customerSegment: Optional[str] = None
     customerSegmentNotes: Optional[str] = None
-    problemType: Optional[List[str]] = None  # cost | time | compliance | quality | reliability (multi-select)
+    problemType: Optional[List[str]] = Field(default_factory=list)  # cost | time | compliance | quality | reliability (multi-select)
     problemFrequency: Optional[str] = None  # daily | weekly | monthly
     currentAlternatives: Optional[str] = None
     serviceType: Optional[str] = None

@@ -79,6 +79,7 @@ class ValidationReportService:
         
         # Update engagement counter
         await ValidationReportService._increment_engagement(workspace_id, user_id)
+        await ValidationReportService._store_response_bank_entry(workspace_id, user_id, data, report_id)
         
         # Log intelligence event
         await db.intelligence_events.insert_one({
@@ -173,14 +174,24 @@ class ValidationReportService:
         else:
             d1_margin = 25
 
-        # D2: Demand realism
-        if units > 0 and customers > 0:
-            d2_demand = 70
-        elif units > 0:
-            d2_demand = 50
+        # D2: Demand realism (continuous sensitivity, not coarse buckets)
+        if units <= 0 and customers <= 0:
+            d2_demand = 25
         else:
-            d2_demand = 30
-        d2_demand = clip(d2_demand + (demand_factor - 50) * 0.4)
+            # Scale assumptions so scores move when the user changes values.
+            customer_score = clip((customers / 50) * 100) if customers > 0 else 20
+            units_score = clip((units / 600) * 100) if units > 0 else 20
+            units_per_customer = (units / customers) if customers > 0 else 0
+            # Penalize unrealistic delivery load/customer concentration extremes.
+            realism_penalty = 0
+            if units_per_customer > 60:
+                realism_penalty += 20
+            elif units_per_customer > 30:
+                realism_penalty += 10
+            if customers > 0 and customers <= 1 and units >= 50:
+                realism_penalty += 12
+            base_d2 = (0.45 * customer_score) + (0.35 * units_score) + (0.20 * demand_factor)
+            d2_demand = clip(base_d2 - realism_penalty)
 
         # D3: Capacity feasibility
         if capacity_utilization_pct is None:
@@ -234,17 +245,34 @@ class ValidationReportService:
             d6_diversification -= 10
         d6_diversification = clip(d6_diversification, 15, 95)
 
-        # D7: Proof strength (MVP proxy from structured completeness)
-        proof_fields = [
-            data.ideaDescription, data.targetAudience, data.problemSolved, data.howItWorks,
-            data.serviceType, data.pricingModel, data.priceAmount, data.expectedUnitsPerMonth, data.expectedCustomers
+        # D7: Proof strength (quality + structure + validation signals)
+        text_fields = [
+            data.ideaDescription or "",
+            data.targetAudience or "",
+            data.problemSolved or "",
+            data.howItWorks or "",
         ]
-        filled = sum(1 for v in proof_fields if v not in (None, "", []))
-        d7_proof = clip((filled / max(1, len(proof_fields))) * 100)
-        if data.problemFrequency:
-            d7_proof = clip(d7_proof + 5)
-        if data.urgencyLevel:
-            d7_proof = clip(d7_proof + 5)
+        avg_text_len = sum(len(t.strip()) for t in text_fields) / max(1, len(text_fields))
+        text_quality = clip((avg_text_len / 180) * 100)  # grows with concrete detail length
+
+        structured_fields = [
+            data.serviceType, data.pricingModel, data.priceAmount, data.expectedUnitsPerMonth,
+            data.expectedCustomers, data.salesCycleDays, data.paymentTermsDays,
+            data.variableCostPerUnit, data.fixedMonthlyCosts, data.staffCount, data.capacityPerStaffPerMonth
+        ]
+        structured_filled = sum(1 for v in structured_fields if v not in (None, "", []))
+        structured_quality = clip((structured_filled / max(1, len(structured_fields))) * 100)
+
+        validation_signals = 40
+        if data.problemFrequency in {"daily", "weekly"}:
+            validation_signals += 20
+        if data.urgencyLevel in {"high", "medium"}:
+            validation_signals += 20
+        if (data.currentAlternatives or "").strip():
+            validation_signals += 20
+        validation_signals = clip(validation_signals)
+
+        d7_proof = clip((0.40 * text_quality) + (0.40 * structured_quality) + (0.20 * validation_signals))
 
         dimension_weights = {
             "D1_marginStrength": 0.20,
@@ -975,63 +1003,76 @@ Be realistic but constructive. Base scores on the information provided. Return O
     @staticmethod
     def _generate_fallback_report(data: ValidationReportCreate) -> dict:
         """Generate a comprehensive report without AI (fallback)"""
-        
+        channels = data.goToMarketChannel or []
+        problem_text = data.problemSolved or ""
+        desc_text = data.ideaDescription or ""
+        audience_text = data.targetAudience or ""
+        how_text = data.howItWorks or ""
+        industry = data.industry or "General"
+        location = data.targetLocation or "selected location"
+        target_market = data.targetMarket or "B2C"
+        delivery_model = data.deliveryModel or "service"
+        customer_budget = data.customerBudget or "unknown"
+        urgency_level = data.urgencyLevel or "medium"
+        idea_name = data.ideaName or "Idea"
+
         # Calculate scores based on input quality
-        problem_len = len(data.problemSolved)
-        desc_len = len(data.ideaDescription)
-        audience_len = len(data.targetAudience)
-        how_len = len(data.howItWorks)
+        problem_len = len(problem_text)
+        desc_len = len(desc_text)
+        audience_len = len(audience_text)
+        how_len = len(how_text)
         
         # Opportunity score
-        opp_score = min(9, 5 + (desc_len // 50) + (1 if data.urgencyLevel == "high" else 0))
+        opp_score = min(9, 5 + (desc_len // 50) + (1 if urgency_level == "high" else 0))
         
         # Problem score
-        prob_score = min(9, 4 + (problem_len // 40) + (2 if data.urgencyLevel == "high" else 1 if data.urgencyLevel == "medium" else 0))
+        prob_score = min(9, 4 + (problem_len // 40) + (2 if urgency_level == "high" else 1 if urgency_level == "medium" else 0))
         
         # Feasibility score
         easy_models = ["digital", "saas", "mobile app"]
-        feas_score = 7 if data.deliveryModel.lower() in easy_models else 5
+        delivery_model_key = (data.deliveryModel or "").lower()
+        feas_score = 7 if delivery_model_key in easy_models else 5
         feas_score = min(9, feas_score + (how_len // 100))
         
         # Why Now score
-        why_now_score = 8 if data.urgencyLevel == "high" else 6 if data.urgencyLevel == "medium" else 4
-        why_now_score = min(9, why_now_score + len(data.goToMarketChannel) // 2)
+        why_now_score = 8 if urgency_level == "high" else 6 if urgency_level == "medium" else 4
+        why_now_score = min(9, why_now_score + len(channels) // 2)
         
         # Revenue indicator
         rev_indicator = "$$$" if data.customerBudget == "high" else "$$" if data.customerBudget == "medium" else "$"
         
         # Execution difficulty
-        exec_diff = 5 if data.deliveryModel.lower() in easy_models else 7
+        exec_diff = 5 if delivery_model_key in easy_models else 7
         
         # GTM score
-        gtm_score = min(9, 5 + len(data.goToMarketChannel))
+        gtm_score = min(9, 5 + len(channels))
         
         return {
-            "title": data.ideaName,
+            "title": idea_name,
             "tags": ValidationReportService._generate_tags(data, opp_score, prob_score),
             "description": ValidationReportService._structured_description(
-                data.ideaDescription,
+                desc_text,
                 data.customerSegment,
-                data.targetLocation,
-                data.targetMarket,
-                data.problemSolved,
+                location,
+                target_market,
+                problem_text,
             ),
             "disclaimer": "*Analysis and scores are based on provided information and general market assumptions. Results vary by execution and market conditions.",
             "scores": {
                 "opportunity": {
                     "value": opp_score,
                     "label": "Exceptional" if opp_score >= 8 else "Good" if opp_score >= 6 else "Moderate",
-                    "description": f"Strong market opportunity in {data.industry}"
+                    "description": f"Strong market opportunity in {industry}"
                 },
                 "problem": {
                     "value": prob_score,
                     "label": "High Pain" if prob_score >= 7 else "Moderate Pain" if prob_score >= 5 else "Low Pain",
-                    "description": f"Problem urgency is {data.urgencyLevel}"
+                    "description": f"Problem urgency is {urgency_level}"
                 },
                 "feasibility": {
                     "value": feas_score,
                     "label": "Achievable" if feas_score >= 7 else "Challenging" if feas_score >= 5 else "Difficult",
-                    "description": f"{data.deliveryModel} delivery model assessment"
+                    "description": f"{delivery_model} delivery model assessment"
                 },
                 "whyNow": {
                     "value": why_now_score,
@@ -1042,41 +1083,41 @@ Be realistic but constructive. Base scores on the information provided. Return O
             "businessFit": {
                 "revenuePotential": {
                     "indicator": rev_indicator,
-                    "description": f"Target customers have {data.customerBudget} budget capacity"
+                    "description": f"Target customers have {customer_budget} budget capacity"
                 },
                 "executionDifficulty": {
                     "score": exec_diff,
-                    "description": f"Building a {data.deliveryModel} requires moderate technical execution"
+                    "description": f"Building a {delivery_model} requires moderate technical execution"
                 },
                 "goToMarket": {
                     "score": gtm_score,
-                    "description": f"Planned channels: {', '.join(data.goToMarketChannel[:3])}"
+                    "description": f"Planned channels: {', '.join(channels[:3]) if channels else 'direct'}"
                 }
             },
             "offer": [
                 {
                     "tier": "LEAD MAGNET",
-                    "name": f"{data.ideaName} Calculator",
+                    "name": f"{idea_name} Calculator",
                     "price": "Free",
-                    "description": f"Free tool to estimate value for {data.targetAudience}"
+                    "description": f"Free tool to estimate value for {audience_text or 'target customers'}"
                 },
                 {
                     "tier": "FRONTEND",
-                    "name": f"Basic {data.ideaName}",
+                    "name": f"Basic {idea_name}",
                     "price": "$15/month",
-                    "description": f"Entry-level offering for individual {data.targetMarket} customers"
+                    "description": f"Entry-level offering for individual {target_market} customers"
                 },
                 {
                     "tier": "CORE",
-                    "name": f"Pro {data.ideaName}",
+                    "name": f"Pro {idea_name}",
                     "price": "$30-50/month",
                     "description": "Full-featured solution with premium capabilities"
                 }
             ],
-            "whyNow": f"Now is an opportune time to launch in the {data.industry} market. With {data.urgencyLevel} urgency around {data.problemSolved[:100]}..., early movers can capture significant market share.",
-            "proofSignals": f"Market research indicates strong demand signals in {data.targetLocation}. The {data.targetMarket} segment shows active interest in solutions addressing {data.problemSolved[:80]}...",
-            "marketGap": f"Current solutions in {data.industry} don't fully address the needs of {data.targetAudience}. This creates a clear opportunity to differentiate through {data.deliveryModel} delivery.",
-            "executionPlan": f"Launch MVP focused on core value: {data.howItWorks[:100]}... Start with {data.goToMarketChannel[0] if data.goToMarketChannel else 'direct'} acquisition, then expand to additional channels.",
+            "whyNow": f"Now is an opportune time to launch in the {industry} market. With {urgency_level} urgency around {(problem_text[:100] or 'the identified customer pain')}..., early movers can capture significant market share.",
+            "proofSignals": f"Market research indicates strong demand signals in {location}. The {target_market} segment shows active interest in solutions addressing {(problem_text[:80] or 'this need')}...",
+            "marketGap": f"Current solutions in {industry} don't fully address the needs of {audience_text or 'target customers'}. This creates a clear opportunity to differentiate through {delivery_model} delivery.",
+            "executionPlan": f"Launch MVP focused on core value: {(how_text[:100] or 'deliver core value quickly')}... Start with {channels[0] if channels else 'direct'} acquisition, then expand to additional channels.",
             "frameworkFit": [
                 {
                     "name": "Value Equation",
@@ -1090,7 +1131,7 @@ Be realistic but constructive. Base scores on the information provided. Return O
                 },
                 {
                     "name": "Market Position",
-                    "description": f"Positioned as a {data.deliveryModel} solution in the {data.industry} space targeting {data.targetMarket} customers."
+                    "description": f"Positioned as a {delivery_model} solution in the {industry} space targeting {target_market} customers."
                 },
                 {
                     "name": "ACP Framework",
@@ -1102,10 +1143,10 @@ Be realistic but constructive. Base scores on the information provided. Return O
                 }
             ],
             "categorization": {
-                "type": data.deliveryModel.upper() if data.deliveryModel.lower() in ["saas", "service", "marketplace"] else "SaaS",
-                "market": data.targetMarket,
-                "target": data.targetAudience[:50] if len(data.targetAudience) > 50 else data.targetAudience,
-                "trendAnalysis": f"The {data.industry} market in {data.targetLocation} shows promising growth potential for {data.deliveryModel} solutions."
+                "type": delivery_model.upper() if delivery_model_key in ["saas", "service", "marketplace"] else "SaaS",
+                "market": target_market,
+                "target": audience_text[:50] if len(audience_text) > 50 else (audience_text or "target customers"),
+                "trendAnalysis": f"The {industry} market in {location} shows promising growth potential for {delivery_model} solutions."
             },
             "communitySignals": [
                 {"platform": "Reddit", "details": "Multiple relevant subreddits", "score": 7},
@@ -1114,11 +1155,11 @@ Be realistic but constructive. Base scores on the information provided. Return O
                 {"platform": "LinkedIn", "details": "Professional discussions", "score": 6}
             ],
             "topKeywords": [
-                {"keyword": f"{data.industry.lower()} {data.deliveryModel.lower()}", "volume": "2.4K", "competition": "MEDIUM", "growth": "+45%"},
-                {"keyword": f"{data.ideaName.lower().split()[0]} solution", "volume": "1.8K", "competition": "LOW", "growth": "+32%"},
-                {"keyword": f"best {data.industry.lower()} tools", "volume": "5.1K", "competition": "HIGH"}
+                {"keyword": f"{industry.lower()} {delivery_model.lower()}", "volume": "2.4K", "competition": "MEDIUM", "growth": "+45%"},
+                {"keyword": f"{idea_name.lower().split()[0]} solution", "volume": "1.8K", "competition": "LOW", "growth": "+32%"},
+                {"keyword": f"best {industry.lower()} tools", "volume": "5.1K", "competition": "HIGH"}
             ],
-            "trendKeyword": f"{data.industry.lower()} {data.deliveryModel.lower()}",
+            "trendKeyword": f"{industry.lower()} {delivery_model.lower()}",
             "trendVolume": "2.4K",
             "trendGrowth": "+45%",
             "buildPrompts": ["Ad Creatives", "Brand Package", "Landing Page", "Email Sequence", "Social Media Strategy"],
@@ -1145,9 +1186,9 @@ Be realistic but constructive. Base scores on the information provided. Return O
             tags.append("Perfect Timing")
         if data.customerBudget == "high":
             tags.append("Premium Market")
-        if len(data.goToMarketChannel) >= 3:
+        if len(data.goToMarketChannel or []) >= 3:
             tags.append("Multi-Channel Ready")
-        if data.deliveryModel.lower() in ["saas", "subscription"]:
+        if (data.deliveryModel or "").lower() in ["saas", "subscription"]:
             tags.append("Recurring Revenue")
         if data.targetMarket == "B2B":
             tags.append("B2B Opportunity")
@@ -1244,7 +1285,7 @@ Be realistic but constructive. Base scores on the information provided. Return O
         
         if result:
             result.pop("_id", None)
-            
+
             # Log event
             await db.intelligence_events.insert_one({
                 "id": str(uuid.uuid4()),
@@ -1255,6 +1296,49 @@ Be realistic but constructive. Base scores on the information provided. Return O
             })
         
         return result
+
+    @staticmethod
+    async def _store_response_bank_entry(
+        workspace_id: str,
+        user_id: str,
+        data: ValidationReportCreate,
+        report_id: str
+    ) -> None:
+        """Store user-provided validation responses for future non-hallucinated suggestion training."""
+        try:
+            db = get_db()
+            now = datetime.now(timezone.utc).isoformat()
+            payload = data.model_dump() if hasattr(data, "model_dump") else data.dict()
+            await db.validation_response_bank.insert_one({
+                "id": str(uuid.uuid4()),
+                "workspace_id": workspace_id,
+                "user_id": user_id,
+                "report_id": report_id,
+                "createdAt": now,
+                "responses": {
+                    "ideaType": payload.get("ideaType"),
+                    "ideaName": payload.get("ideaName"),
+                    "ideaDescription": payload.get("ideaDescription"),
+                    "industry": payload.get("industry"),
+                    "targetLocation": payload.get("targetLocation"),
+                    "customerSegment": payload.get("customerSegment"),
+                    "targetAudience": payload.get("targetAudience"),
+                    "problemSolved": payload.get("problemSolved"),
+                    "problemType": payload.get("problemType") or [],
+                    "problemFrequency": payload.get("problemFrequency"),
+                    "urgencyLevel": payload.get("urgencyLevel"),
+                    "serviceType": payload.get("serviceType"),
+                    "howItWorks": payload.get("howItWorks"),
+                    "pricingModel": payload.get("pricingModel"),
+                    "priceAmount": payload.get("priceAmount"),
+                    "expectedUnitsPerMonth": payload.get("expectedUnitsPerMonth"),
+                    "expectedCustomers": payload.get("expectedCustomers"),
+                    "goToMarketChannel": payload.get("goToMarketChannel") or [],
+                }
+            })
+        except Exception as e:
+            # Non-blocking: report generation should continue even if training capture fails.
+            print(f"Response bank storage skipped: {e}")
     
     @staticmethod
     async def modify_and_regenerate(
@@ -1296,6 +1380,7 @@ Be realistic but constructive. Base scores on the information provided. Return O
         
         if result:
             result.pop("_id", None)
+            await ValidationReportService._store_response_bank_entry(workspace_id, user_id, new_data, report_id)
             
             # Log event
             await db.intelligence_events.insert_one({

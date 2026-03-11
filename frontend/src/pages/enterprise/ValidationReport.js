@@ -10,7 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { 
+import {
   FileText, 
   ArrowLeft, 
   CheckCircle, 
@@ -24,7 +24,6 @@ import {
   Clock,
   BarChart3,
   MessageCircle,
-  ExternalLink,
   ThumbsUp,
   ThumbsDown,
   Loader2,
@@ -39,6 +38,7 @@ import { toast } from 'sonner';
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 const JOURNEY_STORAGE_KEY = 'enterprate_journey_progress';
 const IDEA_STORAGE_KEY = 'enterprate_last_validated_idea';
+const DASHBOARD_VIEW_STORAGE_KEY = 'enterprate_validation_dashboard_view';
 
 const MetricInfoTip = ({ text }) => (
   <Tooltip delayDuration={150}>
@@ -71,7 +71,7 @@ const ScoreGauge = ({ value, label, subtitle, infoText, color = "purple" }) => {
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-medium opacity-80 inline-flex items-center gap-1.5">
           {label}
-          <MetricInfoTip text={infoText || reason || `Score from ${label.toLowerCase()} factors.`} />
+          <MetricInfoTip text={infoText || `Score from ${label.toLowerCase()} factors.`} />
         </span>
       </div>
       <div className="text-2xl md:text-3xl font-bold">{value}</div>
@@ -182,12 +182,20 @@ export default function ValidationReport() {
   const [proofCount, setProofCount] = useState(0);
   const [showAllDimensions, setShowAllDimensions] = useState(false);
   const [showAllOffer, setShowAllOffer] = useState(false);
+  const [dashboardView, setDashboardView] = useState(() => {
+    const saved = localStorage.getItem(DASHBOARD_VIEW_STORAGE_KEY);
+    return saved === 'simple' ? 'simple' : 'detailed';
+  });
 
   useEffect(() => {
     if (currentWorkspace && reportId) {
       fetchReport();
     }
   }, [currentWorkspace, reportId]);
+
+  useEffect(() => {
+    localStorage.setItem(DASHBOARD_VIEW_STORAGE_KEY, dashboardView);
+  }, [dashboardView]);
 
   const fetchReport = async () => {
     try {
@@ -267,9 +275,12 @@ export default function ValidationReport() {
     );
   }
 
-  const { report: r, ideaInput, status, createdAt } = report;
+  const r = report?.report || {};
+  const ideaInput = report?.ideaInput || {};
+  const status = report?.status || 'pending';
+  const createdAt = report?.createdAt || new Date().toISOString();
   const scores = r.scores || {};
-  const deterministic = r.deterministicSummary;
+  const deterministic = r.deterministicSummary || {};
   const overallScore = scores.opportunity?.value || 5;
   const verdict = overallScore >= 7 ? 'PASS' : overallScore >= 5 ? 'PIVOT' : 'KILL';
   const getCurrencyFromLocation = (location) => {
@@ -316,6 +327,7 @@ export default function ValidationReport() {
     D6_diversificationBenefit: 'Diversification Benefit',
     D7_proofStrength: 'Proof Strength'
   };
+
   const dimensionScores = deterministic?.scoreBreakdown?.dimensionScores || {};
   const baselineMetricInfo = {
     monthlyRevenue: 'Expected top-line monthly income. Calculated as expected units multiplied by unit price.',
@@ -500,6 +512,8 @@ export default function ValidationReport() {
       detail: { message: question, autoSend: true, context: contextPayload }
     }));
   };
+  const isSimpleView = dashboardView === 'simple';
+  const isDetailedView = !isSimpleView;
 
   return (
     <TooltipProvider>
@@ -569,10 +583,39 @@ export default function ValidationReport() {
         </div>
       )}
 
+      <Card className="border-gray-200 bg-gradient-to-r from-white to-slate-50/70 shadow-sm">
+        <CardContent className="p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <p className="text-sm font-medium text-gray-800">Dashboard View</p>
+            <p className="text-xs text-gray-500">Switch between core essentials and full detailed analysis.</p>
+          </div>
+          <div className="inline-flex rounded-lg border bg-white p-1 shadow-sm">
+            <Button
+              type="button"
+              size="sm"
+              variant={isSimpleView ? 'default' : 'ghost'}
+              onClick={() => setDashboardView('simple')}
+              className="h-8 px-3"
+            >
+              Simple
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={isDetailedView ? 'default' : 'ghost'}
+              onClick={() => setDashboardView('detailed')}
+              className="h-8 px-3"
+            >
+              Detailed
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Main Content - Two Column Layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-3 xl:gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
         {/* Left Column - Main Content */}
-        <div className="xl:col-span-8 space-y-3 xl:space-y-4">
+        <div className="xl:col-span-8 space-y-4">
           {/* Deterministic Baseline */}
 	          {deterministic?.metrics && (
 	            <Card className="border-purple-200 bg-purple-50/40 shadow-sm">
@@ -580,7 +623,7 @@ export default function ValidationReport() {
                 <CardTitle className="flex items-center justify-between text-lg">
                   <span>Deterministic Baseline Model</span>
                   <Badge className="gradient-primary border-0">
-                    Score {proofSimulationActive ? simulatedValidationScore : (deterministic.validationScore ?? 0)}/100
+                    Score {proofSimulationActive ? simulatedValidationScore : (deterministic?.validationScore ?? 0)}/100
                   </Badge>
                 </CardTitle>
                 <CardDescription>Unit economics and feasibility from your structured assumptions</CardDescription>
@@ -653,7 +696,7 @@ export default function ValidationReport() {
                     )}
                   </div>
                 )}
-                {Array.isArray(deterministic.flags) && deterministic.flags.length > 0 && (
+                {isDetailedView && Array.isArray(deterministic.flags) && deterministic.flags.length > 0 && (
                   <div>
                     <h4 className="font-semibold text-sm mb-2">Flags</h4>
                     <ul className="space-y-1 text-sm text-gray-700">
@@ -663,7 +706,7 @@ export default function ValidationReport() {
                     </ul>
                   </div>
                 )}
-	                {Array.isArray(deterministic.recommendations) && deterministic.recommendations.length > 0 && (
+	                {isDetailedView && Array.isArray(deterministic.recommendations) && deterministic.recommendations.length > 0 && (
 	                  <div>
 	                    <h4 className="font-semibold text-sm mb-2">What To Change</h4>
                     <ul className="space-y-1 text-sm text-gray-700">
@@ -673,7 +716,7 @@ export default function ValidationReport() {
                     </ul>
 	                  </div>
 	                )}
-                  {reasonItems.length > 0 && (
+                  {isDetailedView && reasonItems.length > 0 && (
                     <div className="p-4 bg-white rounded-lg border">
                       <h4 className="font-semibold text-sm mb-2 inline-flex items-center gap-1.5">
                         Reasons
@@ -682,19 +725,19 @@ export default function ValidationReport() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                         {reasonItems.map((item, idx) => (
                           <div key={`${item.code}-${idx}`} className="text-sm p-2.5 rounded-md bg-gray-50 border">
-                            <p className="font-medium text-gray-800 inline-flex items-center gap-1.5">
+                            <div className="font-medium text-gray-800 inline-flex items-center gap-1.5">
                               {item.title}
                               <Badge variant="outline" className="text-[10px]">
                                 {String(item.code).replaceAll('_', ' ')}
                               </Badge>
-                            </p>
+                            </div>
                             <p className="text-gray-600">{item.why}</p>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
-                  {topImprovements.length > 0 && (
+                  {isDetailedView && topImprovements.length > 0 && (
                     <div className="p-4 bg-white rounded-lg border">
                       <h4 className="font-semibold text-sm mb-2 inline-flex items-center gap-1.5">
                         Top 3 Improvements
@@ -722,7 +765,7 @@ export default function ValidationReport() {
           </Card>
 
           {/* Trend Section */}
-          {r.trendKeyword && (
+          {isDetailedView && r.trendKeyword && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
@@ -750,7 +793,7 @@ export default function ValidationReport() {
           )}
 
           {/* Offer / Value Ladder */}
-          {r.offer && r.offer.length > 0 && (
+          {isDetailedView && r.offer && r.offer.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
@@ -835,7 +878,7 @@ export default function ValidationReport() {
           )}
 
             {/* Scenario Simulation */}
-            {scenarioResults.length > 0 && (
+            {isDetailedView && scenarioResults.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg inline-flex items-center gap-1.5">
@@ -861,7 +904,7 @@ export default function ValidationReport() {
             )}
 
             {/* Proof Strength Panel */}
-            <Card>
+            {isDetailedView && <Card>
               <CardHeader>
                 <CardTitle className="text-lg inline-flex items-center gap-1.5">
                   Proof Strength
@@ -910,11 +953,11 @@ export default function ValidationReport() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card>}
 	
 	          {/* Framework Fit */}
-	          {r.frameworkFit && r.frameworkFit.length > 0 && (
-            <Card>
+	          {isDetailedView && r.frameworkFit && r.frameworkFit.length > 0 && (
+	            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
                   <BarChart3 className="w-5 h-5 mr-2 text-purple-600" />
@@ -936,12 +979,12 @@ export default function ValidationReport() {
                   ))}
                 </div>
               </CardContent>
-            </Card>
-          )}
+	            </Card>
+	          )}
         </div>
 
         {/* Right Column - Scores & Metrics */}
-        <div className="xl:col-span-4 space-y-3 xl:space-y-4 xl:sticky xl:top-20 self-start">
+        <div className="xl:col-span-4 space-y-4 xl:sticky xl:top-20 self-start">
 	          {/* Classification Card */}
 	          <Card className={`border-2 ${
 	            classView.tone === 'green' ? 'border-green-200 bg-green-50' :
@@ -977,6 +1020,7 @@ export default function ValidationReport() {
 	          </Card>
 
             {/* External Context Influence */}
+            {isDetailedView && (
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">External Context Influence</CardTitle>
@@ -989,6 +1033,7 @@ export default function ValidationReport() {
                 <div className="flex justify-between"><span className="text-gray-600 inline-flex items-center gap-1.5">Macro share of total <MetricInfoTip text="Actual portion of total score assigned to macroeconomic context data." /></span><span className="font-semibold">{externalMacroPct || 4}%</span></div>
               </CardContent>
             </Card>
+            )}
 
           {/* Validation Scores */}
           <Card>
@@ -1030,7 +1075,7 @@ export default function ValidationReport() {
           </Card>
 
           {/* Business Fit */}
-          {r.businessFit && (
+          {isDetailedView && r.businessFit && (
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center">
@@ -1073,7 +1118,7 @@ export default function ValidationReport() {
           )}
 
           {/* Categorization */}
-          {r.categorization && (
+          {(isDetailedView || isSimpleView) && r.categorization && (
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center">
@@ -1109,7 +1154,7 @@ export default function ValidationReport() {
           )}
 
           {/* Community Signals */}
-          {r.communitySignals && r.communitySignals.length > 0 && (
+          {isDetailedView && r.communitySignals && r.communitySignals.length > 0 && (
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center">
@@ -1131,7 +1176,7 @@ export default function ValidationReport() {
           )}
 
           {/* Top Keywords */}
-          {r.topKeywords && r.topKeywords.length > 0 && (
+          {isDetailedView && r.topKeywords && r.topKeywords.length > 0 && (
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center">
@@ -1153,38 +1198,11 @@ export default function ValidationReport() {
             </Card>
           )}
 
-          {/* Build Prompts */}
-          {r.buildPrompts && r.buildPrompts.length > 0 && (
-            <Card className="bg-gradient-to-br from-purple-50 to-blue-50">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center">
-                  <Sparkles className="w-4 h-4 mr-2 text-purple-600" />
-                  Start Building
-                </CardTitle>
-                <CardDescription>Pre-built prompts to get started</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {r.buildPrompts.map((prompt, i) => (
-                    <Button 
-                      key={i} 
-                      variant="outline" 
-                      className="w-full justify-start bg-white hover:bg-purple-50"
-                      size="sm"
-                    >
-                      <ExternalLink className="w-3 h-3 mr-2" />
-                      {prompt}
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
 
       {/* Suggested Questions */}
-      {r.suggestedQuestions && r.suggestedQuestions.length > 0 && (
+      {isDetailedView && r.suggestedQuestions && r.suggestedQuestions.length > 0 && (
         <Card className="bg-gray-50 border border-gray-200">
           <CardHeader>
             <CardTitle className="flex items-center text-lg">
