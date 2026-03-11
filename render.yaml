@@ -41,7 +41,7 @@ services:
   - type: static
     name: enterprate-frontend
     rootDir: frontend
-    buildCommand: npm ci && npm run build
+    buildCommand: npm install --legacy-peer-deps && npm run build
     staticPublishPath: build
     envVars:
       - key: REACT_APP_BACKEND_URL
