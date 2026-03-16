@@ -23,17 +23,22 @@ export default function CreateWorkspaceModal({ open, onOpenChange }) {
     if (!workspaceName.trim()) return;
 
     setCreating(true);
-    try {
-      await createWorkspace({ name: workspaceName });
-      toast.success('Workspace created successfully!');
-      onOpenChange(false);
-      setWorkspaceName('');
-    } catch (error) {
-      toast.error('Failed to create workspace');
-    } finally {
-      setCreating(false);
-    }
-  };
+	    try {
+	      await createWorkspace({ name: workspaceName });
+	      toast.success('Workspace created successfully!');
+	      onOpenChange(false);
+	      setWorkspaceName('');
+	    } catch (error) {
+	      const status = error?.status ?? error?.response?.status;
+	      if (status === 409) {
+	        toast.error('Only one workspace is allowed per account.');
+	      } else {
+	        toast.error('Failed to create workspace');
+	      }
+	    } finally {
+	      setCreating(false);
+	    }
+	  };
 
   const isFirstWorkspace = workspaces.length === 0;
 
@@ -45,61 +50,59 @@ export default function CreateWorkspaceModal({ open, onOpenChange }) {
             <Building2 className="text-white" size={24} />
           </div>
           <DialogTitle className="text-center">
-            {isFirstWorkspace ? 'Create Your First Workspace' : 'Create New Workspace'}
+            {isFirstWorkspace ? 'Create Your Workspace' : 'Workspace Limit'}
           </DialogTitle>
           <DialogDescription className="text-center">
-            {isFirstWorkspace 
-              ? 'Get started by creating a workspace for your business or project.'
-              : 'Add another workspace to manage a new business or project.'
+            {isFirstWorkspace
+              ? 'Get started by creating your workspace. You can only have one workspace per account.'
+              : 'Only one workspace is allowed per account.'
             }
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleCreateWorkspace} className="space-y-4 mt-4">
-          <div>
-            <Label htmlFor="workspace-name" className="text-sm font-medium">
-              Workspace Name
-            </Label>
-            <Input
-              id="workspace-name"
-              data-testid="workspace-name-input"
-              value={workspaceName}
-              onChange={(e) => setWorkspaceName(e.target.value)}
-              placeholder="e.g., My Startup, Acme Corp"
-              className="mt-1.5"
-              required
-              autoFocus
-            />
-          </div>
-          
-          <div className="flex justify-end space-x-2 pt-2">
-            {!isFirstWorkspace && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                data-testid="cancel-workspace-btn"
+        {isFirstWorkspace ? (
+          <form onSubmit={handleCreateWorkspace} className="space-y-4 mt-4">
+            <div>
+              <Label htmlFor="workspace-name" className="text-sm font-medium">
+                Workspace Name
+              </Label>
+              <Input
+                id="workspace-name"
+                data-testid="workspace-name-input"
+                value={workspaceName}
+                onChange={(e) => setWorkspaceName(e.target.value)}
+                placeholder="e.g., My Startup, Acme Corp"
+                className="mt-1.5"
+                required
+                autoFocus
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-2 pt-2">
+              <Button 
+                type="submit" 
+                disabled={creating || !workspaceName.trim()}
+                className="gradient-primary border-0"
+                data-testid="submit-workspace-btn"
               >
-                Cancel
+                {creating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Workspace'
+                )}
               </Button>
-            )}
-            <Button 
-              type="submit" 
-              disabled={creating || !workspaceName.trim()}
-              className="gradient-primary border-0"
-              data-testid="submit-workspace-btn"
-            >
-              {creating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                'Create Workspace'
-              )}
+            </div>
+          </form>
+        ) : (
+          <div className="mt-4 flex justify-end">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Close
             </Button>
           </div>
-        </form>
+        )}
       </DialogContent>
     </Dialog>
   );

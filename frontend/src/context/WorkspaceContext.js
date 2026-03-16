@@ -50,6 +50,11 @@ export default function WorkspaceProvider({ children }) {
   };
 
   const createWorkspace = async (data) => {
+    if (workspaces.length > 0) {
+      const err = new Error('Only one workspace is allowed per user');
+      err.status = 409;
+      throw err;
+    }
     const response = await axios.post(`${API_URL}/workspaces`, data, {
       headers: { Authorization: `Bearer ${token}` }
     });

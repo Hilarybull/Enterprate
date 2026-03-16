@@ -1,6 +1,7 @@
 """Business Blueprint service with AI generation"""
 import uuid
 import os
+import re
 from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 from fastapi import HTTPException
@@ -20,6 +21,14 @@ except ImportError:
 
 class BlueprintService:
     """Service for Business Blueprint generation"""
+
+    TEMPLATE_VERSIONS: Dict[str, str] = {
+        "business_plan": "template_v2",
+    }
+
+    @staticmethod
+    def _normalize_business_name(name: str) -> str:
+        return " ".join(str(name or "").strip().lower().split())
     
     SECTION_PROMPTS = {
         "executive_summary": """Generate a professional executive summary for a business plan.
@@ -140,11 +149,106 @@ class BlueprintService:
             {"key": "fixedMonthlyCosts", "label": "Fixed monthly costs", "source": "state"},
         ],
     }
+
+    DEFAULT_DOCUMENT_INPUTS: Dict[str, Dict[str, Any]] = {
+        "business_plan": {
+            "projectionYears": 3,
+            "growthRateAnnualPct": 8,
+        },
+        "cashflow_analysis": {
+            "analysisMonths": 12,
+        },
+        "financial_projection": {
+            "projectionYears": 3,
+            "growthRateAnnualPct": 8,
+            "costInflationAnnualPct": 4,
+        },
+        "client_proposal": {
+            "deliveryTimelineDays": 14,
+        },
+        "sales_letter": {
+            "targetRecipientType": "customer",
+            "tonePreference": "professional",
+        },
+        "sales_quotation": {
+            "validityDays": 30,
+            "paymentSchedule": "50% upfront, 50% on delivery",
+        },
+    }
+
+    @staticmethod
+    def _suggest_missing_inputs(state: dict, document_type: str, missing_fields: List[dict], existing_inputs: dict) -> dict:
+        """
+        Suggest values for input-only missing fields using existing validated state + safe defaults.
+        This keeps deterministic generation while reducing unnecessary manual typing.
+        """
+        suggestions: Dict[str, Any] = {}
+
+        defaults = BlueprintService.DEFAULT_DOCUMENT_INPUTS.get(document_type, {})
+        for field in missing_fields or []:
+            key = field.get("key")
+            source = field.get("source")
+            if not key or source not in ["input", "state_or_input"]:
+                continue
+            if BlueprintService._value_exists(existing_inputs.get(key)):
+                continue
+            if key in defaults:
+                suggestions[key] = defaults[key]
+
+        # Document-specific heuristics from state
+        if document_type == "client_proposal":
+            if not BlueprintService._value_exists(existing_inputs.get("deliverables")):
+                service_type = (state.get("serviceModel", {}) or {}).get("serviceType")
+                how_it_works = (state.get("serviceModel", {}) or {}).get("howItWorks")
+                if BlueprintService._value_exists(service_type):
+                    deliverables = [
+                        f"- {service_type}: delivery as agreed",
+                        "- Weekly progress update",
+                        "- Handover + next-steps checklist",
+                    ]
+                    if BlueprintService._value_exists(how_it_works):
+                        deliverables.insert(1, f"- Implementation approach: {how_it_works}")
+                    suggestions["deliverables"] = "\n".join(deliverables)
+        if document_type == "sales_quotation":
+            if not BlueprintService._value_exists(existing_inputs.get("servicePackage")):
+                service_type = (state.get("serviceModel", {}) or {}).get("serviceType")
+                if BlueprintService._value_exists(service_type):
+                    suggestions["servicePackage"] = str(service_type)
+        if document_type == "sales_letter":
+            if not BlueprintService._value_exists(existing_inputs.get("targetRecipientType")):
+                audience = (state.get("customerSegment", {}) or {}).get("audience") or (state.get("customerSegment", {}) or {}).get("segment")
+                if BlueprintService._value_exists(audience):
+                    suggestions["targetRecipientType"] = str(audience)
+
+        return suggestions
     
     @staticmethod
     async def create_blueprint(workspace_id: str, user_id: str, data: BlueprintCreate) -> dict:
         """Create a new business blueprint"""
         db = get_db()
+
+        normalized_name = BlueprintService._normalize_business_name(data.businessName)
+        if not normalized_name:
+            raise HTTPException(status_code=422, detail="Business name is required")
+
+        existing = await db.blueprints.find_one(
+            {"workspace_id": workspace_id, "businessNameNormalized": normalized_name},
+            {"_id": 0},
+        )
+        if not existing:
+            escaped = re.escape(str(data.businessName or "").strip())
+            existing = await db.blueprints.find_one(
+                {"workspace_id": workspace_id, "businessName": {"$regex": f"^{escaped}$", "$options": "i"}},
+                {"_id": 0},
+            )
+        if existing:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "message": "A blueprint with this business name already exists in this workspace",
+                    "existingBlueprintId": existing.get("id"),
+                },
+            )
         
         blueprint_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc).isoformat()
@@ -153,6 +257,7 @@ class BlueprintService:
             "id": blueprint_id,
             "workspace_id": workspace_id,
             "businessName": data.businessName,
+            "businessNameNormalized": normalized_name,
             "industry": data.industry,
             "description": data.description,
             "targetMarket": data.targetMarket,
@@ -358,6 +463,40 @@ class BlueprintService:
             raise HTTPException(status_code=404, detail="Blueprint not found")
         
         update_data = data.model_dump(exclude_unset=True)
+
+        if "businessName" in update_data:
+            normalized_name = BlueprintService._normalize_business_name(update_data.get("businessName"))
+            if not normalized_name:
+                raise HTTPException(status_code=422, detail="Business name is required")
+
+            existing = await db.blueprints.find_one(
+                {
+                    "workspace_id": workspace_id,
+                    "businessNameNormalized": normalized_name,
+                    "id": {"$ne": blueprint_id},
+                },
+                {"_id": 0},
+            )
+            if not existing:
+                escaped = re.escape(str(update_data.get("businessName") or "").strip())
+                existing = await db.blueprints.find_one(
+                    {
+                        "workspace_id": workspace_id,
+                        "businessName": {"$regex": f"^{escaped}$", "$options": "i"},
+                        "id": {"$ne": blueprint_id},
+                    },
+                    {"_id": 0},
+                )
+            if existing:
+                raise HTTPException(
+                    status_code=409,
+                    detail={
+                        "message": "A blueprint with this business name already exists in this workspace",
+                        "existingBlueprintId": existing.get("id"),
+                    },
+                )
+
+            update_data["businessNameNormalized"] = normalized_name
         update_data["updatedAt"] = datetime.now(timezone.utc).isoformat()
         
         await db.blueprints.update_one(
@@ -462,14 +601,23 @@ class BlueprintService:
         regenerate: bool = False,
     ) -> dict:
         db = get_db()
+        template_version = BlueprintService.TEMPLATE_VERSIONS.get(document_type, "template_v1")
         state = await BlueprintService._get_business_state(workspace_id, business_id)
         readiness = await BlueprintService._evaluate_readiness(workspace_id, state, document_type)
         if not readiness["ready"]:
+            doc_inputs = await BlueprintService._get_document_inputs(workspace_id, state["businessId"], document_type)
+            suggested_inputs = BlueprintService._suggest_missing_inputs(
+                state=state,
+                document_type=document_type,
+                missing_fields=readiness.get("missingFields", []),
+                existing_inputs=doc_inputs,
+            )
             raise HTTPException(
                 status_code=400,
                 detail={
                     "message": f"{BlueprintService.DOCUMENT_LABELS.get(document_type, document_type)} is not ready",
                     "missingFields": readiness.get("missingFields", []),
+                    "suggestedInputs": suggested_inputs,
                 },
             )
 
@@ -497,7 +645,7 @@ class BlueprintService:
             "version": 1,
             "createdAt": now,
             "sourceStateVersion": state["sourceStateVersion"],
-            "templateVersion": "template_v1",
+            "templateVersion": template_version,
             "llmGenerationVersion": "llm_rewrite_v1",
         }
 
@@ -514,7 +662,7 @@ class BlueprintService:
                         "renderedHtml": rendered_html,
                         "sections": sections,
                         "sourceStateVersion": state["sourceStateVersion"],
-                        "templateVersion": "template_v1",
+                        "templateVersion": template_version,
                         "llmGenerationVersion": "llm_rewrite_v1",
                         "sourceData": blueprint_data,
                         "financialSummary": financial_summary,
@@ -536,7 +684,7 @@ class BlueprintService:
                 "renderedHtml": rendered_html,
                 "sections": sections,
                 "sourceStateVersion": state["sourceStateVersion"],
-                "templateVersion": "template_v1",
+                "templateVersion": template_version,
                 "llmGenerationVersion": "llm_rewrite_v1",
                 "sourceData": blueprint_data,
                 "financialSummary": financial_summary,
@@ -745,6 +893,7 @@ class BlueprintService:
                 "targetMarket": idea_input.get("targetMarket"),
             },
             "customerSegment": {
+                "customerSegment": idea_input.get("customerSegment"),
                 "segment": idea_input.get("customerSegment"),
                 "audience": idea_input.get("targetAudience"),
                 "problemSolved": idea_input.get("problemSolved"),
@@ -858,6 +1007,7 @@ class BlueprintService:
             "cost_structure": state.get("costStructure", {}),
             "baseline_metrics": state.get("baselineMetrics", {}),
             "scenario_results": state.get("scenarioResults", {}),
+            "company_profile": state.get("companyProfile", {}),
             "document_context": document_context or {},
         }
 
@@ -972,36 +1122,106 @@ class BlueprintService:
         cs = data.get("customer_segment", {})
         sm = data.get("service_model", {})
         pm = data.get("pricing_model", {})
+        cp = data.get("company_profile", {})
         ctx = data.get("document_context", {})
         currency = BlueprintService._currency_symbol(bp.get("location"))
 
         if document_type == "business_plan":
+            official = (cp.get("officialProfile") or {}) if isinstance(cp, dict) else {}
+            operating = (cp.get("operatingProfile") or {}) if isinstance(cp, dict) else {}
+            derived = (cp.get("derivedProfile") or {}) if isinstance(cp, dict) else {}
+            registration_data = (cp.get("registrationData") or {}) if isinstance(cp, dict) else {}
+
+            entity_type = (cp.get("entityType") if isinstance(cp, dict) else None) or "Not specified"
+            company_number = official.get("companyNumber") or registration_data.get("companyNumber") or "Not specified"
+            vat_number = registration_data.get("vatNumber") or registration_data.get("vat_number") or "Not specified"
+
+            business_name = bp.get("businessName", "Business")
+            location = bp.get("location") or operating.get("tradingAddress") or "Not specified"
+            industry = operating.get("industry") or bp.get("industry") or "Not specified"
+
+            funding_goal = cp.get("fundingGoal") if isinstance(cp, dict) else None
+            funding_text = (
+                f"The request: {BlueprintService._money(funding_goal, currency)} (state how it will be used)."
+                if BlueprintService._value_exists(funding_goal)
+                else "The request: If seeking funding, state the amount required and how it will be used."
+            )
+
+            mission_sentence = (
+                derived.get("elevatorPitch")
+                or derived.get("tagline")
+                or f"{business_name} helps {cs.get('audience') or cs.get('segment') or 'customers'} by delivering {sm.get('serviceType') or 'a solution'}."
+            )
+
+            hook_sentence = (
+                f"Why this wins: a focused offer, clear delivery model ({sm.get('deliveryModel') or 'Not specified'}), and disciplined unit economics."
+            )
+
+            pricing_sentence = (
+                f"Pricing strategy: {BlueprintService._money(pm.get('priceAmount'), currency)} per {pm.get('deliverableUnit') or 'unit'} "
+                f"({pm.get('pricingModel') or 'pricing model not specified'}). VAT: {('TBD' if vat_number == 'Not specified' else 'consider VAT implications')}."
+            )
+
+            financial_plan_parts = [
+                "Sales forecast (12–36 months):",
+                BlueprintService._projection_text(financial, currency),
+                "Cash flow statement (monthly):",
+                BlueprintService._cashflow_text(financial, currency),
+            ]
+            break_even = (financial or {}).get("base", {}).get("breakEvenRevenue")
+            if break_even is not None:
+                financial_plan_parts.append(
+                    f"Break-even analysis: estimated break-even revenue per month is {BlueprintService._money(break_even, currency)}."
+                )
+            financial_plan_text = "\n".join([p for p in financial_plan_parts if str(p).strip()])
+
             sections = [
-                ("executive_summary", "Executive Summary", (
-                    f'{bp.get("businessName", "Business")} in {bp.get("location", "its target market")} '
-                    f'addresses {cs.get("problemSolved", "a defined customer problem")} with {sm.get("serviceType", "a structured service offer")}.'
-                )),
-                ("problem_opportunity", "Problem and Opportunity", (
-                    f'Target segment: {cs.get("segment", "N/A")}. Audience: {cs.get("audience", "N/A")}. '
-                    f'Core problem: {cs.get("problemSolved", "N/A")}.'
-                )),
-                ("service_offering", "Service Offering", (
-                    f'Service: {sm.get("serviceType", "N/A")} via {sm.get("deliveryModel", "N/A")}. '
-                    f'How it works: {sm.get("howItWorks", "N/A")}.'
-                )),
-                ("pricing_strategy", "Pricing Strategy", (
-                    f'Model: {pm.get("pricingModel", "N/A")}; price: {BlueprintService._money(pm.get("priceAmount"), currency)} '
-                    f'per {pm.get("deliverableUnit", "unit")}; payment terms: '
-                    f'{pm.get("paymentTermsDays") or ctx.get("paymentTermsDays") or "N/A"} days.'
-                )),
-                ("cashflow_analysis", "Cashflow Analysis", BlueprintService._cashflow_text(financial, currency)),
-                ("financial_projection", "Financial Projection", BlueprintService._projection_text(financial, currency)),
-                ("risk_mitigation", "Risks and Mitigation", (
-                    "Key risk: demand and delivery mismatch. Mitigation: tighten scope, monitor monthly net cashflow, and adjust staffing or pricing based on monthly variance."
-                )),
-                ("growth_plan", "Growth Plan", (
-                    "Validate one segment first, then scale with documented delivery SOPs, stable payment terms, and quarterly review of conversion, unit economics, and operating capacity."
-                )),
+                ("executive_summary", "Executive Summary", "\n".join([
+                    f"The mission: {mission_sentence}",
+                    f"The hook: {hook_sentence}",
+                    funding_text,
+                ])),
+                ("business_overview", "Business Overview", "\n".join([
+                    f"Legal structure: {entity_type}.",
+                    f"Registration: Companies House number: {company_number}. VAT number: {vat_number}.",
+                    f"Location: {location}.",
+                    f"Industry: {industry}.",
+                ])),
+                ("market_analysis", "Market Analysis", "\n".join([
+                    "UK lenders love data. Show the gap in the market with evidence.",
+                    f"Target audience: {cs.get('audience') or 'Not specified'} (segment: {cs.get('segment') or 'Not specified'}).",
+                    "Competitor analysis: identify local and national competitors and quantify your differentiation.",
+                    "Market trends: include UK-specific trends impacting demand/costs (e.g., regulation, consumer behaviour, supply chain shifts).",
+                ])),
+                ("products_services", "Products and Services", "\n".join([
+                    f"The problem: {cs.get('problemSolved') or 'Not specified'}.",
+                    f"The solution: {sm.get('serviceType') or 'Not specified'} delivered via {sm.get('deliveryModel') or 'Not specified'}.",
+                    f"Detail: {sm.get('howItWorks') or 'Not specified'}.",
+                    pricing_sentence,
+                ])),
+                ("sales_marketing", "Sales and Marketing", "\n".join([
+                    f"Branding: {business_name} (tone: {derived.get('tone') or 'Not specified'}).",
+                    f"Channels: {operating.get('website') or 'Website not specified'}; outbound, referrals, partnerships, and relevant marketplaces where applicable.",
+                    "Marketing strategy: combine local SEO, content, targeted ads, and networking; track conversion rate, CAC, and retention.",
+                ])),
+                ("operational_plan", "Operational Plan", "\n".join([
+                    "Suppliers: list key suppliers and whether they are UK-based or international.",
+                    "Technology: list core tools (e.g., accounting tools like Xero/FreeAgent, CRM, invoicing, analytics).",
+                    "Insurance: confirm appropriate coverage (e.g., Public Liability, Professional Indemnity).",
+                ])),
+                ("management_personnel", "Management and Personnel", "\n".join([
+                    "The team: summarise the founder(s) and relevant experience that supports execution.",
+                    "Hiring: define when to use contractors vs PAYE employees (note IR35 considerations for contractors).",
+                ])),
+                ("financial_plan", "Financial Plan", financial_plan_text),
+                ("risk_analysis", "Risk Analysis", "\n".join([
+                    "Market risks; financial risks; operational risks; regulatory risks.",
+                    "Mitigation: monitor monthly cashflow, maintain pipeline coverage, and adjust pricing/capacity based on variance.",
+                ])),
+                ("growth_strategy", "Growth Strategy", "\n".join([
+                    "Market expansion plans; product development roadmap; strategic partnerships; technology adoption; hiring and operational expansion.",
+                ])),
+                ("conclusion", "Conclusion", "Summary and next steps to persuade stakeholders to support the plan."),
             ]
         elif document_type == "client_proposal":
             sections = [

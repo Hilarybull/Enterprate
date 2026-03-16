@@ -13,6 +13,13 @@ class WorkspaceService:
     async def create_workspace(user_id: str, data: WorkspaceCreate) -> dict:
         """Create a new workspace"""
         db = get_db()
+
+        existing = await db.workspace_memberships.find_one({"user_id": user_id}, {"_id": 0})
+        if existing:
+            raise HTTPException(
+                status_code=409,
+                detail="Only one workspace is allowed per user",
+            )
         
         workspace_id = str(uuid.uuid4())
         slug = data.name.lower().replace(' ', '-')

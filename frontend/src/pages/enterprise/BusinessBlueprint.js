@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -21,35 +22,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
 import { 
   BookOpen, 
-  Target, 
   Users, 
   DollarSign,
-  BarChart3,
-  Lightbulb,
-  FileText,
   Sparkles,
   ArrowRight,
   Plus,
   Loader2,
   Check,
-  ChevronDown,
-  ChevronUp,
   Download,
   Trash2,
   RefreshCw,
-  TrendingUp,
   Building2,
   FileSignature,
-  Mail,
-  Share2,
   Shield,
   ScrollText,
   Copy,
@@ -64,14 +50,12 @@ const BusinessOperationsContent = lazy(() => import('./BusinessOperations'));
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
-const blueprintSections = [
-  { key: 'executive_summary', title: 'Executive Summary', icon: FileText, description: 'High-level overview of your business concept and goals' },
-  { key: 'market_analysis', title: 'Market Analysis', icon: BarChart3, description: 'Industry trends, target market, and competitive landscape' },
-  { key: 'products_services', title: 'Products & Services', icon: Lightbulb, description: 'Detailed description of your offerings and value proposition' },
-  { key: 'marketing_strategy', title: 'Marketing Strategy', icon: Target, description: 'Customer acquisition and brand positioning plans' },
-  { key: 'operations_plan', title: 'Operations Plan', icon: Users, description: 'Day-to-day operations, processes, and resource requirements' },
-  { key: 'financial_projections', title: 'Financial Projections', icon: DollarSign, description: 'Revenue forecasts, expense budgets, and break-even analysis' },
-  { key: 'competitive_analysis', title: 'Competitive Analysis', icon: TrendingUp, description: 'Competitor analysis and differentiation strategy' },
+const blueprintViews = [
+  { key: 'blueprint_outputs', label: 'Blueprint Outputs', icon: BookOpen },
+  { key: 'financials', label: 'Financials', icon: DollarSign },
+  { key: 'documents', label: 'Documents', icon: Briefcase },
+  { key: 'legal', label: 'Legal Docs', icon: FileSignature },
+  { key: 'operations', label: 'Operations', icon: Users },
 ];
 
 // Document types for generation
@@ -139,7 +123,6 @@ export default function BusinessBlueprint() {
   const [showDocumentDialog, setShowDocumentDialog] = useState(false);
   const [creating, setCreating] = useState(false);
   const [generating, setGenerating] = useState({});
-  const [expandedSections, setExpandedSections] = useState({});
   const [generatedDocuments, setGeneratedDocuments] = useState({});
   const [activeTab, setActiveTab] = useState('blueprint_outputs');
   
@@ -267,61 +250,17 @@ export default function BusinessBlueprint() {
       await loadBlueprints();
       setSelectedBlueprint(response.data);
     } catch (error) {
+      const status = error?.response?.status;
+      const detail = error?.response?.data?.detail;
+      if (status === 409) {
+        toast.error(detail?.message || 'A blueprint with this business name already exists');
+        setShowCreateDialog(false);
+        return;
+      }
       toast.error('Failed to create blueprint');
       console.error(error);
     } finally {
       setCreating(false);
-    }
-  };
-
-  const handleGenerateSection = async (sectionType) => {
-    if (!selectedBlueprint) return;
-    
-    setGenerating(prev => ({ ...prev, [sectionType]: true }));
-    
-    try {
-      await axios.post(
-        `${API_URL}/blueprint/${selectedBlueprint.id}/generate-section/${sectionType}`,
-        {},
-        { headers: getHeaders() }
-      );
-      toast.success(`${sectionType.replace('_', ' ')} generated!`);
-      
-      const response = await axios.get(`${API_URL}/blueprint/${selectedBlueprint.id}`, {
-        headers: getHeaders()
-      });
-      setSelectedBlueprint(response.data);
-      setExpandedSections(prev => ({ ...prev, [sectionType]: true }));
-    } catch (error) {
-      toast.error('Failed to generate section');
-      console.error(error);
-    } finally {
-      setGenerating(prev => ({ ...prev, [sectionType]: false }));
-    }
-  };
-
-  const handleGenerateSWOT = async () => {
-    if (!selectedBlueprint) return;
-    
-    setGenerating(prev => ({ ...prev, swot: true }));
-    
-    try {
-      await axios.post(
-        `${API_URL}/blueprint/${selectedBlueprint.id}/generate-swot`,
-        {},
-        { headers: getHeaders() }
-      );
-      toast.success('SWOT Analysis generated!');
-      
-      const response = await axios.get(`${API_URL}/blueprint/${selectedBlueprint.id}`, {
-        headers: getHeaders()
-      });
-      setSelectedBlueprint(response.data);
-    } catch (error) {
-      toast.error('Failed to generate SWOT');
-      console.error(error);
-    } finally {
-      setGenerating(prev => ({ ...prev, swot: false }));
     }
   };
 
@@ -442,15 +381,6 @@ export default function BusinessBlueprint() {
   const copyDocument = (content, name) => {
     navigator.clipboard.writeText(content);
     toast.success(`${name} copied to clipboard!`);
-  };
-
-  const getSectionContent = (sectionType) => {
-    if (!selectedBlueprint?.sections) return null;
-    return selectedBlueprint.sections.find(s => s.sectionType === sectionType);
-  };
-
-  const toggleSection = (sectionType) => {
-    setExpandedSections(prev => ({ ...prev, [sectionType]: !prev[sectionType] }));
   };
 
   if (loading) {
@@ -600,165 +530,31 @@ export default function BusinessBlueprint() {
                   </CardContent>
                 </Card>
 
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="grid grid-cols-7 w-full">
-                    <TabsTrigger value="blueprint_outputs">Blueprint Outputs</TabsTrigger>
-                    <TabsTrigger value="sections">Sections</TabsTrigger>
-                    <TabsTrigger value="swot">SWOT Analysis</TabsTrigger>
-                    <TabsTrigger value="financials">Financials</TabsTrigger>
-                    <TabsTrigger value="documents">Documents</TabsTrigger>
-                    <TabsTrigger value="legal">Legal Docs</TabsTrigger>
-                    <TabsTrigger value="operations">Operations</TabsTrigger>
-                  </TabsList>
+                <div className="mt-4 space-y-4">
+                  <Tabs value={activeTab} onValueChange={setActiveTab}>
+                    <TabsList className="w-full justify-start gap-1 overflow-x-auto bg-slate-100 p-1">
+                      {blueprintViews.map((view) => {
+                        const Icon = view.icon;
+                        return (
+                          <TabsTrigger key={view.key} value={view.key} className="data-[state=active]:bg-white">
+                            <Icon size={14} className="mr-2 hidden sm:inline" />
+                            <span className="text-xs sm:text-sm">{view.label}</span>
+                          </TabsTrigger>
+                        );
+                      })}
+                    </TabsList>
+                  </Tabs>
 
-                  <TabsContent value="blueprint_outputs" className="mt-4">
-                    <Module2BlueprintWorkflow getHeaders={getHeaders} />
-                  </TabsContent>
-
-                  <TabsContent value="sections" className="space-y-4 mt-4">
-                    {blueprintSections.map((section) => {
-                      const Icon = section.icon;
-                      const content = getSectionContent(section.key);
-                      const isExpanded = expandedSections[section.key];
-                      const isGenerating = generating[section.key];
-
-                      return (
-                        <Card key={section.key}>
-                          <CardHeader className="pb-2">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
-                                  <Icon size={20} />
-                                </div>
-                                <div>
-                                  <CardTitle className="text-base">{section.title}</CardTitle>
-                                  <CardDescription className="text-xs">{section.description}</CardDescription>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                {content ? (
-                                  <>
-                                    <span className="text-xs text-green-600 flex items-center">
-                                      <Check size={14} className="mr-1" /> Generated
-                                    </span>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleGenerateSection(section.key)}
-                                      disabled={isGenerating}
-                                    >
-                                      <RefreshCw size={14} className={isGenerating ? 'animate-spin' : ''} />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => toggleSection(section.key)}
-                                    >
-                                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                    </Button>
-                                  </>
-                                ) : (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleGenerateSection(section.key)}
-                                    disabled={isGenerating}
-                                    className="gradient-primary border-0"
-                                  >
-                                    {isGenerating ? (
-                                      <><Loader2 className="mr-2 h-3 w-3 animate-spin" /> Generating</>
-                                    ) : (
-                                      <><Sparkles className="mr-1" size={14} /> Generate</>
-                                    )}
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          </CardHeader>
-                          {content && isExpanded && (
-                            <CardContent className="pt-2">
-                              <div className="bg-gray-50 rounded-lg p-4 prose prose-sm max-w-none">
-                                <div className="whitespace-pre-wrap text-sm text-gray-700">
-                                  {content.content}
-                                </div>
-                              </div>
-                            </CardContent>
-                          )}
-                        </Card>
-                      );
-                    })}
-                  </TabsContent>
-
-                  <TabsContent value="swot" className="mt-4">
-                    <Card>
-                      <CardHeader>
-                        <div className="flex justify-between items-center">
-                          <CardTitle>SWOT Analysis</CardTitle>
-                          <Button
-                            onClick={handleGenerateSWOT}
-                            disabled={generating.swot}
-                            variant={selectedBlueprint.swotAnalysis ? 'outline' : 'default'}
-                            className={!selectedBlueprint.swotAnalysis ? 'gradient-primary border-0' : ''}
-                          >
-                            {generating.swot ? (
-                              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating</>
-                            ) : selectedBlueprint.swotAnalysis ? (
-                              <><RefreshCw className="mr-2" size={16} /> Regenerate</>
-                            ) : (
-                              <><Sparkles className="mr-2" size={16} /> Generate SWOT</>
-                            )}
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        {selectedBlueprint.swotAnalysis ? (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-green-50 rounded-lg p-4">
-                              <h4 className="font-semibold text-green-700 mb-2">Strengths</h4>
-                              <ul className="space-y-1">
-                                {selectedBlueprint.swotAnalysis.strengths?.map((item, i) => (
-                                  <li key={i} className="text-sm text-green-800 flex items-start">
-                                    <Check size={14} className="mr-2 mt-0.5 flex-shrink-0" />
-                                    {item}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div className="bg-red-50 rounded-lg p-4">
-                              <h4 className="font-semibold text-red-700 mb-2">Weaknesses</h4>
-                              <ul className="space-y-1">
-                                {selectedBlueprint.swotAnalysis.weaknesses?.map((item, i) => (
-                                  <li key={i} className="text-sm text-red-800">• {item}</li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div className="bg-blue-50 rounded-lg p-4">
-                              <h4 className="font-semibold text-blue-700 mb-2">Opportunities</h4>
-                              <ul className="space-y-1">
-                                {selectedBlueprint.swotAnalysis.opportunities?.map((item, i) => (
-                                  <li key={i} className="text-sm text-blue-800">• {item}</li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div className="bg-yellow-50 rounded-lg p-4">
-                              <h4 className="font-semibold text-yellow-700 mb-2">Threats</h4>
-                              <ul className="space-y-1">
-                                {selectedBlueprint.swotAnalysis.threats?.map((item, i) => (
-                                  <li key={i} className="text-sm text-yellow-800">• {item}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-center py-8 text-gray-500">
-                            <Target className="mx-auto mb-2 text-gray-300" size={48} />
-                            <p>Generate a SWOT analysis for your business</p>
-                          </div>
-                        )}
+                  <div className="space-y-4">
+                  {activeTab === 'blueprint_outputs' && (
+                    <Card className="border-slate-200 bg-white">
+                      <CardContent className="p-4 md:p-6">
+                        <Module2BlueprintWorkflow getHeaders={getHeaders} />
                       </CardContent>
                     </Card>
-                  </TabsContent>
+                  )}
 
-                  <TabsContent value="financials" className="mt-4">
+                  {activeTab === 'financials' && (
                     <Card>
                       <CardHeader>
                         <div className="flex justify-between items-center">
@@ -823,9 +619,10 @@ export default function BusinessBlueprint() {
                         )}
                       </CardContent>
                     </Card>
-                  </TabsContent>
+                  )}
 
-                  <TabsContent value="documents" className="mt-4 space-y-4">
+                  {activeTab === 'documents' && (
+                    <div className="space-y-4">
                     {DOCUMENT_TYPES.map((category) => {
                       const Icon = category.icon;
                       return (
@@ -889,10 +686,10 @@ export default function BusinessBlueprint() {
                         </Card>
                       );
                     })}
-                  </TabsContent>
+                    </div>
+                  )}
 
-                  {/* Legal Documents Tab - Full Business Documents Wizard */}
-                  <TabsContent value="legal" className="mt-4">
+                  {activeTab === 'legal' && (
                     <Suspense fallback={
                       <div className="flex items-center justify-center h-64">
                         <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
@@ -900,10 +697,9 @@ export default function BusinessBlueprint() {
                     }>
                       <BusinessDocumentsContent />
                     </Suspense>
-                  </TabsContent>
+                  )}
 
-                  {/* Operations Tab - Full Operations Content */}
-                  <TabsContent value="operations" className="mt-4">
+                  {activeTab === 'operations' && (
                     <Suspense fallback={
                       <div className="flex items-center justify-center h-64">
                         <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
@@ -911,8 +707,9 @@ export default function BusinessBlueprint() {
                     }>
                       <BusinessOperationsContent />
                     </Suspense>
-                  </TabsContent>
-                </Tabs>
+                  )}
+                  </div>
+                </div>
               </>
             )}
           </div>

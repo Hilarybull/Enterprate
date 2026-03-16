@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
-import { Check, Download, Loader2, RefreshCw, Save } from 'lucide-react';
+import { Check, Download, Info, Loader2, RefreshCw, Save } from 'lucide-react';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -23,6 +25,13 @@ const OUTPUTS = [
 const MULTILINE_KEYS = new Set(['deliverables']);
 
 const labels = {
+  businessName: 'Business name',
+  problemSolved: 'Problem statement',
+  customerSegment: 'Customer segment',
+  serviceType: 'Service offer',
+  priceAmount: 'Pricing amount',
+  expectedUnitsPerMonth: 'Units per month',
+  fixedMonthlyCosts: 'Fixed monthly costs',
   projectionYears: 'Projection years (1,2,3,5)',
   growthRateAnnualPct: 'Annual growth assumption (%)',
   costInflationAnnualPct: 'Annual cost inflation (%)',
@@ -37,6 +46,30 @@ const labels = {
   servicePackage: 'Service package',
   validityDays: 'Validity period (days)',
   paymentSchedule: 'Payment schedule',
+};
+
+const helpText = {
+  businessName: 'The name that will appear on the generated documents (your trading/business name).',
+  problemSolved: 'In 1–2 sentences: what pain point are you solving and for whom?',
+  customerSegment: 'Who you sell to (e.g., “UK SMEs in retail”, “homeowners in Manchester”).',
+  serviceType: 'What you offer (product or service) in plain language.',
+  priceAmount: 'Your price per unit/package (use numbers only; currency is inferred from your location).',
+  expectedUnitsPerMonth: 'Estimated monthly volume (units sold, projects delivered, subscriptions, etc.).',
+  fixedMonthlyCosts: 'Monthly fixed costs (e.g., rent, tools, insurance, subscriptions).',
+  projectionYears: 'How many years to include in the financial forecast. Allowed: 1, 2, 3, or 5.',
+  growthRateAnnualPct: 'Assumed annual revenue growth used for projections (percentage).',
+  costInflationAnnualPct: 'Assumed annual cost inflation used for projections (percentage).',
+  analysisMonths: 'Number of months to generate the cashflow table for (up to 60).',
+  prospectName: 'The client/prospect name this proposal is addressed to.',
+  deliverables: 'List the concrete outputs you will deliver (bullet points work well).',
+  deliveryTimelineDays: 'Estimated delivery time in days.',
+  paymentTermsDays: 'How many days the client has to pay after invoicing (e.g., 7, 14, 30).',
+  targetRecipientType: 'Who the document is written for (e.g., “investor”, “customer”, “partner”).',
+  tonePreference: 'Tone guidance (e.g., “formal”, “friendly”, “premium”, “direct”).',
+  clientName: 'Client name for quotation/invoice-style outputs.',
+  servicePackage: 'The package/tier being purchased (if applicable).',
+  validityDays: 'How long the quote is valid for, in days (e.g., 14 or 30).',
+  paymentSchedule: 'If staged payments apply, describe milestones and percentages.',
 };
 
 const numberKeys = new Set([
@@ -59,6 +92,9 @@ export default function Module2BlueprintWorkflow({ getHeaders }) {
   const [documentDraft, setDocumentDraft] = useState(null);
   const [savingSection, setSavingSection] = useState('');
   const [regeneratingSection, setRegeneratingSection] = useState('');
+  const [showInputsDialog, setShowInputsDialog] = useState(false);
+  const [missingFieldsForDialog, setMissingFieldsForDialog] = useState([]);
+  const [hasTriedGenerate, setHasTriedGenerate] = useState(false);
 
   const loadEligibility = async () => {
     setLoadingEligibility(true);
@@ -79,11 +115,21 @@ export default function Module2BlueprintWorkflow({ getHeaders }) {
     loadEligibility();
   }, []);
 
+  useEffect(() => {
+    setShowInputsDialog(false);
+    setMissingFieldsForDialog([]);
+    setHasTriedGenerate(false);
+  }, [selectedType]);
+
   const selectedReadiness = useMemo(() => {
     if (!eligibility) return null;
     const all = [...(eligibility.available || []), ...(eligibility.partial || []), ...(eligibility.missing || [])];
     return all.find((item) => item.documentType === selectedType) || null;
   }, [eligibility, selectedType]);
+
+  const missingFields = missingFieldsForDialog.length
+    ? missingFieldsForDialog
+    : (selectedReadiness?.missingFields || []);
 
   const onSaveInputs = async () => {
     if (!selectedReadiness) return;
@@ -108,6 +154,8 @@ export default function Module2BlueprintWorkflow({ getHeaders }) {
         return next;
       });
       toast.success('Inputs saved');
+      setMissingFieldsForDialog([]);
+      setShowInputsDialog(false);
     } catch (error) {
       toast.error('Could not save inputs');
       console.error(error);
@@ -118,6 +166,7 @@ export default function Module2BlueprintWorkflow({ getHeaders }) {
 
   const onGenerate = async () => {
     setGenerating(true);
+    setHasTriedGenerate(true);
     try {
       const payload = {
         businessId: eligibility?.businessId || null,
@@ -134,6 +183,21 @@ export default function Module2BlueprintWorkflow({ getHeaders }) {
       const detail = error?.response?.data?.detail;
       if (detail?.missingFields) {
         toast.error('Missing required fields before generation');
+        setMissingFieldsForDialog(detail.missingFields || []);
+        if (detail?.suggestedInputs) {
+          const suggested = detail.suggestedInputs || {};
+          setFormInputs((prev) => {
+            const next = { ...prev };
+            Object.entries(suggested).forEach(([key, value]) => {
+              const existing = next[key];
+              if (existing === undefined || existing === null || String(existing).trim() === '') {
+                next[key] = value;
+              }
+            });
+            return next;
+          });
+        }
+        setShowInputsDialog(true);
       } else {
         toast.error('Generation failed');
       }
@@ -203,7 +267,8 @@ export default function Module2BlueprintWorkflow({ getHeaders }) {
   };
 
   return (
-    <div className="space-y-4">
+    <TooltipProvider>
+      <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle>Blueprint Output Builder</CardTitle>
@@ -212,7 +277,7 @@ export default function Module2BlueprintWorkflow({ getHeaders }) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {OUTPUTS.map((output) => {
               const readiness = [...(eligibility?.available || []), ...(eligibility?.partial || []), ...(eligibility?.missing || [])]
                 .find((x) => x.documentType === output.id);
@@ -247,56 +312,92 @@ export default function Module2BlueprintWorkflow({ getHeaders }) {
               <div className="rounded-lg border bg-white p-3">
                 <p className="text-sm font-semibold">{selectedReadiness.label}</p>
                 <p className="text-xs text-gray-600">Completion: {selectedReadiness.completionPercent}%</p>
-                {!selectedReadiness.ready && (
+                {hasTriedGenerate && !selectedReadiness.ready && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {(selectedReadiness.missingFields || []).map((field) => (
-                      <Badge key={field.key} variant="outline">{field.label}</Badge>
+                      <Tooltip key={field.key}>
+                        <TooltipTrigger asChild>
+                          <button type="button" className="text-left">
+                            <Badge variant="outline" className="cursor-help">
+                              {labels[field.key] || field.label}
+                              <Info size={12} className="ml-1 text-slate-500" />
+                            </Badge>
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs">
+                          {helpText[field.key] || field.label}
+                        </TooltipContent>
+                      </Tooltip>
                     ))}
                   </div>
                 )}
               </div>
 
-              {!selectedReadiness.ready && (
-                <Card className="border-dashed">
-                  <CardHeader>
-                    <CardTitle className="text-base">Missing Inputs</CardTitle>
-                    <CardDescription>Fill the fields below to unlock generation for this output.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {(selectedReadiness.missingFields || []).map((field) => (
-                      <div key={field.key} className={MULTILINE_KEYS.has(field.key) ? 'md:col-span-2' : ''}>
-                        <Label htmlFor={field.key}>{labels[field.key] || field.label}</Label>
-                        {MULTILINE_KEYS.has(field.key) ? (
-                          <Textarea
-                            id={field.key}
-                            value={formInputs[field.key] || ''}
-                            onChange={(e) => setFormInputs((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                            rows={3}
-                          />
+              <Dialog open={showInputsDialog} onOpenChange={setShowInputsDialog}>
+                <DialogContent className="max-w-3xl">
+                  <DialogHeader>
+                    <DialogTitle>Missing inputs - {selectedReadiness.label}</DialogTitle>
+                  </DialogHeader>
+
+                  <div className="max-h-[70vh] overflow-y-auto pr-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {(missingFields || []).map((field) => (
+                        <div key={field.key} className={MULTILINE_KEYS.has(field.key) ? 'sm:col-span-2' : ''}>
+                          <Label htmlFor={`missing-${field.key}`} className="flex items-center gap-1 flex-wrap">
+                            <span>{labels[field.key] || field.label}</span>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center rounded-full p-0.5 text-slate-500 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                                  aria-label={`Info: ${labels[field.key] || field.label}`}
+                                >
+                                  <Info size={14} />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-xs">
+                                {helpText[field.key] || field.label}
+                              </TooltipContent>
+                            </Tooltip>
+                          </Label>
+
+                          {MULTILINE_KEYS.has(field.key) ? (
+                            <Textarea
+                              id={`missing-${field.key}`}
+                              value={formInputs[field.key] || ''}
+                              onChange={(e) => setFormInputs((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                              rows={4}
+                            />
+                          ) : (
+                            <Input
+                              id={`missing-${field.key}`}
+                              type={numberKeys.has(field.key) ? 'number' : 'text'}
+                              value={formInputs[field.key] || ''}
+                              onChange={(e) => setFormInputs((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="sticky bottom-0 mt-4 border-t bg-white/95 backdrop-blur p-3 flex justify-end">
+                      <Button onClick={onSaveInputs} disabled={savingInputs} className="w-full sm:w-auto">
+                        {savingInputs ? (
+                          <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</>
                         ) : (
-                          <Input
-                            id={field.key}
-                            type={numberKeys.has(field.key) ? 'number' : 'text'}
-                            value={formInputs[field.key] || ''}
-                            onChange={(e) => setFormInputs((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                          />
+                          <><Save className="mr-2" size={14} />Save inputs</>
                         )}
-                      </div>
-                    ))}
-                    <div className="md:col-span-2">
-                      <Button onClick={onSaveInputs} disabled={savingInputs}>
-                        {savingInputs ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</> : <><Save className="mr-2" size={14} />Save Inputs</>}
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                  </div>
+                </DialogContent>
+              </Dialog>
 
               <div className="flex flex-wrap gap-2">
-                <Button onClick={onGenerate} disabled={generating}>
+                <Button onClick={onGenerate} disabled={generating} className="w-full sm:w-auto">
                   {generating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</> : 'Generate Draft'}
                 </Button>
-                <Button variant="outline" onClick={loadEligibility}>
+                <Button variant="outline" onClick={loadEligibility} className="w-full sm:w-auto">
                   <RefreshCw size={14} className="mr-2" />
                   Refresh Readiness
                 </Button>
@@ -365,6 +466,7 @@ export default function Module2BlueprintWorkflow({ getHeaders }) {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }

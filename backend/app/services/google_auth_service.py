@@ -7,6 +7,8 @@ from fastapi import HTTPException
 from app.core.database import get_db
 from app.schemas.google_auth import GoogleAuthCallback, GoogleUserResponse, GoogleAuthResponse
 import jwt
+from google.oauth2 import id_token as google_id_token
+from google.auth.transport import requests as google_requests
 
 
 class GoogleAuthService:
@@ -19,11 +21,43 @@ class GoogleAuthService:
     async def process_callback(data: GoogleAuthCallback) -> GoogleAuthResponse:
         """
         Process Google OAuth callback
-        1. Exchange session_id with Emergent Auth for user data
+        1. Verify id_token from Google OR exchange session_id with Emergent Auth
         2. Create or update user in database
         3. Create session and return JWT token
         """
         db = get_db()
+
+        # Preferred path: direct Google ID token verification
+        if data.id_token:
+            google_user = GoogleAuthService._verify_google_id_token(data.id_token)
+            email = google_user.get("email")
+            name = google_user.get("name") or (email.split("@")[0] if email else "User")
+            picture = google_user.get("picture")
+            google_sub = google_user.get("sub")
+
+            if not email:
+                raise HTTPException(status_code=400, detail="Email not provided by Google")
+
+            user_id = await GoogleAuthService._get_or_create_user(
+                db, email, name, picture, google_sub
+            )
+            await GoogleAuthService._create_session(db, user_id)
+            jwt_token = GoogleAuthService._generate_jwt_token(user_id, email, name)
+
+            return GoogleAuthResponse(
+                user=GoogleUserResponse(
+                    user_id=user_id,
+                    email=email,
+                    name=name,
+                    picture=picture,
+                    created_at=datetime.now(timezone.utc),
+                ),
+                token=jwt_token,
+                message="Authentication successful",
+            )
+
+        if not data.session_id:
+            raise HTTPException(status_code=400, detail="Missing id_token or session_id")
         
         # Step 1: Exchange session_id for user data from Emergent Auth
         try:
@@ -61,7 +95,7 @@ class GoogleAuthService:
         
         # Step 2: Create or update user in database
         user_id = await GoogleAuthService._get_or_create_user(
-            db, email, name, picture
+            db, email, name, picture, None
         )
         
         # Step 3: Create session (stored in database for future validation)
@@ -86,9 +120,24 @@ class GoogleAuthService:
             token=jwt_token,
             message="Authentication successful"
         )
+
+    @staticmethod
+    def _verify_google_id_token(raw_id_token: str) -> dict:
+        """Verify Google ID token against configured Google client id."""
+        client_id = os.environ.get("GOOGLE_CLIENT_ID")
+        if not client_id:
+            raise HTTPException(status_code=500, detail="GOOGLE_CLIENT_ID is not configured on server")
+        try:
+            return google_id_token.verify_oauth2_token(
+                raw_id_token,
+                google_requests.Request(),
+                audience=client_id,
+            )
+        except Exception as exc:
+            raise HTTPException(status_code=401, detail=f"Invalid Google token: {exc}")
     
     @staticmethod
-    async def _get_or_create_user(db, email: str, name: str, picture: str) -> str:
+    async def _get_or_create_user(db, email: str, name: str, picture: str, google_sub: str = None) -> str:
         """Get existing user or create new one"""
         # Check if user exists by email
         existing_user = await db.users.find_one(
@@ -107,6 +156,7 @@ class GoogleAuthService:
                     "name": name,
                     "picture": picture,
                     "google_linked": True,
+                    "googleId": google_sub or existing_user.get("googleId"),
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }}
             )
@@ -122,6 +172,7 @@ class GoogleAuthService:
             "name": name,
             "picture": picture,
             "google_linked": True,
+            "googleId": google_sub,
             "password_hash": None,  # No password for Google users
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat()

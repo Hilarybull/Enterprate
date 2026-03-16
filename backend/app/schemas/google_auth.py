@@ -6,7 +6,8 @@ from datetime import datetime
 
 class GoogleAuthCallback(BaseModel):
     """Request schema for Google OAuth callback"""
-    session_id: str
+    session_id: Optional[str] = None
+    id_token: Optional[str] = None
 
 
 class GoogleUserResponse(BaseModel):

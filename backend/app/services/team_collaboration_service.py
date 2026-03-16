@@ -46,6 +46,13 @@ class TeamCollaborationService:
         
         # Check if user exists
         user = await db.users.find_one({"email": email})
+        if user and user.get("id"):
+            already_has_workspace = await db.workspace_memberships.find_one(
+                {"user_id": user.get("id")},
+                {"_id": 0},
+            )
+            if already_has_workspace:
+                raise HTTPException(status_code=409, detail="This user already belongs to a workspace")
         
         invite_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc).isoformat()
@@ -88,6 +95,13 @@ class TeamCollaborationService:
         user = await db.users.find_one({"id": user_id})
         if not user or user.get("email") != invite.get("email"):
             raise HTTPException(status_code=403, detail="This invite is not for you")
+
+        already_has_workspace = await db.workspace_memberships.find_one(
+            {"user_id": user_id},
+            {"_id": 0},
+        )
+        if already_has_workspace:
+            raise HTTPException(status_code=409, detail="Only one workspace is allowed per user")
         
         now = datetime.now(timezone.utc).isoformat()
         

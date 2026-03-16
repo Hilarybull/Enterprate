@@ -9,7 +9,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useWorkspace } from '@/context/WorkspaceContext';
 import NotificationCenter from './NotificationCenter';
 
 export default function EnterpriseHeader({ 
@@ -19,7 +18,11 @@ export default function EnterpriseHeader({
   onLogout,
   onCreateWorkspace 
 }) {
-  const { workspaces, switchWorkspace } = useWorkspace();
+  const openCreateWorkspace = () => {
+    if (typeof onCreateWorkspace === 'function') {
+      onCreateWorkspace();
+    }
+  };
 
   return (
     <header className="sticky top-0 z-30 h-16 bg-white border-b border-gray-200">
@@ -53,7 +56,7 @@ export default function EnterpriseHeader({
           {/* Create Workspace Button - Show prominently when no workspace */}
           {!currentWorkspace && (
             <Button
-              onClick={onCreateWorkspace}
+              onClick={openCreateWorkspace}
               className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 border-0 text-white"
               data-testid="create-first-workspace-btn"
             >
@@ -62,65 +65,18 @@ export default function EnterpriseHeader({
             </Button>
           )}
 
-          {/* Workspace Selector */}
+          {/* Workspace Indicator (single workspace per user) */}
           {currentWorkspace && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="hidden sm:flex items-center space-x-2 h-9 px-3 border-gray-200 hover:border-gray-300"
-                  data-testid="workspace-selector"
-                >
-                  <div className="w-6 h-6 rounded-md gradient-primary flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">
-                      {currentWorkspace.name?.charAt(0)?.toUpperCase()}
-                    </span>
-                  </div>
-                  <span className="max-w-[120px] truncate text-sm font-medium">
-                    {currentWorkspace.name}
-                  </span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                <div className="px-2 py-1.5 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Workspaces
-                </div>
-                {workspaces.map((ws) => (
-                  <DropdownMenuItem
-                    key={ws.id}
-                    onClick={() => switchWorkspace(ws.id)}
-                    className={`cursor-pointer ${currentWorkspace.id === ws.id ? 'bg-purple-50' : ''}`}
-                    data-testid={`workspace-option-${ws.slug || ws.id}`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                        currentWorkspace.id === ws.id ? 'gradient-primary' : 'bg-gray-200'
-                      }`}>
-                        <span className={`text-sm font-bold ${
-                          currentWorkspace.id === ws.id ? 'text-white' : 'text-gray-600'
-                        }`}>
-                          {ws.name?.charAt(0)?.toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <div className="font-medium text-sm">{ws.name}</div>
-                        <div className="text-xs text-gray-500">{ws.role || 'Owner'}</div>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={onCreateWorkspace}
-                  className="cursor-pointer"
-                  data-testid="create-workspace-btn"
-                >
-                  <Plus size={16} className="mr-2 text-purple-600" />
-                  <span className="text-purple-600 font-medium">Create Workspace</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="hidden sm:flex items-center space-x-2 h-9 px-3 border border-gray-200 rounded-lg bg-white">
+              <div className="w-6 h-6 rounded-md gradient-primary flex items-center justify-center">
+                <span className="text-white text-xs font-bold">
+                  {currentWorkspace.name?.charAt(0)?.toUpperCase()}
+                </span>
+              </div>
+              <span className="max-w-[160px] truncate text-sm font-medium">
+                {currentWorkspace.name}
+              </span>
+            </div>
           )}
 
           {/* Notifications */}

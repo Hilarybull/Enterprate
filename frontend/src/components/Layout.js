@@ -11,9 +11,7 @@ import {
   Settings,
   LogOut,
   Menu,
-  X,
-  ChevronDown,
-  Plus
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,15 +39,15 @@ const navItems = [
   { path: '/settings', icon: Settings, label: 'Settings' }
 ];
 
-export default function Layout() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const { currentWorkspace, workspaces, switchWorkspace, createWorkspace, loading } = useWorkspace();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(false);
-  const [workspaceName, setWorkspaceName] = useState('');
-  const [creating, setCreating] = useState(false);
+	export default function Layout() {
+	  const location = useLocation();
+	  const navigate = useNavigate();
+	  const { user, logout } = useAuth();
+	  const { currentWorkspace, workspaces, createWorkspace, loading } = useWorkspace();
+	  const [sidebarOpen, setSidebarOpen] = useState(false);
+	  const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(false);
+	  const [workspaceName, setWorkspaceName] = useState('');
+	  const [creating, setCreating] = useState(false);
 
   // Auto-open workspace creation if no workspaces exist
   useEffect(() => {
@@ -63,22 +61,27 @@ export default function Layout() {
     navigate('/auth/login');
   };
 
-  const handleCreateWorkspace = async (e) => {
-    e.preventDefault();
-    if (!workspaceName.trim()) return;
+	  const handleCreateWorkspace = async (e) => {
+	    e.preventDefault();
+	    if (!workspaceName.trim()) return;
 
-    setCreating(true);
-    try {
-      await createWorkspace({ name: workspaceName });
-      toast.success('Workspace created successfully');
-      setCreateWorkspaceOpen(false);
-      setWorkspaceName('');
-    } catch (error) {
-      toast.error('Failed to create workspace');
-    } finally {
-      setCreating(false);
-    }
-  };
+	    setCreating(true);
+	    try {
+	      await createWorkspace({ name: workspaceName });
+	      toast.success('Workspace created successfully');
+	      setCreateWorkspaceOpen(false);
+	      setWorkspaceName('');
+	    } catch (error) {
+	      const status = error?.status ?? error?.response?.status;
+	      if (status === 409) {
+	        toast.error('Only one workspace is allowed per user.');
+	      } else {
+	        toast.error('Failed to create workspace');
+	      }
+	    } finally {
+	      setCreating(false);
+	    }
+	  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -100,47 +103,33 @@ export default function Layout() {
               </div>
               <span className="text-xl font-bold" style={{ fontFamily: 'Space Grotesk' }}>EnterprateAI</span>
             </Link>
-          </div>
+	          </div>
 
-          <div className="flex items-center space-x-3">
-            {/* Workspace Selector */}
-            {currentWorkspace && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="flex items-center space-x-2" data-testid="workspace-selector">
-                    <span className="max-w-[150px] truncate">{currentWorkspace.name}</span>
-                    <ChevronDown size={16} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  {workspaces.map((ws) => (
-                    <DropdownMenuItem
-                      key={ws.id}
-                      onClick={() => switchWorkspace(ws.id)}
-                      className={currentWorkspace.id === ws.id ? 'bg-gray-100' : ''}
-                      data-testid={`workspace-option-${ws.slug}`}
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-medium">{ws.name}</span>
-                        <span className="text-xs text-gray-500">{ws.role}</span>
-                      </div>
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuItem
-                    onClick={() => setCreateWorkspaceOpen(true)}
-                    className="border-t mt-1 pt-2"
-                    data-testid="create-workspace-btn"
-                  >
-                    <Plus size={16} className="mr-2" />
-                    Create Workspace
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+	          <div className="flex items-center space-x-3">
+	            {/* Workspace Indicator (single-workspace app) */}
+	            {currentWorkspace ? (
+	              <div
+	                className="hidden sm:flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700"
+	                data-testid="workspace-indicator"
+	              >
+	                <span className="text-gray-500">Workspace</span>
+	                <span className="max-w-[160px] truncate font-medium">{currentWorkspace.name}</span>
+	              </div>
+	            ) : (
+	              !loading && (
+	                <Button
+	                  variant="outline"
+	                  onClick={() => setCreateWorkspaceOpen(true)}
+	                  data-testid="create-workspace-btn"
+	                >
+	                  Create Workspace
+	                </Button>
+	              )
+	            )}
 
-            {/* User Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+	            {/* User Menu */}
+	            <DropdownMenu>
+	              <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center space-x-2" data-testid="user-menu">
                   <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
                     <span className="text-white text-sm font-medium">{user?.name?.charAt(0)}</span>
@@ -207,40 +196,57 @@ export default function Layout() {
         </main>
       </div>
 
-      {/* Create Workspace Dialog */}
-      <Dialog open={createWorkspaceOpen} onOpenChange={setCreateWorkspaceOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Workspace</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleCreateWorkspace} className="space-y-4">
-            <div>
-              <Label htmlFor="workspace-name">Workspace Name</Label>
-              <Input
-                id="workspace-name"
-                data-testid="workspace-name-input"
-                value={workspaceName}
-                onChange={(e) => setWorkspaceName(e.target.value)}
-                placeholder="My Company"
-                required
-              />
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setCreateWorkspaceOpen(false)}
-                data-testid="cancel-workspace-btn"
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={creating} data-testid="submit-workspace-btn">
-                {creating ? 'Creating...' : 'Create'}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+	      {/* Create Workspace Dialog */}
+	      <Dialog open={createWorkspaceOpen} onOpenChange={setCreateWorkspaceOpen}>
+	        <DialogContent>
+	          <DialogHeader>
+	            <DialogTitle>Create Workspace</DialogTitle>
+	          </DialogHeader>
+	          {workspaces.length > 0 ? (
+	            <div className="space-y-4">
+	              <p className="text-sm text-gray-600">
+	                Only one workspace is allowed per user.
+	              </p>
+	              <div className="flex justify-end">
+	                <Button
+	                  type="button"
+	                  onClick={() => setCreateWorkspaceOpen(false)}
+	                  data-testid="close-workspace-limit-btn"
+	                >
+	                  Close
+	                </Button>
+	              </div>
+	            </div>
+	          ) : (
+	            <form onSubmit={handleCreateWorkspace} className="space-y-4">
+	              <div>
+	                <Label htmlFor="workspace-name">Workspace Name</Label>
+	                <Input
+	                  id="workspace-name"
+	                  data-testid="workspace-name-input"
+	                  value={workspaceName}
+	                  onChange={(e) => setWorkspaceName(e.target.value)}
+	                  placeholder="My Company"
+	                  required
+	                />
+	              </div>
+	              <div className="flex justify-end space-x-2">
+	                <Button
+	                  type="button"
+	                  variant="outline"
+	                  onClick={() => setCreateWorkspaceOpen(false)}
+	                  data-testid="cancel-workspace-btn"
+	                >
+	                  Cancel
+	                </Button>
+	                <Button type="submit" disabled={creating} data-testid="submit-workspace-btn">
+	                  {creating ? 'Creating...' : 'Create'}
+	                </Button>
+	              </div>
+	            </form>
+	          )}
+	        </DialogContent>
+	      </Dialog>
 
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
