@@ -102,27 +102,27 @@ class BlueprintService:
 
     DOCUMENT_REQUIREMENTS: Dict[str, List[Dict[str, str]]] = {
         "business_plan": [
-            {"key": "businessName", "label": "Business name", "source": "state"},
-            {"key": "problemSolved", "label": "Problem statement", "source": "state"},
-            {"key": "customerSegment", "label": "Customer segment", "source": "state"},
-            {"key": "serviceType", "label": "Service offer", "source": "state"},
-            {"key": "priceAmount", "label": "Pricing amount", "source": "state"},
-            {"key": "expectedUnitsPerMonth", "label": "Units per month", "source": "state"},
-            {"key": "fixedMonthlyCosts", "label": "Fixed monthly costs", "source": "state"},
+            {"key": "businessName", "label": "Business name", "source": "state_or_input"},
+            {"key": "problemSolved", "label": "Problem statement", "source": "state_or_input"},
+            {"key": "customerSegment", "label": "Customer segment", "source": "state_or_input"},
+            {"key": "serviceType", "label": "Service offer", "source": "state_or_input"},
+            {"key": "priceAmount", "label": "Pricing amount", "source": "state_or_input"},
+            {"key": "expectedUnitsPerMonth", "label": "Units per month", "source": "state_or_input"},
+            {"key": "fixedMonthlyCosts", "label": "Fixed monthly costs", "source": "state_or_input"},
             {"key": "projectionYears", "label": "Projection years", "source": "input"},
             {"key": "growthRateAnnualPct", "label": "Annual growth assumption (%)", "source": "input"},
         ],
         "client_proposal": [
             {"key": "prospectName", "label": "Prospect name", "source": "input"},
-            {"key": "serviceType", "label": "Service selected", "source": "state"},
+            {"key": "serviceType", "label": "Service selected", "source": "state_or_input"},
             {"key": "deliverables", "label": "Deliverables", "source": "input"},
             {"key": "deliveryTimelineDays", "label": "Timeline (days)", "source": "input"},
-            {"key": "priceAmount", "label": "Pricing", "source": "state"},
+            {"key": "priceAmount", "label": "Pricing", "source": "state_or_input"},
             {"key": "paymentTermsDays", "label": "Payment terms", "source": "state_or_input"},
         ],
         "sales_letter": [
             {"key": "targetRecipientType", "label": "Target recipient type", "source": "input"},
-            {"key": "serviceType", "label": "Selected service", "source": "state"},
+            {"key": "serviceType", "label": "Selected service", "source": "state_or_input"},
             {"key": "tonePreference", "label": "Tone preference", "source": "input"},
         ],
         "sales_quotation": [
@@ -130,23 +130,23 @@ class BlueprintService:
             {"key": "servicePackage", "label": "Service package", "source": "input"},
             {"key": "validityDays", "label": "Validity period (days)", "source": "input"},
             {"key": "paymentSchedule", "label": "Payment schedule", "source": "input"},
-            {"key": "priceAmount", "label": "Pricing", "source": "state"},
+            {"key": "priceAmount", "label": "Pricing", "source": "state_or_input"},
         ],
         "cashflow_analysis": [
             {"key": "analysisMonths", "label": "Analysis horizon (months)", "source": "input"},
-            {"key": "expectedUnitsPerMonth", "label": "Units per month", "source": "state"},
-            {"key": "priceAmount", "label": "Unit price", "source": "state"},
-            {"key": "variableCostPerUnit", "label": "Variable cost per unit", "source": "state"},
-            {"key": "fixedMonthlyCosts", "label": "Fixed monthly costs", "source": "state"},
+            {"key": "expectedUnitsPerMonth", "label": "Units per month", "source": "state_or_input"},
+            {"key": "priceAmount", "label": "Unit price", "source": "state_or_input"},
+            {"key": "variableCostPerUnit", "label": "Variable cost per unit", "source": "state_or_input"},
+            {"key": "fixedMonthlyCosts", "label": "Fixed monthly costs", "source": "state_or_input"},
         ],
         "financial_projection": [
             {"key": "projectionYears", "label": "Projection years", "source": "input"},
             {"key": "growthRateAnnualPct", "label": "Annual growth assumption (%)", "source": "input"},
             {"key": "costInflationAnnualPct", "label": "Cost inflation assumption (%)", "source": "input"},
-            {"key": "expectedUnitsPerMonth", "label": "Units per month", "source": "state"},
-            {"key": "priceAmount", "label": "Unit price", "source": "state"},
-            {"key": "variableCostPerUnit", "label": "Variable cost per unit", "source": "state"},
-            {"key": "fixedMonthlyCosts", "label": "Fixed monthly costs", "source": "state"},
+            {"key": "expectedUnitsPerMonth", "label": "Units per month", "source": "state_or_input"},
+            {"key": "priceAmount", "label": "Unit price", "source": "state_or_input"},
+            {"key": "variableCostPerUnit", "label": "Variable cost per unit", "source": "state_or_input"},
+            {"key": "fixedMonthlyCosts", "label": "Fixed monthly costs", "source": "state_or_input"},
         ],
     }
 
@@ -605,7 +605,7 @@ class BlueprintService:
         state = await BlueprintService._get_business_state(workspace_id, business_id)
         readiness = await BlueprintService._evaluate_readiness(workspace_id, state, document_type)
         if not readiness["ready"]:
-            doc_inputs = await BlueprintService._get_document_inputs(workspace_id, state["businessId"], document_type)
+            doc_inputs = await BlueprintService._get_effective_document_inputs(workspace_id, state["businessId"], document_type)
             suggested_inputs = BlueprintService._suggest_missing_inputs(
                 state=state,
                 document_type=document_type,
@@ -621,8 +621,9 @@ class BlueprintService:
                 },
             )
 
-        doc_inputs = await BlueprintService._get_document_inputs(workspace_id, state["businessId"], document_type)
-        blueprint_data = BlueprintService._assemble_blueprint_data_object(state, doc_inputs)
+        doc_inputs = await BlueprintService._get_effective_document_inputs(workspace_id, state["businessId"], document_type)
+        hydrated_state = BlueprintService._hydrate_state_from_document_context(state, doc_inputs)
+        blueprint_data = BlueprintService._assemble_blueprint_data_object(hydrated_state, doc_inputs)
         financial_summary = BlueprintService._run_financial_engine(document_type, blueprint_data)
         sections = BlueprintService._build_template_sections(document_type, blueprint_data, financial_summary)
         sections = await BlueprintService._rewrite_sections_for_tone(document_type, sections, blueprint_data)
@@ -941,9 +942,27 @@ class BlueprintService:
         return (entry or {}).get("inputs", {}) or {}
 
     @staticmethod
+    def _apply_document_input_defaults(document_type: str, inputs: Optional[dict]) -> dict:
+        """
+        Merge safe defaults for a given document type without overwriting user-provided values.
+        Treat empty strings as missing so defaults can apply.
+        """
+        base = dict(BlueprintService.DEFAULT_DOCUMENT_INPUTS.get(document_type, {}) or {})
+        incoming = inputs or {}
+        for key, value in incoming.items():
+            if BlueprintService._value_exists(value):
+                base[key] = value
+        return base
+
+    @staticmethod
+    async def _get_effective_document_inputs(workspace_id: str, business_id: str, document_type: str) -> dict:
+        stored = await BlueprintService._get_document_inputs(workspace_id, business_id, document_type)
+        return BlueprintService._apply_document_input_defaults(document_type, stored)
+
+    @staticmethod
     async def _evaluate_readiness(workspace_id: str, state: dict, document_type: str) -> dict:
         requirements = BlueprintService.DOCUMENT_REQUIREMENTS.get(document_type, [])
-        doc_inputs = await BlueprintService._get_document_inputs(workspace_id, state["businessId"], document_type)
+        doc_inputs = await BlueprintService._get_effective_document_inputs(workspace_id, state["businessId"], document_type)
 
         def get_value(key: str, source: str):
             if source == "input":
@@ -996,6 +1015,39 @@ class BlueprintService:
         if isinstance(value, list):
             return len(value) > 0
         return True
+
+    @staticmethod
+    def _hydrate_state_from_document_context(state: dict, document_context: dict) -> dict:
+        """
+        Allow module2 document inputs to satisfy generation even when upstream modules
+        (business registration / idea validation) haven't provided a field yet.
+        This does NOT overwrite existing state values.
+        """
+        hydrated = dict(state or {})
+        ctx = document_context or {}
+        mapping = {
+            "businessName": ("businessProfile", "businessName"),
+            "problemSolved": ("businessProfile", "problemSolved"),
+            "customerSegment": ("customerSegment", "customerSegment"),
+            "serviceType": ("serviceModel", "serviceType"),
+            "priceAmount": ("pricingModel", "priceAmount"),
+            "expectedUnitsPerMonth": ("baselineMetrics", "expectedUnitsPerMonth"),
+            "fixedMonthlyCosts": ("costStructure", "fixedMonthlyCosts"),
+            "variableCostPerUnit": ("costStructure", "variableCostPerUnit"),
+            "paymentTermsDays": ("pricingModel", "paymentTermsDays"),
+        }
+
+        for ctx_key, (state_section, state_key) in mapping.items():
+            value = ctx.get(ctx_key)
+            if not BlueprintService._value_exists(value):
+                continue
+            section_obj = dict(hydrated.get(state_section, {}) or {})
+            if BlueprintService._value_exists(section_obj.get(state_key)):
+                continue
+            section_obj[state_key] = value
+            hydrated[state_section] = section_obj
+
+        return hydrated
 
     @staticmethod
     def _assemble_blueprint_data_object(state: dict, document_context: dict) -> dict:
